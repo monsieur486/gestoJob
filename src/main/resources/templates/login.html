@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html lang="fr"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>GestoJob - Connexion</title>
+    <div th:replace="~{fragments/header :: header-css}"></div>
+</head>
+<body>
+<div class="container" style="max-width: 420px; margin-top: 8vh;">
+    <h3 class="mb-4 text-center">🧑🏻‍💻💼🔎 GestoJob</h3>
+
+    <div class="alert alert-danger" th:if="${param.error}">
+        Identifiant ou mot de passe incorrect.
+    </div>
+    <div class="alert alert-success" th:if="${param.logout}">
+        Vous avez été déconnecté.
+    </div>
+
+    <form method="post" th:action="@{/login}">
+        <div class="mb-3">
+            <label class="form-label" for="username">Identifiant</label>
+            <input class="form-control" id="username" name="username" required autofocus type="text"/>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="password">Mot de passe</label>
+            <input class="form-control" id="password" name="password" required type="password"/>
+        </div>
+        <button class="btn btn-primary w-100" type="submit">Se connecter</button>
+    </form>
+</div>
+</body>
+</html>

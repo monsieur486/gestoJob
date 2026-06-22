@@ -38,3 +38,6 @@ gestojob:
   max-entreprises-par-page: ${MAX_ENTREPRISES_PAR_PAGE}
   max-annonces-par-page: ${MAX_ANNONCESS_PAR_PAGE}
   max-positifs-par-page: ${MAX_POSITIFS_PAR_PAGE}
+  admin:
+    username: ${GESTOJOB_ADMIN_USERNAME:utilisateur}
+    password: ${GESTOJOB_ADMIN_PASSWORD:Mdp12345*}
