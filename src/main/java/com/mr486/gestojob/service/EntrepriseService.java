@@ -34,10 +34,10 @@ public class EntrepriseService {
     /**
      * Recopie les champs d'un formulaire vers une entité entreprise existante.
      *
+     * <p><b>Exemple :</b> un formulaire de nom « Acme » et ville « Paris » écrase les champs nom et ville de l'entité cible avec ces valeurs.</p>
+     *
      * @param form formulaire source
      * @param e    entité entreprise à mettre à jour
-     *
-     * <p><b>Exemple :</b> un formulaire de nom « Acme » et ville « Paris » écrase les champs nom et ville de l'entité cible avec ces valeurs.</p>
      */
     public static void Convert(EntrepriseForm form, Entreprise e) {
         e.setNom(form.getNom());
@@ -51,11 +51,11 @@ public class EntrepriseService {
     /**
      * Crée et enregistre une nouvelle entreprise à partir du formulaire.
      *
+     * <p><b>Exemple :</b> save(form avec nom « Acme ») retourne l'id généré ; si une entreprise « acme » existe déjà (casse ignorée), lève RuntimeException(« L'entreprise existe déjà »).</p>
+     *
      * @param form formulaire de l'entreprise
      * @return l'identifiant de l'entreprise créée
      * @throws RuntimeException si une entreprise du même nom existe déjà
-     *
-     * <p><b>Exemple :</b> save(form avec nom « Acme ») retourne l'id généré ; si une entreprise « acme » existe déjà (casse ignorée), lève RuntimeException(« L'entreprise existe déjà »).</p>
      */
     public int save(EntrepriseForm form) {
         if (entrepriseRepository.existsByNomIgnoreCase(form.getNom())) {
@@ -68,11 +68,11 @@ public class EntrepriseService {
     /**
      * Met à jour une entreprise existante à partir du formulaire.
      *
+     * <p><b>Exemple :</b> update(3, form) met à jour l'entreprise 3 avec les valeurs du formulaire ; un id inexistant lève RuntimeException(« Entreprise introuvable avec id: 3 »).</p>
+     *
      * @param entrepriseId identifiant de l'entreprise à modifier
      * @param form         formulaire contenant les nouvelles valeurs
      * @throws RuntimeException si l'entreprise est introuvable
-     *
-     * <p><b>Exemple :</b> update(3, form) met à jour l'entreprise 3 avec les valeurs du formulaire ; un id inexistant lève RuntimeException(« Entreprise introuvable avec id: 3 »).</p>
      */
     public void update(Integer entrepriseId, EntrepriseForm form) {
         try {
@@ -87,11 +87,11 @@ public class EntrepriseService {
     /**
      * Construit le formulaire pré-rempli d'une entreprise (pour l'édition).
      *
+     * <p><b>Exemple :</b> getForm(3) retourne un EntrepriseForm rempli avec les champs de l'entreprise 3 ; un id inexistant lève NoSuchElementException.</p>
+     *
      * @param entrepriseId identifiant de l'entreprise
      * @return le formulaire pré-rempli
      * @throws java.util.NoSuchElementException si l'entreprise est introuvable
-     *
-     * <p><b>Exemple :</b> getForm(3) retourne un EntrepriseForm rempli avec les champs de l'entreprise 3 ; un id inexistant lève NoSuchElementException.</p>
      */
     public EntrepriseForm getForm(Integer entrepriseId) {
         return new EntrepriseForm(entrepriseRepository.findById(entrepriseId).orElseThrow());
@@ -100,11 +100,11 @@ public class EntrepriseService {
     /**
      * Récupère une entreprise par son identifiant.
      *
+     * <p><b>Exemple :</b> getEntreprise(3) retourne l'entreprise 3 ; un id inexistant lève RuntimeException(« Entreprise introuvable avec id: 3 »).</p>
+     *
      * @param entrepriseId identifiant de l'entreprise
      * @return l'entreprise correspondante
      * @throws RuntimeException si l'entreprise est introuvable
-     *
-     * <p><b>Exemple :</b> getEntreprise(3) retourne l'entreprise 3 ; un id inexistant lève RuntimeException(« Entreprise introuvable avec id: 3 »).</p>
      */
     public Entreprise getEntreprise(Integer entrepriseId) {
         return entrepriseRepository.findById(entrepriseId)
@@ -128,10 +128,10 @@ public class EntrepriseService {
     /**
      * Désactive une entreprise (la marque comme inactive).
      *
+     * <p><b>Exemple :</b> desactiveEntreprise(3) met estActive à false pour l'entreprise 3.</p>
+     *
      * @param entrepriseId identifiant de l'entreprise
      * @throws java.util.NoSuchElementException si l'entreprise est introuvable
-     *
-     * <p><b>Exemple :</b> desactiveEntreprise(3) met estActive à false pour l'entreprise 3.</p>
      */
     public void desactiveEntreprise(Integer entrepriseId) {
         Entreprise e = entrepriseRepository.findById(entrepriseId).orElseThrow();
@@ -142,10 +142,10 @@ public class EntrepriseService {
     /**
      * Active une entreprise (la marque comme active).
      *
+     * <p><b>Exemple :</b> activeEntreprise(3) met estActive à true pour l'entreprise 3.</p>
+     *
      * @param entrepriseId identifiant de l'entreprise
      * @throws java.util.NoSuchElementException si l'entreprise est introuvable
-     *
-     * <p><b>Exemple :</b> activeEntreprise(3) met estActive à true pour l'entreprise 3.</p>
      */
     public void activeEntreprise(Integer entrepriseId) {
         Entreprise e = entrepriseRepository.findById(entrepriseId).orElseThrow();
@@ -157,10 +157,10 @@ public class EntrepriseService {
      * Retourne une page d'entreprises au format DTO, triées par nom croissant.
      * Les index de page négatifs sont ramenés à 0.
      *
+     * <p><b>Exemple :</b> getAllListePage(-1) est traité comme la page 0 ; les entreprises sont triées par nom croissant (« Acme » avant « Beta »).</p>
+     *
      * @param pageIndex index de la page (commençant à 0)
      * @return la page d'entreprises
-     *
-     * <p><b>Exemple :</b> getAllListePage(-1) est traité comme la page 0 ; les entreprises sont triées par nom croissant (« Acme » avant « Beta »).</p>
      */
     public Page<EntrepriseListe> getAllListePage(int pageIndex) {
         int safePageIndex = Math.max(0, pageIndex);
@@ -177,10 +177,10 @@ public class EntrepriseService {
     /**
      * Recherche les entreprises dont le nom contient la chaîne fournie (insensible à la casse).
      *
+     * <p><b>Exemple :</b> rechercheEntrepriseParNom(« cm ») retourne l'entreprise « Acme » (recherche insensible à la casse sur un fragment du nom).</p>
+     *
      * @param nom fragment de nom recherché
      * @return la liste des entreprises correspondantes au format DTO
-     *
-     * <p><b>Exemple :</b> rechercheEntrepriseParNom(« cm ») retourne l'entreprise « Acme » (recherche insensible à la casse sur un fragment du nom).</p>
      */
     public List<EntrepriseListe> rechercheEntrepriseParNom(String nom) {
         return entrepriseRepository.findAllByNomContainingIgnoreCase(nom)
@@ -196,9 +196,9 @@ public class EntrepriseService {
     /**
      * Retourne la liste des entreprises actives au format DTO.
      *
-     * @return la liste des entreprises actives
-     *
      * <p><b>Exemple :</b> sur deux entreprises dont une seule a estActive=true, ne retourne que cette dernière.</p>
+     *
+     * @return la liste des entreprises actives
      */
     public List<EntrepriseListe> rechercheEntrepriseActive() {
         return entrepriseRepository.findAllByEstActiveTrue()
@@ -214,10 +214,10 @@ public class EntrepriseService {
     /**
      * Indique si une entreprise existe pour l'identifiant donné.
      *
+     * <p><b>Exemple :</b> existe(3) retourne true si l'entreprise 3 est en base, false sinon.</p>
+     *
      * @param entrepriseId identifiant de l'entreprise
      * @return {@code true} si l'entreprise existe, {@code false} sinon
-     *
-     * <p><b>Exemple :</b> existe(3) retourne true si l'entreprise 3 est en base, false sinon.</p>
      */
     public Boolean existe(Integer entrepriseId) {
         return entrepriseRepository.existsById(entrepriseId);
@@ -226,9 +226,9 @@ public class EntrepriseService {
     /**
      * Retourne le nombre total d'entreprises enregistrées.
      *
-     * @return le nombre d'entreprises
-     *
      * <p><b>Exemple :</b> avec 5 entreprises en base, countAllEntreprises() retourne 5.</p>
+     *
+     * @return le nombre d'entreprises
      */
     public Integer countAllEntreprises() {
         return (int) entrepriseRepository.count();

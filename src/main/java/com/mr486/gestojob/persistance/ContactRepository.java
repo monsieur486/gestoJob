@@ -17,10 +17,10 @@ public interface ContactRepository extends JpaRepository<Contact, Long> {
     /**
      * Récupère tous les contacts rattachés à une entreprise donnée.
      *
+     * <p><b>Exemple :</b> findAllByEntrepriseId(7) renvoie tous les contacts rattachés à l'entreprise 7, et une liste vide si elle n'en possède aucun.</p>
+     *
      * @param id l'identifiant de l'entreprise concernée
      * @return la liste des contacts de l'entreprise
-     *
-     * <p><b>Exemple :</b> findAllByEntrepriseId(7) renvoie tous les contacts rattachés à l'entreprise 7, et une liste vide si elle n'en possède aucun.</p>
      */
     List<Contact> findAllByEntrepriseId(Integer id);
 }

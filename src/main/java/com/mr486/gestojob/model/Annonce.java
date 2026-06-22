@@ -40,10 +40,10 @@ public class Annonce {
      * Retourne le libellé lisible (avec icône) correspondant au statut numérique
      * de l'annonce.
      *
+     * <p><b>Exemple :</b> pour statusAnnonce = 5, retourne « 🟢 Positif ».</p>
+     *
      * @return le libellé du statut, ou {@code "Inconnu"} si le code de statut
      *         n'est pas reconnu
-     *
-     * <p><b>Exemple :</b> pour statusAnnonce = 5, retourne « 🟢 Positif ».</p>
      */
     public String getStatusAnnonceString() {
         return switch (statusAnnonce) {
@@ -63,9 +63,9 @@ public class Annonce {
      * mentionne la référence et le poste ; sinon, il s'agit du texte standard
      * de demande spontanée.
      *
-     * @return le libellé textuel de l'annonce
-     *
      * <p><b>Exemple :</b> pour typeAnnonce = 1, reference = « ABC123 » et poste = « Développeur », retourne « Réf [ABC123] Laurent Touret - candidature au poste Développeur » ; sinon, retourne le texte standard de demande spontanée ({@code ApplicationConfiguration.DEMANDE_SPONTANEE_TXT}).</p>
+     *
+     * @return le libellé textuel de l'annonce
      */
     public String getLibelle() {
         if (typeAnnonce == 1) {

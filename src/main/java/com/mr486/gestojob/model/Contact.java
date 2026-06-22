@@ -33,10 +33,10 @@ public class Contact {
      * Construit le message de politesse (en-tête de courrier) adapté au contact,
      * en fonction de la formule de politesse renseignée.
      *
+     * <p><b>Exemple :</b> formuleDePolistesse = 2 et contact = « Durand » donne « Madame Durand, » ; formuleDePolistesse = 1 donne « Monsieur Durand, » ; toute autre valeur donne « Madame, Monsieur, ».</p>
+     *
      * @return la formule de politesse formatée ; {@code "Madame, Monsieur,"}
      *         lorsque aucune formule spécifique n'est définie
-     *
-     * <p><b>Exemple :</b> formuleDePolistesse = 2 et contact = « Durand » donne « Madame Durand, » ; formuleDePolistesse = 1 donne « Monsieur Durand, » ; toute autre valeur donne « Madame, Monsieur, ».</p>
      */
     public String getMessageDePolitesse() {
         String message = "";

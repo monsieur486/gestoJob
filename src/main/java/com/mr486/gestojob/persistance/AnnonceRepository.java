@@ -24,20 +24,20 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
     /**
      * Récupère toutes les annonces possédant le statut indiqué.
      *
+     * <p><b>Exemple :</b> findAllByStatusAnnonce(1) renvoie les annonces en attente d'envoi.</p>
+     *
      * @param i le statut de l'annonce recherché
      * @return la liste des annonces correspondant à ce statut
-     *
-     * <p><b>Exemple :</b> findAllByStatusAnnonce(1) renvoie les annonces en attente d'envoi.</p>
      */
     List<Annonce> findAllByStatusAnnonce(int i);
 
     /**
      * Met à jour le statut d'une annonce identifiée par son identifiant.
      *
+     * <p><b>Exemple :</b> updateStatusAnnonce(42L, 2) passe l'annonce 42 au statut archivé sans toucher à sa date d'envoi.</p>
+     *
      * @param annonceId     l'identifiant de l'annonce à modifier
      * @param statusAnnonce le nouveau statut à appliquer
-     *
-     * <p><b>Exemple :</b> updateStatusAnnonce(42L, 2) passe l'annonce 42 au statut archivé sans toucher à sa date d'envoi.</p>
      */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update Annonce a set a.statusAnnonce = :statusAnnonce where a.id = :annonceId")
@@ -48,11 +48,11 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
      * Met à jour à la fois le statut et la date d'envoi d'une annonce
      * identifiée par son identifiant.
      *
+     * <p><b>Exemple :</b> updateStatusAnnonceEtDateEnvoi(42L, 1, now()) marque l'annonce 42 comme envoyée et enregistre l'instant de l'envoi.</p>
+     *
      * @param annonceId     l'identifiant de l'annonce à modifier
      * @param statusAnnonce le nouveau statut à appliquer
      * @param dateEnvoi     la nouvelle date d'envoi à enregistrer
-     *
-     * <p><b>Exemple :</b> updateStatusAnnonceEtDateEnvoi(42L, 1, now()) marque l'annonce 42 comme envoyée et enregistre l'instant de l'envoi.</p>
      */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update Annonce a set a.statusAnnonce = :statusAnnonce, a.dateEnvoi = :dateEnvoi where a.id = :annonceId")
@@ -64,10 +64,10 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
      * Récupère toutes les annonces d'une entreprise donnée, triées par statut
      * d'annonce dans l'ordre croissant.
      *
+     * <p><b>Exemple :</b> findAllByEntrepriseIdOrderByStatusAnnonceAsc(7) renvoie les annonces de l'entreprise 7, en plaçant d'abord celles au statut le plus bas (0, puis 1, puis 2).</p>
+     *
      * @param entrepriseId l'identifiant de l'entreprise concernée
      * @return la liste des annonces de l'entreprise triées par statut croissant
-     *
-     * <p><b>Exemple :</b> findAllByEntrepriseIdOrderByStatusAnnonceAsc(7) renvoie les annonces de l'entreprise 7, en plaçant d'abord celles au statut le plus bas (0, puis 1, puis 2).</p>
      */
     List<Annonce> findAllByEntrepriseIdOrderByStatusAnnonceAsc(Integer entrepriseId);
 
@@ -75,11 +75,11 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
      * Récupère, de façon paginée, les annonces possédant le statut indiqué,
      * triées par date d'envoi décroissante.
      *
+     * <p><b>Exemple :</b> findAllByStatusAnnonceOrderByDateEnvoiDesc(1, PageRequest.of(0, 10)) renvoie les 10 annonces envoyées les plus récentes en premier.</p>
+     *
      * @param statusAnnonce le statut d'annonce recherché
      * @param pageable      les informations de pagination et de tri
      * @return une page d'annonces correspondant au statut, triées par date d'envoi décroissante
-     *
-     * <p><b>Exemple :</b> findAllByStatusAnnonceOrderByDateEnvoiDesc(1, PageRequest.of(0, 10)) renvoie les 10 annonces envoyées les plus récentes en premier.</p>
      */
     Page<Annonce> findAllByStatusAnnonceOrderByDateEnvoiDesc(Integer statusAnnonce, Pageable pageable);
 
@@ -87,10 +87,10 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
      * Récupère, de façon paginée, l'ensemble des annonces triées par date
      * d'envoi décroissante, les annonces sans date d'envoi étant placées en fin.
      *
+     * <p><b>Exemple :</b> findAllOrderByDateEnvoiDesc(PageRequest.of(0, 20)) renvoie toutes les annonces, la plus récemment envoyée en tête et les annonces jamais envoyées (dateEnvoi null) reléguées en fin de liste.</p>
+     *
      * @param pageable les informations de pagination et de tri
      * @return une page de toutes les annonces triées par date d'envoi décroissante
-     *
-     * <p><b>Exemple :</b> findAllOrderByDateEnvoiDesc(PageRequest.of(0, 20)) renvoie toutes les annonces, la plus récemment envoyée en tête et les annonces jamais envoyées (dateEnvoi null) reléguées en fin de liste.</p>
      */
     @Query("""
             select a
@@ -108,12 +108,12 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
      * vaut {@code true}. Les résultats sont triés par date d'envoi décroissante,
      * les annonces sans date d'envoi étant placées en fin.
      *
+     * <p><b>Exemple :</b> search("java", false, pageable) renvoie les annonces non archivées dont le poste, la référence, le nom de l'entreprise, l'email ou le nom du contact contient « java » (ex. poste « Développeur Java »), tandis que search("java", true, pageable) inclut aussi les annonces archivées (statut 2).</p>
+     *
      * @param q               le terme de recherche
      * @param includeArchives {@code true} pour inclure également les annonces archivées
      * @param pageable        les informations de pagination et de tri
      * @return une page d'annonces correspondant au terme de recherche
-     *
-     * <p><b>Exemple :</b> search("java", false, pageable) renvoie les annonces non archivées dont le poste, la référence, le nom de l'entreprise, l'email ou le nom du contact contient « java » (ex. poste « Développeur Java »), tandis que search("java", true, pageable) inclut aussi les annonces archivées (statut 2).</p>
      */
     @Query("""
             select a

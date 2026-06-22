@@ -38,9 +38,9 @@ public class EntrepriseForm {
      * Construit un formulaire d'entreprise pré-rempli à partir d'une entité
      * {@link Entreprise} existante, en recopiant ses différents champs.
      *
-     * @param e l'entité entreprise source dont les valeurs sont reprises
-     *
      * <p><b>Exemple :</b> pour une entité avec nom = « ACME » et ville = « Paris », le formulaire créé porte nom = « ACME » et ville = « Paris » (ainsi que estActive, adresse1, adresse2 et codePostal recopiés).</p>
+     *
+     * @param e l'entité entreprise source dont les valeurs sont reprises
      */
     public EntrepriseForm(Entreprise e) {
         this.nom = e.getNom();
@@ -56,10 +56,10 @@ public class EntrepriseForm {
      * {@link Entreprise}, en déléguant la copie des champs au service
      * {@link EntrepriseService}.
      *
+     * <p><b>Exemple :</b> pour un formulaire avec nom = « ACME » et ville = « Paris », retourne une nouvelle entité Entreprise dont nom = « ACME » et ville = « Paris ».</p>
+     *
      * @param form le formulaire source contenant les données saisies
      * @return une nouvelle entité {@link Entreprise} alimentée à partir du formulaire
-     *
-     * <p><b>Exemple :</b> pour un formulaire avec nom = « ACME » et ville = « Paris », retourne une nouvelle entité Entreprise dont nom = « ACME » et ville = « Paris ».</p>
      */
     public Entreprise entity(EntrepriseForm form) {
         Entreprise e = new Entreprise();

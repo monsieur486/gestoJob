@@ -24,11 +24,11 @@ public class HomePageController {
      * Affiche la page d'accueil avec les compteurs et les annonces positives
      * paginées.
      *
+     * <p><b>Exemple :</b> GET /?page=2 charge la page 2 (index 1) des annonces positives, ajoute les compteurs « 3 entreprises » et « 12 annonces » au modèle, et retourne la vue {@code accueil}.</p>
+     *
      * @param model le modèle Thymeleaf alimenté pour la vue
      * @param page  le numéro de page demandé (commence à 1)
      * @return le nom de la vue Thymeleaf {@code accueil}
-     *
-     * <p><b>Exemple :</b> GET /?page=2 charge la page 2 (index 1) des annonces positives, ajoute les compteurs « 3 entreprises » et « 12 annonces » au modèle, et retourne la vue {@code accueil}.</p>
      */
     @GetMapping("/")
     public String publicView(Model model, @RequestParam(name = "page", defaultValue = "1") int page) {

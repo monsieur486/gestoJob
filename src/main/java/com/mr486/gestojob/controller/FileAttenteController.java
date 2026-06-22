@@ -21,10 +21,10 @@ public class FileAttenteController {
     /**
      * Affiche la liste des annonces en attente d'envoi d'e-mail.
      *
+     * <p><b>Exemple :</b> GET /file place la liste des annonces renvoyées par annoncesEnAttenteEnvoiEmail() dans le modèle et retourne la vue {@code file}.</p>
+     *
      * @param model le modèle Thymeleaf alimenté pour la vue
      * @return le nom de la vue Thymeleaf {@code file}
-     *
-     * <p><b>Exemple :</b> GET /file place la liste des annonces renvoyées par annoncesEnAttenteEnvoiEmail() dans le modèle et retourne la vue {@code file}.</p>
      */
     @GetMapping("/file")
     public String fileAttenteView(Model model) {
@@ -36,9 +36,9 @@ public class FileAttenteController {
     /**
      * Déclenche l'envoi des e-mails pour toutes les annonces en attente.
      *
-     * @return une redirection vers la page {@code /file}
-     *
      * <p><b>Exemple :</b> POST /file/postMail envoie les e-mails de toutes les annonces en attente via sendEmailForPendingAnnonces() puis redirige vers /file.</p>
+     *
+     * @return une redirection vers la page {@code /file}
      */
     @PostMapping("/file/postMail")
     public String postMail() {
@@ -49,10 +49,10 @@ public class FileAttenteController {
     /**
      * Déclenche l'envoi de l'e-mail pour une annonce précise.
      *
+     * <p><b>Exemple :</b> POST /file/postMail/7 envoie l'e-mail de l'annonce 7 via sendDirectEmail(7) puis redirige vers /file.</p>
+     *
      * @param annonceId l'identifiant de l'annonce dont l'e-mail doit être envoyé
      * @return une redirection vers la page {@code /file}
-     *
-     * <p><b>Exemple :</b> POST /file/postMail/7 envoie l'e-mail de l'annonce 7 via sendDirectEmail(7) puis redirige vers /file.</p>
      */
     @PostMapping("/file/postMail/{annonceId}")
     public String postDirectMail(@PathVariable Long annonceId) {

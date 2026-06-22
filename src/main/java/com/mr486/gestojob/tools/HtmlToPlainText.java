@@ -20,10 +20,10 @@ public class HtmlToPlainText {
      * sauts de ligne, puces ou tabulations, puis le résultat est nettoyé pour
      * réduire les espaces et les sauts de ligne excessifs.
      *
+     * <p><b>Exemple :</b> « &lt;p&gt;Bonjour &lt;b&gt;Monde&lt;/b&gt;&lt;/p&gt; » devient « Bonjour Monde » ; une entrée {@code null} ou vide renvoie une chaîne vide.</p>
+     *
      * @param html le contenu HTML à convertir (peut être {@code null} ou vide)
      * @return le texte brut correspondant, ou une chaîne vide si l'entrée est nulle ou vide
-     *
-     * <p><b>Exemple :</b> « &lt;p&gt;Bonjour &lt;b&gt;Monde&lt;/b&gt;&lt;/p&gt; » devient « Bonjour Monde » ; une entrée {@code null} ou vide renvoie une chaîne vide.</p>
      */
     public static String toPlainTextKeepLines(String html) {
         if (html == null || html.isBlank()) return "";

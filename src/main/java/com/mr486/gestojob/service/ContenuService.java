@@ -147,12 +147,12 @@ public class ContenuService {
     /**
      * Génère la version HTML du contenu de la candidature.
      *
+     * <p><b>Exemple :</b> un poste contenant « &lt;script&gt; » est échappé en « &amp;lt;script&amp;gt; » dans le HTML produit.</p>
+     *
      * @param poste              intitulé du poste visé (une valeur par défaut est utilisée si vide)
      * @param typeContenu        type de contenu (1 = microservices, sinon généraliste)
      * @param messageDePolitesse formule de politesse à insérer
      * @return le contenu HTML de la candidature
-     *
-     * <p><b>Exemple :</b> un poste contenant « &lt;script&gt; » est échappé en « &amp;lt;script&amp;gt; » dans le HTML produit.</p>
      */
     public String getHtmlContenu(String poste, int typeContenu, String messageDePolitesse) {
         return getContent(poste, typeContenu, messageDePolitesse, true);
@@ -161,12 +161,12 @@ public class ContenuService {
     /**
      * Génère la version texte du contenu de la candidature.
      *
+     * <p><b>Exemple :</b> avec typeContenu=1 et un poste vide, le texte produit utilise le poste par défaut « de développeur Java orienté microservices » ; le poste fourni n'est pas échappé (sortie texte brut).</p>
+     *
      * @param poste              intitulé du poste visé (une valeur par défaut est utilisée si vide)
      * @param typeContenu        type de contenu (1 = microservices, sinon généraliste)
      * @param messageDePolitesse formule de politesse à insérer
      * @return le contenu texte de la candidature
-     *
-     * <p><b>Exemple :</b> avec typeContenu=1 et un poste vide, le texte produit utilise le poste par défaut « de développeur Java orienté microservices » ; le poste fourni n'est pas échappé (sortie texte brut).</p>
      */
     public String getTextContenu(String poste, int typeContenu, String messageDePolitesse) {
         return getContent(poste, typeContenu, messageDePolitesse, false);

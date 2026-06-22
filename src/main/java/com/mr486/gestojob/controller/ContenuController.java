@@ -19,10 +19,10 @@ public class ContenuController {
     /**
      * Renvoie le contenu textuel d'une annonce, au format texte brut UTF-8.
      *
+     * <p><b>Exemple :</b> GET /contenu/7 retourne, en {@code text/plain; charset=UTF-8}, le texte renvoyé par getAnnonceTxtContenuById(7).</p>
+     *
      * @param id l'identifiant de l'annonce concernée
      * @return le contenu textuel de l'annonce
-     *
-     * <p><b>Exemple :</b> GET /contenu/7 retourne, en {@code text/plain; charset=UTF-8}, le texte renvoyé par getAnnonceTxtContenuById(7).</p>
      */
     @GetMapping(value = "/contenu/{id}", produces = "text/plain; charset=UTF-8")
     public String getContenuById(@PathVariable Long id) {

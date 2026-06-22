@@ -13,6 +13,8 @@ public class LoginController {
     /**
      * Affiche le formulaire de connexion.
      *
+     * <p><b>Exemple :</b> GET /login affiche la page de connexion.</p>
+     *
      * @return le nom de la vue de connexion
      */
     @GetMapping("/login")
