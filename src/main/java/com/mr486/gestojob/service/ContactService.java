@@ -81,6 +81,9 @@ public class ContactService {
      * Évite le problème N+1 lors de la construction des listes d'annonces.
      *
      * <p><b>Exemple :</b> getContactsByIds([2L, 5L]) retourne une map {2 -> contact 2, 5 -> contact 5} en une seule requête ; une collection nulle ou vide retourne une map vide.</p>
+     *
+     * @param ids identifiants des contacts à charger (peut être nul ou vide)
+     * @return une map des contacts trouvés indexés par identifiant, vide si aucun id
      */
     public Map<Long, Contact> getContactsByIds(Collection<Long> ids) {
         if (ids == null || ids.isEmpty()) {

@@ -116,6 +116,9 @@ public class EntrepriseService {
      * Évite le problème N+1 lors de la construction des listes d'annonces.
      *
      * <p><b>Exemple :</b> getEntreprisesByIds([1, 4]) retourne une map {1 -> entreprise 1, 4 -> entreprise 4} en une seule requête ; une collection nulle ou vide retourne une map vide.</p>
+     *
+     * @param ids identifiants des entreprises à charger (peut être nul ou vide)
+     * @return une map des entreprises trouvées indexées par identifiant, vide si aucun id
      */
     public Map<Integer, Entreprise> getEntreprisesByIds(Collection<Integer> ids) {
         if (ids == null || ids.isEmpty()) {

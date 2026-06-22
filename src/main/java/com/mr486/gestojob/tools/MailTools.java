@@ -33,6 +33,11 @@ public class MailTools {
      * afin que l'appelant ne marque pas l'annonce comme envoyée à tort.
      *
      * <p><b>Exemple :</b> en cas d'échec SMTP, lève une MailException (l'appelant ne marque pas l'annonce envoyée).</p>
+     *
+     * @param emailDestinataire adresse email du destinataire
+     * @param libelle           objet (sujet) de l'email
+     * @param message           corps de l'email au format HTML
+     * @throws MailException si l'envoi échoue
      */
     public void sendHtmlMail(String emailDestinataire, String libelle, String message) {
         try {
