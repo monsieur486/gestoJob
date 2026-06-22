@@ -1,0 +1,207 @@
+<!DOCTYPE HTML>
+<html lang="fr"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>GestoJob</title>
+    <div th:replace="~{fragments/header :: header-css}"></div>
+</head>
+<body>
+<div th:replace="~{fragments/menu :: menu}"></div>
+<div class="container-fluid">
+    <div class="alert alert-danger" id="error" th:if="${errorMessage != null}">
+        <div th:text="${errorMessage}">Erreur</div>
+    </div>
+    <div th:if="${entreprise != null}">
+        <div>
+            <strong th:text="'🏢 ' + ${entreprise.nom}">Nom entreprise</strong>
+        </div>
+        <div th:text="'🏠 ' + ${entreprise.ville}">Ville</div>
+    </div>
+    <hr/>
+    <h4>👤 Ajouter un contact</h4>
+    <div class="alert alert-danger" th:if="${errorMessage != null}" th:text="${errorMessage}">
+        Message d'erreur
+    </div>
+
+    <form method="post"
+          th:action="@{/entreprises/{id}/contacts/ajout(id=${entreprise.id})}"
+          th:object="${form}">
+
+        <div class="row g-2 align-items-end">
+
+            <div class="col-12 col-md-5">
+                <label class="form-label" for="email">Email *</label>
+                <input class="form-control"
+                       id="email"
+                       required
+                       th:field="*{email}"
+                       type="email"/>
+                <div class="text-danger"
+                     th:errors="*{email}"
+                     th:if="${#fields.hasErrors('email')}">
+                    Erreur email
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <label class="form-label" for="formule">Formule de politesse</label>
+                <select class="form-select" id="formule" th:field="*{formuleDePolitesse}">
+                    <option value="0">Madame, Monsieur</option>
+                    <option value="1">Monsieur</option>
+                    <option value="2">Madame</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <label class="form-label" for="contact">Contact</label>
+                <input class="form-control"
+                       id="contact"
+                       th:field="*{contact}"
+                       type="text"/>
+            </div>
+
+            <div class="col-12 col-md-1 d-grid">
+                <button class="btn btn-primary" type="submit">💾 Contact</button>
+            </div>
+        </div>
+    </form>
+
+    <h4>Annonces</h4>
+
+    <!-- En-tête "une ligne" (optionnel) -->
+    <div class="row g-2 fw-bold border-bottom pb-2 mb-2">
+        <div class="col-12 col-md-2">🗓️ Date</div>
+        <div class="col-12 col-md-1">Type</div>
+        <div class="col-12 col-md-6">Libellé</div>
+        <div class="col-12 col-md-1">Statut</div>
+    </div>
+
+    <!-- Chaque annonce sur une seule ligne -->
+    <div class="row g-2 align-items-center py-2 border-bottom" th:each="a : ${annonces}">
+        <div class="col-12 col-md-2" th:text="${a.dateEnvoi}">--</div>
+        <div class="col-12 col-md-1" th:text="${a.type}">TYPE</div>
+        <div class="col-12 col-md-6" th:text="${a.libelle}">Libellé</div>
+        <div class="col-12 col-md-1" th:text="${a.status}">Statut</div>
+        <div class="col-12 col-md-2">
+            <div class="d-flex gap-2 justify-content-md-end">
+                <form method="post" th:action="@{/annonces/{id}/negatif(id=${a.id})}" th:if="${a.status == '🟠 En cours'}">
+                    <button class="btn btn-outline-danger btn-sm" type="submit">
+                        Négatif
+                    </button>
+                </form>
+                <form method="post" th:action="@{/annonces/{id}/positif(id=${a.id})}" th:if="${a.status == '🟠 En cours'}">
+                    <button class="btn btn-outline-success btn-sm" type="submit">
+                        Positif
+                    </button>
+                </form>
+                <button class="btn btn-outline-secondary btn-sm"
+                        type="button"
+                        th:attr="data-annonce-id=${a.id}"
+                        onclick="copyAnnonceTxtToClipboard(this)">
+                    Txt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <hr/>
+
+    <h4>📝 Ajouter une annonce</h4>
+
+    <form method="post"
+          th:action="@{/entreprises/{id}/annonces/ajout(id=${entreprise.id})}"
+          th:object="${annonceForm}">
+
+        <div class="row g-2 align-items-end">
+
+            <div class="col-12 col-md-1">
+                <label class="form-label" for="typeAnnonce">Type</label>
+                <select class="form-select" id="typeAnnonce" th:field="*{typeAnnonce}">
+                    <option value="0">Spontanée</option>
+                    <option value="1">Annonce</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-1">
+                <label class="form-label" for="contenuSelect">Contenu</label>
+                <select class="form-select" id="contenuSelect" th:field="*{contenuId}">
+                    <option value="0">Général</option>
+                    <option value="1">Micros.</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="contactSelect">Choisir un contact</label>
+                <select class="form-select" id="contactSelect" th:field="*{contactId}">
+                    <option value="0">🌐 Site</option>
+                    <option th:each="c : ${contacts}"
+                            th:text="${c.email + ' ' + c.messageDePolitesse}"
+                            th:value="${c.id}">
+                        email message
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-5" id="annonceDetailsFields" style="display:none;">
+                <div class="row g-2">
+                    <div class="col-12 col-md-8">
+                        <label class="form-label" for="poste">Poste</label>
+                        <input class="form-control" id="poste" th:field="*{poste}" type="text"/>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="reference">Référence</label>
+                        <input class="form-control" id="reference" th:field="*{reference}" type="text"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-1 d-grid">
+                <button class="btn btn-primary" type="submit">💾 Annonce</button>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="" th:src="@{/js/main.js}" type="text/javascript"></script>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        const typeSelect = document.getElementById('typeAnnonce');
+        const details = document.getElementById('annonceDetailsFields');
+        const poste = document.getElementById('poste');
+        const reference = document.getElementById('reference');
+
+        function setRequired(el, required) {
+            if (!el) return;
+            el.required = required;
+            el.setAttribute('aria-required', required ? 'true' : 'false');
+        }
+
+        function toggleDetails() {
+            const isAnnonce = typeSelect && typeSelect.value === '1';
+
+            if (details) details.style.display = isAnnonce ? '' : 'none';
+
+            setRequired(poste, isAnnonce);
+            setRequired(reference, isAnnonce);
+
+            if (!isAnnonce) {
+                if (poste) poste.value = '';
+                if (reference) reference.value = '';
+            }
+        }
+
+        if (typeSelect) {
+            typeSelect.addEventListener('change', toggleDetails);
+        }
+        toggleDetails();
+    });
+</script>
+
+</body>
+</html>

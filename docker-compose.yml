@@ -1,0 +1,30 @@
+services:
+
+  gestojob-db:
+    image: postgres:16
+    container_name: gestojob-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - gestojob_db_data:/var/lib/postgresql/data
+
+  gestojob-webclient:
+    env_file:
+      - .env
+    build:
+      dockerfile: Dockerfile
+    profiles: [ "fullstack" ]
+    container_name: gestojob-webclient
+    depends_on:
+      - gestojob-db
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "${DOCKER_UI_PORT}:${DOCKER_UI_PORT}"
+
+volumes:
+  gestojob_db_data:

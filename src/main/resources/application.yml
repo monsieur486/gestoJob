@@ -1,0 +1,40 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+
+  application:
+    name: gestojob-webclient
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  liquibase:
+    change-log: classpath:db/changelog/master.xml
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: ${DOCKER_UI_PORT}
+
+gestojob:
+  max-entreprises-par-page: ${MAX_ENTREPRISES_PAR_PAGE}
+  max-annonces-par-page: ${MAX_ANNONCESS_PAR_PAGE}
+  max-positifs-par-page: ${MAX_POSITIFS_PAR_PAGE}

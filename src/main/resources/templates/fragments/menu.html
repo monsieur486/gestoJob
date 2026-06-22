@@ -1,0 +1,38 @@
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="menu">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/" style="margin-left: 13px;">🧑🏻‍💻💼🔎 GestoJob</a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/"
+                       th:classappend="${page_active == 'home'} ? ' active' : ''"
+                    >🏠︎ Accueil</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/entreprises"
+                       th:classappend="${page_active == 'entreprises'} ? ' active' : ''"
+                    >🏢 Entreprises</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/file"
+                       th:classappend="${page_active == 'file'} ? ' active' : ''"
+                    >📤 File d'attente</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/annonces"
+                       th:classappend="${page_active == 'annonces'} ? ' active' : ''"
+                    >📝 Annonces</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/parametres"
+                       th:classappend="${page_active == 'parametres'} ? ' active' : ''"
+                    >⚙️ Paramètres</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</div>
+</html>

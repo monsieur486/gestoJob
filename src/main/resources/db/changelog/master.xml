@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <include file="db/changelog/001-creation_entreprises.sql"/>
+    <include file="db/changelog/002-creation_contacts.sql"/>
+    <include file="db/changelog/003-creation_annonces.sql.sql"/>
+    <include file="db/changelog/004-indexes.sql"/>
+</databaseChangeLog>

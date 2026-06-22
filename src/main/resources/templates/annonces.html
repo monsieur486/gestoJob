@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html lang="fr"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>GestoJob</title>
+    <div th:replace="~{fragments/header :: header-css}"></div>
+</head>
+<body>
+<div th:replace="~{fragments/menu :: menu}"></div>
+<div class="container-fluid">
+    <div class="alert alert-danger" id="error" th:if="${errorMessage != null}">
+        <div th:text="${errorMessage}">Erreur</div>
+    </div>
+
+    <div class="d-flex align-items-baseline justify-content-between mb-2">
+        <h5 class="mb-0">
+            Recherche
+            <span class="text-muted"
+                  th:if="${annoncesPage != null}"
+                  th:text="'(' + ${annoncesPage.totalElements} + ' résultat' + (${annoncesPage.totalElements} > 1 ? 's' : '') + ')'">
+                (0 résultat)
+            </span>
+        </h5>
+    </div>
+
+    <form class="row g-2 align-items-end mb-3" method="get" th:action="@{/annonces}">
+        <div class="col-12 col-md-6">
+            <input class="form-control" id="q" name="q" placeholder="Poste, référence..."
+                   th:value="${searchQuery}"
+                   type="text">
+        </div>
+
+        <div class="col-12 col-md-3">
+            <div class="form-check mt-4">
+                <input class="form-check-input" id="archives" name="archives" th:checked="${includeArchives}"
+                       type="checkbox">
+                <label class="form-check-label" for="archives">Archives incluses</label>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-3 d-grid">
+            <button class="btn btn-primary" type="submit">Rechercher</button>
+        </div>
+    </form>
+
+    <div class="text-muted" th:if="${#lists.isEmpty(annonces)}">
+        Aucune annonce trouvée.
+    </div>
+
+    <div th:if="${!#lists.isEmpty(annonces)}">
+
+        <div class="row g-2 fw-bold border-bottom pb-2 mb-2">
+            <div class="col-12 col-md-1">🗓️ Date</div>
+            <div class="col-12 col-md-1">Type</div>
+            <div class="col-12 col-md-2">Infos</div>
+            <div class="col-12 col-md-6">Libellé</div>
+            <div class="col-12 col-md-1">Statut</div>
+        </div>
+
+        <div class="row g-2 align-items-center py-2 border-bottom"
+             th:each="a : ${annonces}">
+
+            <div class="col-12 col-md-1" th:text="${a.dateEnvoi}" style="font-size: 14px">--</div>
+            <div class="col-12 col-md-1" th:text="${a.type}">TYPE</div>
+            <div class="col-12 col-md-2">
+                <a class="text-decoration-none text-reset"
+                   th:href="@{/entreprises/{id}(id=${a.entrepriseId})}"
+                   th:text="${a.info}">
+                    Info
+                </a>
+            </div>
+            <div class="col-12 col-md-6" th:text="${a.libelle}">Libellé</div>
+            <div class="col-12 col-md-1" th:text="${a.status}">Statut</div>
+            <div class="col-12 col-md-1" th:if="${a.status == '🟠 En cours'}">
+                <div class="d-flex gap-2 justify-content-md-end">
+                    <form method="post" th:action="@{/annonces/{id}/negatif(id=${a.id})}">
+                        <button class="btn btn-outline-danger btn-sm" type="submit">
+                            Négatif
+                        </button>
+                    </form>
+                    <form method="post" th:action="@{/annonces/{id}/positif(id=${a.id})}">
+                        <button class="btn btn-outline-success btn-sm" type="submit">
+                            Positif
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <nav class="mt-3" th:if="${totalPages != null and totalPages > 1}">
+            <ul class="pagination">
+                <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/annonces(page=${currentPage - 1}, q=${searchQuery}, archives=${includeArchives})}">
+                        Précédent
+                    </a>
+                </li>
+
+                <li class="page-item"
+                    th:classappend="${p == currentPage} ? 'active'"
+                    th:each="p : ${#numbers.sequence(1, totalPages)}">
+                    <a class="page-link"
+                       th:href="@{/annonces(page=${p}, q=${searchQuery}, archives=${includeArchives})}"
+                       th:text="${p}">
+                        1
+                    </a>
+                </li>
+
+                <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/annonces(page=${currentPage + 1}, q=${searchQuery}, archives=${includeArchives})}">
+                        Suivant
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="" th:src="@{/js/main.js}" type="text/javascript"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html lang="fr"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>GestoJob</title>
+    <div th:replace="~{fragments/header :: header-css}"></div>
+</head>
+<body>
+<div th:replace="~{fragments/menu :: menu}"></div>
+
+<div class="container-fluid">
+    <div class="alert alert-danger" id="error" th:if="${errorMessage != null}">
+        <div th:text="${errorMessage}">Erreur</div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center">
+        <a class="btn btn-sm btn-primary" style="margin-bottom: 0.6rem" th:href="@{/entreprises/ajout}">
+            ✏️ Ajouter
+        </a>
+    </div>
+
+    <div class="alert alert-info" th:if="${#lists.isEmpty(entreprises)}">
+        Aucune entreprise active.
+    </div>
+
+    <form class="mt-3" method="get" th:action="@{/entreprises}">
+        <div class="row g-2 align-items-center">
+            <div class="col-12 col-md-6">
+                <input class="form-control"
+                       name="q"
+                       placeholder="Recherche par nom…"
+                       th:value="${searchQuery}"
+                       type="text">
+            </div>
+
+            <div class="col-12 col-md-auto d-flex gap-2">
+                <button class="btn btn-outline-primary" type="submit">Rechercher</button>
+
+                <a class="btn btn-outline-success" th:href="@{/entreprises(active=true)}">
+                    Entreprises actives
+                </a>
+
+                <a class="btn btn-outline-secondary" th:href="@{/entreprises}">
+                    Tout afficher
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <ul class="list-group" th:if="${!#lists.isEmpty(entreprises)}">
+        <li class="list-group-item d-flex justify-content-between align-items-center"
+            th:each="e : ${entreprises}">
+
+            <div class="d-flex align-items-center gap-2">
+                <a class="btn btn-sm btn-outline-primary"
+                   th:href="@{/entreprises/{id}(id=${e.id})}">
+                    Voir
+                </a>
+                <strong class="me-2" th:text="${e.nom}">Nom</strong>
+
+                <!-- Actif => bouton vert qui désactive -->
+                <form class="m-0"
+                      method="post"
+                      th:action="@{/entreprises/{id}/desactivate(id=${e.id})}"
+                      th:if="${e.estActive}">
+                    <input name="page" th:value="${currentPage}" type="hidden"/>
+                    <button class="btn btn-sm btn-success" type="submit">Actif</button>
+                </form>
+
+                <form class="m-0"
+                      method="post"
+                      th:action="@{/entreprises/{id}/activate(id=${e.id})}"
+                      th:if="${!e.estActive}">
+                    <input name="page" th:value="${currentPage}" type="hidden"/>
+                    <button class="btn btn-sm btn-danger" type="submit">Désactivé</button>
+                </form>
+            </div>
+        </li>
+    </ul>
+
+    <nav aria-label="Pagination entreprises" class="mt-3"
+         th:if="${totalPages > 1} and ${!activeOnly} and ${searchQuery == null or #strings.isEmpty(searchQuery)}">
+        <ul class="pagination">
+
+            <!-- Précédent -->
+            <li class="page-item" th:classappend="${currentPage == 1} ? ' disabled' : ''">
+                <a aria-label="Précédent"
+                   class="page-link"
+                   th:href="@{/entreprises(page=${currentPage - 1})}">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+
+            <!-- Pages cliquables -->
+            <li class="page-item"
+                th:classappend="${p == currentPage} ? ' active' : ''"
+                th:each="p : ${#numbers.sequence(1, totalPages)}">
+                <a class="page-link" th:href="@{/entreprises(page=${p})}" th:text="${p}">1</a>
+            </li>
+
+            <!-- Suivant -->
+            <li class="page-item" th:classappend="${currentPage >= totalPages} ? ' disabled' : ''">
+                <a aria-label="Suivant"
+                   class="page-link"
+                   th:href="@{/entreprises(page=${currentPage + 1})}">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="" th:src="@{/js/main.js}" type="text/javascript"></script>
+</body>
+</html>
