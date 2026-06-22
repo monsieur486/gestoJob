@@ -24,10 +24,12 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
 
-    @Value("${gestojob.admin.username:utilisateur}")
+    // Aucune valeur par défaut : l'application refuse de démarrer si les
+    // identifiants ne sont pas fournis (évite tout identifiant codé en dur).
+    @Value("${gestojob.admin.username}")
     private String adminUsername;
 
-    @Value("${gestojob.admin.password:Mdp12345*}")
+    @Value("${gestojob.admin.password}")
     private String adminPassword;
 
     /**
