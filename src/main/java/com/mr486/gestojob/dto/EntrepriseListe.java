@@ -5,6 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO de présentation représentant une ligne d'entreprise dans les listes
+ * affichées à l'utilisateur. Il expose une vue allégée de l'entité
+ * {@link com.mr486.gestojob.model.Entreprise} (nom, identifiant et indicateur
+ * d'activité).
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

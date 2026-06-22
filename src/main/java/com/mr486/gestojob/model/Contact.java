@@ -4,6 +4,12 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+/**
+ * Entité JPA représentant un contact rattaché à une entreprise.
+ * Elle est persistée dans la table {@code contacts} et stocke l'email,
+ * le nom du contact ainsi que la formule de politesse à utiliser lors
+ * des échanges.
+ */
 @Getter
 @Setter
 @ToString
@@ -20,9 +26,18 @@ public class Contact {
     private Integer entrepriseId;
     @NotNull
     private String email;
-    private Integer formuleDePolistesse;
+    private Integer formuleDePolistesse; // formule de politesse : 1 = Monsieur, 2 = Madame, autre = Madame, Monsieur
     private String contact;
 
+    /**
+     * Construit le message de politesse (en-tête de courrier) adapté au contact,
+     * en fonction de la formule de politesse renseignée.
+     *
+     * @return la formule de politesse formatée ; {@code "Madame, Monsieur,"}
+     *         lorsque aucune formule spécifique n'est définie
+     *
+     * <p><b>Exemple :</b> formuleDePolistesse = 2 et contact = « Durand » donne « Madame Durand, » ; formuleDePolistesse = 1 donne « Monsieur Durand, » ; toute autre valeur donne « Madame, Monsieur, ».</p>
+     */
     public String getMessageDePolitesse() {
         String message = "";
         if (formuleDePolistesse == 2) {

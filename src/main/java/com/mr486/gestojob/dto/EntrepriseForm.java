@@ -8,6 +8,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO de formulaire utilisé pour la création ou la modification d'une
+ * entreprise. Il porte les contraintes de validation (nom, code postal et
+ * ville obligatoires) et fait le lien avec l'entité
+ * {@link com.mr486.gestojob.model.Entreprise}.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,6 +34,14 @@ public class EntrepriseForm {
     @NotBlank(message = "La ville est obligatoire.")
     private String ville = "Strasbourg";
 
+    /**
+     * Construit un formulaire d'entreprise pré-rempli à partir d'une entité
+     * {@link Entreprise} existante, en recopiant ses différents champs.
+     *
+     * @param e l'entité entreprise source dont les valeurs sont reprises
+     *
+     * <p><b>Exemple :</b> pour une entité avec nom = « ACME » et ville = « Paris », le formulaire créé porte nom = « ACME » et ville = « Paris » (ainsi que estActive, adresse1, adresse2 et codePostal recopiés).</p>
+     */
     public EntrepriseForm(Entreprise e) {
         this.nom = e.getNom();
         this.estActive = e.getEstActive();
@@ -37,6 +51,16 @@ public class EntrepriseForm {
         this.ville = e.getVille();
     }
 
+    /**
+     * Convertit un formulaire d'entreprise en une nouvelle entité
+     * {@link Entreprise}, en déléguant la copie des champs au service
+     * {@link EntrepriseService}.
+     *
+     * @param form le formulaire source contenant les données saisies
+     * @return une nouvelle entité {@link Entreprise} alimentée à partir du formulaire
+     *
+     * <p><b>Exemple :</b> pour un formulaire avec nom = « ACME » et ville = « Paris », retourne une nouvelle entité Entreprise dont nom = « ACME » et ville = « Paris ».</p>
+     */
     public Entreprise entity(EntrepriseForm form) {
         Entreprise e = new Entreprise();
         EntrepriseService.Convert(form, e);

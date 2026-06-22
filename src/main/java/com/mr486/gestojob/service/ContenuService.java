@@ -4,12 +4,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
 
+/**
+ * Service de génération des contenus des candidatures (lettres de motivation).
+ * Produit, selon le type de poste, les versions HTML et texte du message en
+ * substituant la formule de politesse et l'intitulé du poste dans des modèles.
+ */
 @Service
 @RequiredArgsConstructor
 public class ContenuService {
 
     private final HtmlConverterService htmlConverterService;
 
+    // Modèle HTML pour une candidature de développeur Java généraliste.
     private static String annoncePosteGeneralHtmlTemplate() {
         return """
                 <p>{{POLITESSE}}</p>
@@ -25,6 +31,7 @@ public class ContenuService {
                 """;
     }
 
+    // Modèle texte pour une candidature de développeur Java généraliste.
     private static String annoncePosteGeneralTxtTemplate() {
         return """
                 {{POLITESSE}}
@@ -49,6 +56,7 @@ public class ContenuService {
                 """;
     }
 
+    // Modèle HTML pour une candidature de développeur Java orienté microservices.
     private static String annoncePosteMicroserviceHtmlTemplate() {
         return """
                 <p>{{POLITESSE}}</p>
@@ -65,6 +73,7 @@ public class ContenuService {
                 """;
     }
 
+    // Modèle texte pour une candidature de développeur Java orienté microservices.
     private static String annoncePosteMicroserviceTxtTemplate() {
         return """
                 {{POLITESSE}}
@@ -91,6 +100,10 @@ public class ContenuService {
                 """;
     }
 
+    // Sélectionne le modèle selon le type de contenu (1 = microservices, sinon
+    // généraliste) et la sortie souhaitée (HTML ou texte), applique un poste par
+    // défaut si absent, puis substitue la politesse et le poste dans le modèle.
+    // En HTML, les saisies utilisateur sont échappées pour éviter l'injection.
     private String getContent(String poste, int typeContenu, String messageDePolitesse, Boolean isHtml) {
         String htmlContenu = "";
         if (isHtml) {
@@ -131,10 +144,30 @@ public class ContenuService {
         return htmlContenu;
     }
 
+    /**
+     * Génère la version HTML du contenu de la candidature.
+     *
+     * @param poste              intitulé du poste visé (une valeur par défaut est utilisée si vide)
+     * @param typeContenu        type de contenu (1 = microservices, sinon généraliste)
+     * @param messageDePolitesse formule de politesse à insérer
+     * @return le contenu HTML de la candidature
+     *
+     * <p><b>Exemple :</b> un poste contenant « &lt;script&gt; » est échappé en « &amp;lt;script&amp;gt; » dans le HTML produit.</p>
+     */
     public String getHtmlContenu(String poste, int typeContenu, String messageDePolitesse) {
         return getContent(poste, typeContenu, messageDePolitesse, true);
     }
 
+    /**
+     * Génère la version texte du contenu de la candidature.
+     *
+     * @param poste              intitulé du poste visé (une valeur par défaut est utilisée si vide)
+     * @param typeContenu        type de contenu (1 = microservices, sinon généraliste)
+     * @param messageDePolitesse formule de politesse à insérer
+     * @return le contenu texte de la candidature
+     *
+     * <p><b>Exemple :</b> avec typeContenu=1 et un poste vide, le texte produit utilise le poste par défaut « de développeur Java orienté microservices » ; le poste fourni n'est pas échappé (sortie texte brut).</p>
+     */
     public String getTextContenu(String poste, int typeContenu, String messageDePolitesse) {
         return getContent(poste, typeContenu, messageDePolitesse, false);
     }

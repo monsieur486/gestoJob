@@ -11,6 +11,13 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
+/**
+ * Service utilitaire d'envoi de courriels.
+ * <p>
+ * S'appuie sur {@link JavaMailSender} pour composer et expédier des messages
+ * au format HTML, en utilisant l'adresse d'expéditeur configurée pour
+ * l'application.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -24,6 +31,8 @@ public class MailTools {
     /**
      * Envoie un email HTML. En cas d'échec, lève une {@link MailException}
      * afin que l'appelant ne marque pas l'annonce comme envoyée à tort.
+     *
+     * <p><b>Exemple :</b> en cas d'échec SMTP, lève une MailException (l'appelant ne marque pas l'annonce envoyée).</p>
      */
     public void sendHtmlMail(String emailDestinataire, String libelle, String message) {
         try {
