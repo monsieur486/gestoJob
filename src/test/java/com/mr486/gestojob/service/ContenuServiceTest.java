@@ -49,4 +49,18 @@ class ContenuServiceTest {
 
         assertThat(html).contains("microservices");
     }
+
+    @Test
+    void texte_templateMicroservice_siTypeContenu1() {
+        String txt = contenuService.getTextContenu("Développeur", 1, "Madame, Monsieur,");
+
+        assertThat(txt).contains("microservices");
+    }
+
+    @Test
+    void texte_utiliseLePosteParDefaut_siVide() {
+        String txt = contenuService.getTextContenu("", 0, "Madame, Monsieur,");
+
+        assertThat(txt).contains("de développeur Java");
+    }
 }
