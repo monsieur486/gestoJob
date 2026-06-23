@@ -3,6 +3,12 @@
 <div th:fragment="header-css">
     <meta charset="UTF-8"/>
     <meta content="width=device-width, initial-scale=1" name="viewport">
+    <!-- Active le mode sombre Bootstrap avant le rendu (évite tout flash clair). -->
+    <script>document.documentElement.setAttribute('data-bs-theme', 'dark');</script>
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;600;700&display=swap">
     <link
             crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
             integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"

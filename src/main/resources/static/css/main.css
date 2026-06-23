@@ -1,18 +1,338 @@
+/* =====================================================================
+   GestoJob — thème « command deck » : violet profond, néons multi-teintes,
+   typographie dev (Space Grotesk / Inter / JetBrains Mono).
+   Point unique de style — chargé sur toutes les pages via le fragment header.
+   ===================================================================== */
+
+:root {
+    --gj-bg: #0E0B1E;
+    --gj-bg-2: #120D26;
+    --gj-surface: #181231;
+    --gj-surface-2: #221A45;
+    --gj-border: #322A5C;
+    --gj-text: #ECE9FB;
+    --gj-muted: #9A90C9;
+
+    --gj-magenta: #FF4D9D;
+    --gj-violet: #A855F7;
+    --gj-cyan: #22D3EE;
+    --gj-green: #34E5A1;
+    --gj-amber: #FFB020;
+    --gj-coral: #FF5C72;
+
+    --gj-grad: linear-gradient(90deg, #FF4D9D, #A855F7, #22D3EE);
+}
+
+/* On reprend les variables Bootstrap (mode sombre) avec notre palette vive. */
+[data-bs-theme="dark"] {
+    --bs-body-bg: var(--gj-bg);
+    --bs-body-color: var(--gj-text);
+    --bs-emphasis-color: #FFFFFF;
+    --bs-secondary-color: var(--gj-muted);
+    --bs-tertiary-color: var(--gj-muted);
+    --bs-border-color: var(--gj-border);
+    --bs-primary: var(--gj-magenta);
+    --bs-primary-rgb: 255, 77, 157;
+    --bs-link-color: var(--gj-cyan);
+    --bs-link-color-rgb: 34, 211, 238;
+    --bs-link-hover-color: #67E8F9;
+    --bs-success-rgb: 52, 229, 161;
+    --bs-danger-rgb: 255, 92, 114;
+    --bs-warning-rgb: 255, 176, 32;
+}
+
+/* ----- Base & ambiance ----- */
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--gj-bg);
+    /* Aurore ambiante en haut de page (discrète, fixée). */
+    background-image:
+            radial-gradient(60% 60% at 15% -10%, rgba(168, 85, 247, .22), transparent 60%),
+            radial-gradient(50% 50% at 95% -5%, rgba(34, 211, 238, .16), transparent 55%),
+            radial-gradient(45% 45% at 60% -8%, rgba(255, 77, 157, .14), transparent 55%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+    letter-spacing: .01em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-weight: 600;
+    letter-spacing: -.01em;
+}
+
 #top-offset {
     margin-top: 40px;
 }
 
-/* Nav link active: texte blanc sur fond bleu */
-.navbar .nav-link.active {
-    background-color: #0d6efd; /* bleu Bootstrap */
-    color: #fff !important;
-    border-radius: 0.375rem; /* petit arrondi */
-    padding: 0.5rem 0.75rem; /* un peu de confort */
+.text-muted {
+    color: var(--gj-muted) !important;
 }
 
-/* Optionnel: garder le blanc au survol */
+/* ----- Navbar / command bar ----- */
+.navbar {
+    background: rgba(18, 13, 38, .72) !important;
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--gj-border);
+    padding: .6rem 1rem;
+}
+
+.navbar-brand {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.3rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .15rem;
+}
+
+.gj-wordmark {
+    background: linear-gradient(90deg, #FF4D9D, #A855F7, #22D3EE, #FF4D9D);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: gj-flow 9s linear infinite;
+}
+
+@keyframes gj-flow {
+    to { background-position: 300% 0; }
+}
+
+.navbar-toggler {
+    border-color: var(--gj-border);
+    border-radius: 12px;
+    padding: .35rem .55rem;
+}
+.navbar-toggler:focus { box-shadow: 0 0 0 .2rem rgba(255, 77, 157, .3); }
+
+/* Menu replié (mobile) : posé sur une surface lisible. */
+.navbar-collapse.show,
+.navbar-collapse.collapsing {
+    background: var(--gj-surface);
+    border: 1px solid var(--gj-border);
+    border-radius: 14px;
+    padding: .6rem;
+    margin-top: .6rem;
+}
+
+.navbar .nav-link {
+    color: var(--gj-muted);
+    font-weight: 500;
+    border-radius: 999px;
+    padding: .4rem .9rem;
+    margin: 0 .1rem;
+    transition: color .18s ease, background-color .18s ease, transform .18s ease;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus {
+    color: var(--gj-text);
+    background-color: var(--gj-surface-2);
+    transform: translateY(-1px);
+}
+
+.navbar .nav-link.active {
+    color: #14091F !important;
+    background-color: transparent;
+    background-image: var(--gj-grad);
+    border-radius: 999px;
+    padding: .4rem .9rem;
+    font-weight: 700;
+    box-shadow: 0 6px 18px rgba(168, 85, 247, .45);
+}
+
 .navbar .nav-link.active:hover,
 .navbar .nav-link.active:focus {
-    background-color: #0b5ed7;
-    color: #fff !important;
+    color: #14091F !important;
+    background-image: var(--gj-grad);
+}
+
+/* ----- Conteneurs ----- */
+.container, .container-fluid {
+    padding-top: 1.25rem;
+    padding-bottom: 2.5rem;
+}
+
+/* ----- Cartes & listes ----- */
+.card, .list-group {
+    background-color: var(--gj-surface);
+    border: 1px solid var(--gj-border);
+    border-radius: 16px;
+}
+
+.list-group-item {
+    background-color: transparent;
+    border-color: var(--gj-border);
+    color: var(--gj-text);
+    padding: .85rem 1.1rem;
+    transition: background-color .15s ease, transform .15s ease;
+}
+
+.list-group-item:first-child { border-top-left-radius: 16px; border-top-right-radius: 16px; }
+.list-group-item:last-child { border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; }
+
+.list-group-item:hover {
+    background-color: var(--gj-surface-2);
+    transform: translateX(2px);
+}
+
+/* Lignes « tableau » construites avec .row + border-bottom (annonces, file…). */
+.row.border-bottom {
+    border-color: var(--gj-border) !important;
+    border-radius: 10px;
+    transition: background-color .15s ease;
+}
+
+.row.align-items-center.border-bottom:hover {
+    background-color: var(--gj-surface);
+}
+
+.row.fw-bold.border-bottom {
+    color: var(--gj-muted);
+    text-transform: uppercase;
+    font-size: .78rem;
+    letter-spacing: .08em;
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+/* ----- Boutons ----- */
+.btn {
+    border-radius: 999px;
+    font-weight: 600;
+    padding: .5rem 1.1rem;
+    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+
+.btn-primary {
+    border: none;
+    color: #14091F;
+    background-image: var(--gj-grad);
+    background-size: 160% 100%;
+    box-shadow: 0 8px 22px rgba(255, 77, 157, .35);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    color: #14091F;
+    background-image: var(--gj-grad);
+    filter: brightness(1.08);
+    box-shadow: 0 12px 28px rgba(168, 85, 247, .5);
+}
+
+.btn-success {
+    border: none;
+    color: #06281C;
+    font-weight: 700;
+    background-image: linear-gradient(120deg, #34E5A1, #22D3EE);
+    box-shadow: 0 8px 22px rgba(52, 229, 161, .3);
+}
+
+.btn-danger {
+    border: none;
+    color: #2A0810;
+    background-image: linear-gradient(120deg, #FF5C72, #FF4D9D);
+    box-shadow: 0 8px 22px rgba(255, 92, 114, .3);
+}
+
+.btn-outline-primary { color: var(--gj-magenta); border-color: var(--gj-magenta); }
+.btn-outline-primary:hover { background: var(--gj-magenta); border-color: var(--gj-magenta); color: #14091F; }
+.btn-outline-success { color: var(--gj-green); border-color: var(--gj-green); }
+.btn-outline-success:hover { background: var(--gj-green); border-color: var(--gj-green); color: #06281C; }
+.btn-outline-danger { color: var(--gj-coral); border-color: var(--gj-coral); }
+.btn-outline-danger:hover { background: var(--gj-coral); border-color: var(--gj-coral); color: #2A0810; }
+.btn-outline-secondary { color: var(--gj-muted); border-color: var(--gj-border); }
+.btn-outline-secondary:hover { background: var(--gj-surface-2); border-color: var(--gj-violet); color: var(--gj-text); }
+
+/* ----- Formulaires ----- */
+.form-control, .form-select {
+    background-color: var(--gj-bg-2);
+    border: 1px solid var(--gj-border);
+    color: var(--gj-text);
+    border-radius: 12px;
+    padding: .6rem .85rem;
+}
+
+.form-control::placeholder { color: #6F66A0; }
+
+.form-control:focus, .form-select:focus {
+    background-color: var(--gj-bg-2);
+    color: var(--gj-text);
+    border-color: var(--gj-magenta);
+    box-shadow: 0 0 0 .2rem rgba(255, 77, 157, .25);
+}
+
+.form-label {
+    color: var(--gj-muted);
+    font-weight: 600;
+    font-size: .85rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+/* ----- Alertes & toast ----- */
+.alert {
+    border-radius: 14px;
+    border: 1px solid var(--gj-border);
+    background-color: var(--gj-surface);
+    color: var(--gj-text);
+}
+.alert-danger { border-color: rgba(255, 92, 114, .5); background: rgba(255, 92, 114, .12); }
+.alert-success { border-color: rgba(52, 229, 161, .5); background: rgba(52, 229, 161, .12); }
+.alert-info { border-color: rgba(34, 211, 238, .5); background: rgba(34, 211, 238, .12); }
+
+.badge { border-radius: 999px; font-weight: 600; }
+
+.toast.text-bg-dark {
+    background-color: var(--gj-surface-2) !important;
+    border: 1px solid var(--gj-border);
+    border-radius: 14px;
+}
+
+/* ----- Pagination ----- */
+.pagination { gap: .35rem; }
+.page-link {
+    background-color: var(--gj-surface);
+    border: 1px solid var(--gj-border);
+    color: var(--gj-text);
+    border-radius: 10px !important;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+}
+.page-link:hover { background-color: var(--gj-surface-2); color: var(--gj-text); }
+.page-item.active .page-link {
+    background-image: var(--gj-grad);
+    border-color: transparent;
+    color: #14091F;
+    font-weight: 700;
+    box-shadow: 0 6px 16px rgba(168, 85, 247, .4);
+}
+.page-item.disabled .page-link { background-color: var(--gj-bg-2); color: #5B5390; }
+
+/* ----- Liens ----- */
+a { text-decoration: none; }
+a:hover { text-decoration: none; }
+
+/* ----- Barre de défilement ----- */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: var(--gj-bg); }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(var(--gj-violet), var(--gj-magenta));
+    border-radius: 999px;
+    border: 2px solid var(--gj-bg);
+}
+
+/* ----- Accessibilité : focus visible + mouvement réduit ----- */
+:focus-visible {
+    outline: 2px solid var(--gj-cyan);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gj-wordmark { animation: none; }
+    .btn, .nav-link, .list-group-item, .row.border-bottom { transition: none; }
 }
