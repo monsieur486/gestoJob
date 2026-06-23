@@ -7,9 +7,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      # Base accessible uniquement en local (dev + conteneurs) — jamais exposée publiquement.
-      - "127.0.0.1:5432:5432"
+    # Aucun port publié sur l'hôte : la base n'est jointe qu'en interne
+    # (gestojob-db:5432) par l'app conteneurisée → aucun conflit avec un
+    # postgres déjà présent sur le serveur. Le port n'est exposé qu'en dev
+    # (cf. docker-compose.dev.yml).
     volumes:
       - gestojob_db_data:/var/lib/postgresql/data
 

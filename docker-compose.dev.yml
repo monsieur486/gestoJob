@@ -1,0 +1,9 @@
+# Override de développement.
+# Publie le port de la base sur la loopback pour que l'application lancée sur
+# l'hôte (./mvnw spring-boot:run) puisse s'y connecter via localhost:5432.
+# En production, ce fichier n'est PAS utilisé : la base reste interne au réseau
+# Docker, donc aucun conflit avec un postgres déjà présent sur le serveur.
+services:
+  gestojob-db:
+    ports:
+      - "127.0.0.1:5432:5432"
