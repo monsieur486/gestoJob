@@ -89,4 +89,18 @@ public class AnnoncesPageController {
         annonceService.setAccepte(id);
         return "redirect:/annonces";
     }
+
+    /**
+     * Supprime définitivement une annonce depuis la liste des annonces.
+     *
+     * <p><b>Exemple :</b> POST /annonces/7/supprimer supprime l'annonce 7 via deleteAnnonce(7) puis redirige vers /annonces.</p>
+     *
+     * @param id l'identifiant de l'annonce à supprimer
+     * @return une redirection vers la page {@code /annonces}
+     */
+    @PostMapping("/annonces/{id}/supprimer")
+    public String supprimerAnnonce(@PathVariable Long id) {
+        annonceService.deleteAnnonce(id);
+        return "redirect:/annonces";
+    }
 }

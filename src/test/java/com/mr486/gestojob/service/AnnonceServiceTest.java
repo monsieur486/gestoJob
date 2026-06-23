@@ -119,6 +119,12 @@ class AnnonceServiceTest {
     }
 
     @Test
+    void deleteAnnonce_supprimeViaLeRepository() {
+        annonceService.deleteAnnonce(7L);
+        verify(annonceRepository).deleteById(7L);
+    }
+
+    @Test
     void getAnnonceTxtContenuById_concateneLibelleEtContenuTexte() {
         Annonce a = Annonce.builder().id(1L).contactId(null).typeAnnonce(1)
                 .reference("R1").poste("Dev").typeContenu(0).statusAnnonce(2).build();

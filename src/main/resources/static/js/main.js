@@ -1,3 +1,43 @@
+// Formulaire de suppression d'annonce en attente de confirmation via le modal.
+let formuleSuppressionAnnonce = null;
+
+// Ouvre le modal de confirmation ; mémorise le formulaire de suppression à soumettre.
+function demanderSuppressionAnnonce(buttonEl) {
+    formuleSuppressionAnnonce = buttonEl.closest("form");
+    const modalEl = document.getElementById("confirmSuppressionAnnonceModal");
+
+    // Repli : si Bootstrap ou le modal manquent, confirmation native (OK = supprime).
+    if (!modalEl || typeof bootstrap === "undefined") {
+        if (formuleSuppressionAnnonce && window.confirm("Supprimer définitivement cette annonce ?")) {
+            formuleSuppressionAnnonce.submit();
+        }
+        return;
+    }
+
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const modalEl = document.getElementById("confirmSuppressionAnnonceModal");
+    const confirmBtn = document.getElementById("confirmSuppressionAnnonceBtn");
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener("click", function () {
+            if (formuleSuppressionAnnonce) {
+                formuleSuppressionAnnonce.submit();
+            }
+        });
+    }
+
+    // À chaque ouverture, redonne le focus à « Annuler » (« cancel par défaut »).
+    if (modalEl) {
+        modalEl.addEventListener("shown.bs.modal", function () {
+            const annuler = modalEl.querySelector(".modal-footer .btn-secondary");
+            if (annuler) annuler.focus();
+        });
+    }
+});
+
 function showToast(message, variant) {
     const toastEl = document.getElementById("appToast");
     const bodyEl = document.getElementById("appToastBody");

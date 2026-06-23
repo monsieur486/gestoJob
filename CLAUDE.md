@@ -28,7 +28,7 @@ Stack: Spring Boot 4.0.2, Java 17, Maven, PostgreSQL, Liquibase, Thymeleaf, Lomb
 ./maj.sh                       # down + git pull + rebuild/up (deploy update)
 ```
 
-There is currently only one test (`contextLoads`), which boots the full Spring context and therefore requires a reachable database and the env vars below.
+The suite has ~128 tests across `model/`, `dto/`, `service/`, `controller/`, `tools/`, and `configuration/` — mostly fast JUnit 5 + Mockito unit tests (controllers tested directly, no MockMvc; services with mocked repositories). The lone exception is `GestoJobApplicationTests#contextLoads`, which boots the full Spring context and therefore requires a reachable database and the env vars below — so `./mvnw verify` needs Postgres running (`./dev-start.sh`). A new public method must come with matching tests (the `jacoco:check` rule fails the build under 90 % line coverage).
 
 ## Configuration
 

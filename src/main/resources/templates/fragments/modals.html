@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html lang="fr"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Modal de confirmation de suppression d'une annonce.
+  Le bouton « Annuler » porte le focus (autofocus + re-focus à l'ouverture) :
+  appuyer sur Entrée annule donc la suppression (« cancel par défaut »).
+  La suppression réelle est déclenchée par le JS de main.js (demanderSuppressionAnnonce).
+-->
+<div th:fragment="suppression-annonce">
+    <div aria-hidden="true"
+         aria-labelledby="confirmSuppressionAnnonceLabel"
+         class="modal fade"
+         id="confirmSuppressionAnnonceModal"
+         tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmSuppressionAnnonceLabel">🗑️ Supprimer l'annonce</h5>
+                    <button aria-label="Fermer" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+                </div>
+                <div class="modal-body">
+                    Voulez-vous vraiment supprimer définitivement cette annonce ?
+                    Cette action est irréversible.
+                </div>
+                <div class="modal-footer">
+                    <button autofocus class="btn btn-secondary" data-bs-dismiss="modal" type="button">
+                        Annuler
+                    </button>
+                    <button class="btn btn-danger" id="confirmSuppressionAnnonceBtn" type="button">
+                        Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

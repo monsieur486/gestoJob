@@ -6,6 +6,7 @@ import com.mr486.gestojob.dto.RechercheAnnonceForm;
 import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +25,7 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AnnonceService {
 
     private final AnnonceRepository annonceRepository;
@@ -93,6 +95,18 @@ public class AnnonceService {
     // Persiste une annonce en base.
     private void save(Annonce a) {
         annonceRepository.save(a);
+    }
+
+    /**
+     * Supprime définitivement une annonce.
+     *
+     * <p><b>Exemple :</b> deleteAnnonce(7L) supprime l'annonce d'id 7 ; un identifiant inexistant est sans effet (aucune exception levée).</p>
+     *
+     * @param annonceId identifiant de l'annonce à supprimer
+     */
+    public void deleteAnnonce(Long annonceId) {
+        annonceRepository.deleteById(annonceId);
+        log.info("annonce supprimée : {}", annonceId);
     }
 
     /**

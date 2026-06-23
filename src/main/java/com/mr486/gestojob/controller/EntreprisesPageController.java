@@ -17,11 +17,12 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * Contrôleur MVC gérant les pages liées aux entreprises : liste paginée,
  * recherche, activation/désactivation, ajout, fiche détaillée, ainsi que
- * l'ajout d'annonces rattachées à une entreprise.
+ * l'ajout et la suppression d'annonces rattachées à une entreprise.
  */
 @Controller
 @RequiredArgsConstructor
@@ -235,5 +236,30 @@ public class EntreprisesPageController {
             model.addAttribute("annonces", annonceService.annoncesListeByEntrepriseId(id));
             return "entreprise_detail";
         }
+    }
+
+    /**
+     * Supprime une annonce rattachée à une entreprise puis redirige vers la fiche
+     * de cette entreprise. En cas d'échec, le message est transmis en flash.
+     *
+     * <p><b>Exemple :</b> POST /entreprises/3/annonces/7/supprimer supprime l'annonce 7 via deleteAnnonce(7) puis redirige vers /entreprises/3 ; en cas d'exception, redirige vers /entreprises/3 avec un message d'erreur (flash).</p>
+     *
+     * @param entrepriseId       l'identifiant de l'entreprise (cible de la redirection)
+     * @param annonceId          l'identifiant de l'annonce à supprimer
+     * @param redirectAttributes les attributs flash transmis à la redirection
+     * @return une redirection vers la fiche de l'entreprise
+     */
+    @PostMapping("/entreprises/{entrepriseId}/annonces/{annonceId}/supprimer")
+    public String supprimerAnnonce(
+            @PathVariable Integer entrepriseId,
+            @PathVariable Long annonceId,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            annonceService.deleteAnnonce(annonceId);
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/entreprises/" + entrepriseId;
     }
 }

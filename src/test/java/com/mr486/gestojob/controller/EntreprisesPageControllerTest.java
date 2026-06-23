@@ -19,11 +19,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -166,5 +168,26 @@ class EntreprisesPageControllerTest {
 
         assertThat(view).isEqualTo("entreprise_detail");
         verify(annonceService, never()).saveForm(any(AnnonceForm.class));
+    }
+
+    @Test
+    void supprimerAnnonce_supprime_etRedirigeVersLaFiche() {
+        String view = controller.supprimerAnnonce(8, 7L, new RedirectAttributesModelMap());
+
+        assertThat(view).isEqualTo("redirect:/entreprises/8");
+        verify(annonceService).deleteAnnonce(7L);
+    }
+
+    @Test
+    void supprimerAnnonce_exposeLErreur_siServiceLeve() {
+        doThrow(new RuntimeException("suppression impossible"))
+                .when(annonceService).deleteAnnonce(7L);
+
+        RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
+        String view = controller.supprimerAnnonce(8, 7L, redirectAttributes);
+
+        assertThat(view).isEqualTo("redirect:/entreprises/8");
+        assertThat(redirectAttributes.getFlashAttributes().get("errorMessage"))
+                .asString().contains("suppression impossible");
     }
 }

@@ -53,4 +53,10 @@ class AnnoncesPageControllerTest {
         assertThat(controller.postReponseAccepte(7L)).isEqualTo("redirect:/annonces");
         verify(annonceService).setAccepte(7L);
     }
+
+    @Test
+    void supprimerAnnonce_appelleDelete_etRedirige() {
+        assertThat(controller.supprimerAnnonce(7L)).isEqualTo("redirect:/annonces");
+        verify(annonceService).deleteAnnonce(7L);
+    }
 }

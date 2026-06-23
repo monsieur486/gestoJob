@@ -119,6 +119,13 @@
                         onclick="copyAnnonceTxtToClipboard(this)">
                     Txt
                 </button>
+                <form class="m-0" method="post"
+                      th:action="@{/entreprises/{eid}/annonces/{aid}/supprimer(eid=${entreprise.id}, aid=${a.id})}">
+                    <button class="btn btn-outline-danger btn-sm"
+                            onclick="demanderSuppressionAnnonce(this)"
+                            title="Supprimer l'annonce"
+                            type="button">🗑️</button>
+                </form>
             </div>
         </div>
     </div>
@@ -183,6 +190,8 @@
     </form>
 
 </div>
+
+<div th:replace="~{fragments/modals :: suppression-annonce}"></div>
 
 <div th:replace="~{fragments/footer :: footer}"></div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
