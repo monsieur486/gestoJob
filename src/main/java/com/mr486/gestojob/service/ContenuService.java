@@ -1,5 +1,6 @@
 package com.mr486.gestojob.service;
 
+import com.mr486.gestojob.configuration.ApplicationConfiguration;
 import com.mr486.gestojob.model.TypeContenu;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -148,58 +149,63 @@ public class ContenuService {
     // Sélectionne le modèle selon le type de contenu (1 = microservices,
     // 2 = IA agentique, sinon généraliste) et la sortie souhaitée (HTML ou texte),
     // applique un poste par défaut si absent, puis substitue la politesse et le
-    // poste dans le modèle.
+    // poste dans le modèle. Type et politesse null sont ramenés à des valeurs sûres
+    // (généraliste / salutation générique) pour éviter toute NPE.
     // En HTML, les saisies utilisateur sont échappées pour éviter l'injection.
-    private String getContent(String poste, int typeContenu, String messageDePolitesse, Boolean isHtml) {
-        String htmlContenu = "";
+    private String getContent(String poste, Integer typeContenu, String messageDePolitesse, Boolean isHtml) {
+        int type = (typeContenu == null) ? TypeContenu.GENERAL.getCode() : typeContenu;
+        String politesse = (messageDePolitesse == null)
+                ? ApplicationConfiguration.SALUTATION_GENERIQUE
+                : messageDePolitesse;
+        String contenu = "";
         if (isHtml) {
             // Les saisies utilisateur (poste, politesse) sont échappées pour éviter
             // toute injection HTML dans le corps de l'email. Les valeurs par défaut
             // ci-dessous sont des littéraux déjà encodés (&eacute;, ...) et ne le sont pas.
-            String safePolitesse = HtmlUtils.htmlEscape(messageDePolitesse == null ? "" : messageDePolitesse);
-            if (typeContenu == TypeContenu.MICROSERVICES.getCode()) {
+            String safePolitesse = HtmlUtils.htmlEscape(politesse);
+            if (type == TypeContenu.MICROSERVICES.getCode()) {
                 String safePoste = (poste == null || poste.isEmpty())
                         ? "de d&eacute;veloppeur Java orient&eacute; microservices"
                         : HtmlUtils.htmlEscape(poste);
-                htmlContenu = annoncePosteMicroserviceHtmlTemplate()
+                contenu = annoncePosteMicroserviceHtmlTemplate()
                         .replace("{{POLITESSE}}", safePolitesse)
                         .replace("{{POSTE}}", safePoste);
-            } else if (typeContenu == TypeContenu.IA.getCode()) {
+            } else if (type == TypeContenu.IA.getCode()) {
                 String safePoste = (poste == null || poste.isEmpty())
                         ? "de d&eacute;veloppeur Java back-end orient&eacute; IA agentique"
                         : HtmlUtils.htmlEscape(poste);
-                htmlContenu = annoncePosteIaAgentiqueHtmlTemplate()
+                contenu = annoncePosteIaAgentiqueHtmlTemplate()
                         .replace("{{POLITESSE}}", safePolitesse)
                         .replace("{{POSTE}}", safePoste);
             } else {
                 String safePoste = (poste == null || poste.isEmpty())
                         ? "de d&eacute;veloppeur Java"
                         : HtmlUtils.htmlEscape(poste);
-                htmlContenu = annoncePosteGeneralHtmlTemplate()
+                contenu = annoncePosteGeneralHtmlTemplate()
                         .replace("{{POLITESSE}}", safePolitesse)
                         .replace("{{POSTE}}", safePoste);
             }
         } else {
-            if (typeContenu == TypeContenu.MICROSERVICES.getCode()) {
+            if (type == TypeContenu.MICROSERVICES.getCode()) {
                 if (poste == null || poste.isEmpty()) poste = "de développeur Java orienté microservices";
-                htmlContenu = annoncePosteMicroserviceTxtTemplate()
-                        .replace("{{POLITESSE}}", messageDePolitesse)
+                contenu = annoncePosteMicroserviceTxtTemplate()
+                        .replace("{{POLITESSE}}", politesse)
                         .replace("{{POSTE}}", poste);
-            } else if (typeContenu == TypeContenu.IA.getCode()) {
+            } else if (type == TypeContenu.IA.getCode()) {
                 if (poste == null || poste.isEmpty()) poste = "de développeur Java back-end orienté IA agentique";
-                htmlContenu = annoncePosteIaAgentiqueTxtTemplate()
-                        .replace("{{POLITESSE}}", messageDePolitesse)
+                contenu = annoncePosteIaAgentiqueTxtTemplate()
+                        .replace("{{POLITESSE}}", politesse)
                         .replace("{{POSTE}}", poste);
             } else {
                 if (poste == null || poste.isEmpty()) poste = "de développeur Java";
-                htmlContenu = annoncePosteGeneralTxtTemplate()
-                        .replace("{{POLITESSE}}", messageDePolitesse)
+                contenu = annoncePosteGeneralTxtTemplate()
+                        .replace("{{POLITESSE}}", politesse)
                         .replace("{{POSTE}}", poste);
             }
 
         }
 
-        return htmlContenu;
+        return contenu;
     }
 
     /**
@@ -208,11 +214,11 @@ public class ContenuService {
      * <p><b>Exemple :</b> un poste contenant « &lt;script&gt; » est échappé en « &amp;lt;script&amp;gt; » dans le HTML produit.</p>
      *
      * @param poste              intitulé du poste visé (une valeur par défaut est utilisée si vide)
-     * @param typeContenu        type de contenu (1 = microservices, 2 = IA agentique, sinon généraliste)
-     * @param messageDePolitesse formule de politesse à insérer
+     * @param typeContenu        type de contenu (1 = microservices, 2 = IA agentique, null/autre = généraliste)
+     * @param messageDePolitesse formule de politesse à insérer (la salutation générique est utilisée si null)
      * @return le contenu HTML de la candidature
      */
-    public String getHtmlContenu(String poste, int typeContenu, String messageDePolitesse) {
+    public String getHtmlContenu(String poste, Integer typeContenu, String messageDePolitesse) {
         return getContent(poste, typeContenu, messageDePolitesse, true);
     }
 
@@ -222,11 +228,11 @@ public class ContenuService {
      * <p><b>Exemple :</b> avec typeContenu=1 et un poste vide, le texte produit utilise le poste par défaut « de développeur Java orienté microservices » ; le poste fourni n'est pas échappé (sortie texte brut).</p>
      *
      * @param poste              intitulé du poste visé (une valeur par défaut est utilisée si vide)
-     * @param typeContenu        type de contenu (1 = microservices, 2 = IA agentique, sinon généraliste)
-     * @param messageDePolitesse formule de politesse à insérer
+     * @param typeContenu        type de contenu (1 = microservices, 2 = IA agentique, null/autre = généraliste)
+     * @param messageDePolitesse formule de politesse à insérer (la salutation générique est utilisée si null)
      * @return le contenu texte de la candidature
      */
-    public String getTextContenu(String poste, int typeContenu, String messageDePolitesse) {
+    public String getTextContenu(String poste, Integer typeContenu, String messageDePolitesse) {
         return getContent(poste, typeContenu, messageDePolitesse, false);
     }
 }

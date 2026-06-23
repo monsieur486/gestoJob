@@ -77,4 +77,25 @@ class ContenuServiceTest {
 
         assertThat(txt).contains("de développeur Java");
     }
+
+    @Test
+    void texte_typeContenuNull_utiliseLeTemplateGeneral_sansNpe() {
+        String txt = contenuService.getTextContenu("", null, "Madame, Monsieur,");
+
+        assertThat(txt).contains("de développeur Java");
+    }
+
+    @Test
+    void html_typeContenuNull_utiliseLeTemplateGeneral_sansNpe() {
+        String html = contenuService.getHtmlContenu("", null, "Madame, Monsieur,");
+
+        assertThat(html).contains("de d&eacute;veloppeur Java");
+    }
+
+    @Test
+    void texte_politesseNull_utiliseLaSalutationGenerique_sansNpe() {
+        String txt = contenuService.getTextContenu("Développeur", 0, null);
+
+        assertThat(txt).contains("Madame, Monsieur,");
+    }
 }
