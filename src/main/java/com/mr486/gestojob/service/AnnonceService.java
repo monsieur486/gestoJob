@@ -141,14 +141,19 @@ public class AnnonceService {
     }
 
     /**
-     * Retourne la liste des annonces en attente d'envoi par email (statut 1).
+     * Retourne une page d'annonces en attente d'envoi par email (statut 1),
+     * triées par date d'envoi décroissante.
      *
-     * <p><b>Exemple :</b> ne retourne que les annonces au statut 1 ; les annonces aux statuts 2 à 6 sont exclues.</p>
+     * <p><b>Exemple :</b> annoncesEnAttenteEnvoiEmailPage(0) retourne la première page des annonces au statut 1 ; les annonces aux statuts 2 à 6 sont exclues.</p>
      *
-     * @return la liste des annonces en attente
+     * @param pageIndex index de la page (commençant à 0, les valeurs négatives sont ramenées à 0)
+     * @return la page d'annonces en attente au format DTO
      */
-    public List<AnnonceListe> annoncesEnAttenteEnvoiEmail() {
-        return toAnnonceListe(annonceRepository.findAllByStatusAnnonce(1));
+    public Page<AnnonceListe> annoncesEnAttenteEnvoiEmailPage(int pageIndex) {
+        int safePageIndex = Math.max(0, pageIndex);
+        var pageable = PageRequest.of(safePageIndex, maxAnnoncesParPage);
+        return toAnnonceListePage(
+                annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(1, pageable));
     }
 
     // Met à jour le statut d'une annonce en base.
@@ -214,10 +219,15 @@ public class AnnonceService {
     @Transactional
     public void sendEmailForPendingAnnonces() {
         List<Annonce> annoncesEnAttente = annonceRepository.findAllByStatusAnnonce(1);
+        // Chargement groupé des contacts (une seule requête) pour éviter le N+1
+        // d'un getContact par annonce dans la boucle d'envoi.
+        Set<Long> contactIds = annoncesEnAttente.stream()
+                .map(Annonce::getContactId).filter(Objects::nonNull).collect(Collectors.toSet());
+        Map<Long, Contact> contacts = contactService.getContactsByIds(contactIds);
         for (Annonce a : annoncesEnAttente) {
             try {
                 log.info("Envoi de l'email pour l'annonce id: {}", a.getId());
-                sendMail(a);
+                sendMail(a, contacts.get(a.getContactId()));
                 setEnvoye(a.getId());
             } catch (RuntimeException ex) {
                 log.error("Échec de l'envoi de l'email pour l'annonce id={}, statut inchangé : {}",
@@ -241,19 +251,22 @@ public class AnnonceService {
                 .orElseThrow(() -> new IllegalArgumentException("Annonce introuvable avec id: " + annonceId));
         log.info("Envoi de l'email pour l'annonce id: {}", annonce.getId());
         // Si l'envoi échoue, l'exception remonte et le statut n'est PAS modifié.
-        sendMail(annonce);
+        Contact contact = (annonce.getContactId() == null)
+                ? null
+                : contactService.getContact(annonce.getContactId());
+        sendMail(annonce, contact);
         setEnvoye(annonce.getId());
     }
 
     /**
-     * Construit et envoie l'email. Lève une exception si l'envoi échoue,
-     * pour que l'appelant ne marque pas l'annonce comme envoyée à tort.
+     * Construit et envoie l'email à partir du contact déjà résolu. Lève une
+     * exception si l'envoi échoue, pour que l'appelant ne marque pas l'annonce
+     * comme envoyée à tort.
      */
-    private void sendMail(Annonce annonce) {
-        Contact contact = contactService.getContact(annonce.getContactId());
+    private void sendMail(Annonce annonce, Contact contact) {
         String recipient = contact.getEmail();
         String subject = annonce.getLibelle();
-        String content = getHtmlContent(annonce);
+        String content = buildHtmlContent(annonce, contact);
         mailTools.sendHtmlMail(recipient, subject, content);
     }
 
@@ -267,9 +280,19 @@ public class AnnonceService {
      * @return le contenu HTML de l'email
      */
     public String getHtmlContent(Annonce annonce) {
-        String messageDePolitesse = (annonce.getContactId() == null)
+        Contact contact = (annonce.getContactId() == null)
+                ? null
+                : contactService.getContact(annonce.getContactId());
+        return buildHtmlContent(annonce, contact);
+    }
+
+    // Construit le corps HTML à partir d'un contact déjà résolu (ou null pour
+    // une formule générique), sans relire la base — réutilisé par la boucle
+    // d'envoi groupée et par getHtmlContent.
+    private String buildHtmlContent(Annonce annonce, Contact contact) {
+        String messageDePolitesse = (contact == null)
                 ? "Madame, Monsieur,"
-                : contactService.getContact(annonce.getContactId()).getMessageDePolitesse();
+                : contact.getMessageDePolitesse();
 
         return contenuService.getHtmlContenu(
                 annonce.getPoste(),

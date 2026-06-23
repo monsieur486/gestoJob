@@ -23,6 +23,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -90,6 +91,19 @@ class EntrepriseServiceTest {
     }
 
     @Test
+    void update_propageLErreur_siEchecDePersistance() {
+        Entreprise e = entreprise(5, "Ancien");
+        when(entrepriseRepository.findById(5)).thenReturn(Optional.of(e));
+        when(entrepriseRepository.save(any())).thenThrow(new IllegalStateException("erreur SGBD"));
+        EntrepriseForm form = EntrepriseForm.builder().nom("Nouveau").build();
+
+        // L'erreur réelle de persistance ne doit PAS être masquée en « introuvable ».
+        assertThatThrownBy(() -> entrepriseService.update(5, form))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("SGBD");
+    }
+
+    @Test
     void getForm_renvoieLeFormulairePrerempli() {
         when(entrepriseRepository.findById(5)).thenReturn(Optional.of(entreprise(5, "ACME")));
 
@@ -140,24 +154,24 @@ class EntrepriseServiceTest {
     }
 
     @Test
-    void rechercheEntrepriseParNom_mappeLesResultats() {
-        when(entrepriseRepository.findAllByNomContainingIgnoreCase("ac"))
-                .thenReturn(List.of(entreprise(1, "ACME")));
+    void rechercheEntrepriseParNomPage_mappeLesResultats() {
+        when(entrepriseRepository.findAllByNomContainingIgnoreCaseOrderByNomAsc(eq("ac"), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(entreprise(1, "ACME"))));
 
-        List<EntrepriseListe> result = entrepriseService.rechercheEntrepriseParNom("ac");
+        Page<EntrepriseListe> result = entrepriseService.rechercheEntrepriseParNomPage("ac", 0);
 
-        assertThat(result).extracting(EntrepriseListe::getNom).containsExactly("ACME");
+        assertThat(result.getContent()).extracting(EntrepriseListe::getNom).containsExactly("ACME");
     }
 
     @Test
-    void rechercheEntrepriseActive_mappeLesResultats() {
-        when(entrepriseRepository.findAllByEstActiveTrue())
-                .thenReturn(List.of(entreprise(1, "ACME")));
+    void rechercheEntrepriseActivePage_mappeLesResultats() {
+        when(entrepriseRepository.findAllByEstActiveTrueOrderByNomAsc(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(entreprise(1, "ACME"))));
 
-        List<EntrepriseListe> result = entrepriseService.rechercheEntrepriseActive();
+        Page<EntrepriseListe> result = entrepriseService.rechercheEntrepriseActivePage(0);
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getEstActive()).isTrue();
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getEstActive()).isTrue();
     }
 
     @Test

@@ -6,7 +6,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -31,15 +30,16 @@ public interface EntrepriseRepository extends JpaRepository<Entreprise, Integer>
     Page<Entreprise> findAllByOrderByNomAsc(Pageable pageable);
 
     /**
-     * Récupère toutes les entreprises dont le nom contient la chaîne indiquée,
-     * sans tenir compte de la casse.
+     * Récupère, de façon paginée, les entreprises dont le nom contient la chaîne
+     * indiquée (insensible à la casse), triées par nom croissant.
      *
-     * <p><b>Exemple :</b> findAllByNomContainingIgnoreCase("acme") renvoie l'entreprise « Acme Corp » (recherche insensible à la casse).</p>
+     * <p><b>Exemple :</b> findAllByNomContainingIgnoreCaseOrderByNomAsc("acme", PageRequest.of(0, 10)) renvoie la première page des entreprises dont le nom contient « acme ».</p>
      *
-     * @param nom le fragment de nom à rechercher
-     * @return la liste des entreprises dont le nom contient le fragment
+     * @param nom      le fragment de nom à rechercher
+     * @param pageable les informations de pagination et de tri
+     * @return une page d'entreprises dont le nom contient le fragment
      */
-    List<Entreprise> findAllByNomContainingIgnoreCase(String nom);
+    Page<Entreprise> findAllByNomContainingIgnoreCaseOrderByNomAsc(String nom, Pageable pageable);
 
     /**
      * Récupère une entreprise à partir de son identifiant.
@@ -63,11 +63,13 @@ public interface EntrepriseRepository extends JpaRepository<Entreprise, Integer>
     Boolean existsByNomIgnoreCase(String nom);
 
     /**
-     * Récupère toutes les entreprises actuellement actives.
+     * Récupère, de façon paginée, les entreprises actuellement actives, triées
+     * par nom croissant.
      *
-     * <p><b>Exemple :</b> findAllByEstActiveTrue() renvoie uniquement les entreprises dont estActive vaut true, en excluant les entreprises désactivées.</p>
+     * <p><b>Exemple :</b> findAllByEstActiveTrueOrderByNomAsc(PageRequest.of(0, 10)) renvoie la première page des entreprises dont estActive vaut true.</p>
      *
-     * @return la liste des entreprises dont l'indicateur d'activité est vrai
+     * @param pageable les informations de pagination et de tri
+     * @return une page d'entreprises dont l'indicateur d'activité est vrai
      */
-    List<Entreprise> findAllByEstActiveTrue();
+    Page<Entreprise> findAllByEstActiveTrueOrderByNomAsc(Pageable pageable);
 }

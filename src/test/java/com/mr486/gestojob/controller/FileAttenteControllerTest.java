@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
@@ -25,15 +27,18 @@ class FileAttenteControllerTest {
     private FileAttenteController controller;
 
     @Test
-    void fileAttenteView_renvoieFile_etChargeLesAnnoncesEnAttente() {
-        when(annonceService.annoncesEnAttenteEnvoiEmail()).thenReturn(List.of());
+    void fileAttenteView_renvoieFile_etChargeLaPageDesAnnoncesEnAttente() {
+        when(annonceService.annoncesEnAttenteEnvoiEmailPage(0))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 7), 0));
 
         Model model = new ExtendedModelMap();
-        String view = controller.fileAttenteView(model);
+        String view = controller.fileAttenteView(model, 1);
 
         assertThat(view).isEqualTo("file");
         assertThat(model.getAttribute("page_active")).isEqualTo("file");
         assertThat(model.getAttribute("annoncesEnAttenteEnvoiEmail")).isEqualTo(List.of());
+        assertThat(model.getAttribute("currentPage")).isEqualTo(1);
+        assertThat(model.getAttribute("totalPages")).isEqualTo(0);
     }
 
     @Test

@@ -58,6 +58,28 @@ class ContactServiceTest {
     }
 
     @Test
+    void saveContact_leveUneException_siFormuleDePolitesseEtEmailNull() {
+        when(entrepriseService.existe(7)).thenReturn(true);
+        ContactForm form = ContactForm.builder().email(null).formuleDePolitesse(1).build();
+
+        assertThatThrownBy(() -> contactService.saveContact(form, 7))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("email");
+
+        verify(contactRepository, never()).save(any());
+    }
+
+    @Test
+    void saveContact_enregistre_siFormuleNulleEtSansEmail() {
+        when(entrepriseService.existe(7)).thenReturn(true);
+        ContactForm form = ContactForm.builder().email(null).formuleDePolitesse(null).contact("Durand").build();
+
+        contactService.saveContact(form, 7);
+
+        verify(contactRepository).save(any(Contact.class));
+    }
+
+    @Test
     void saveContact_enregistre_siValide() {
         when(entrepriseService.existe(7)).thenReturn(true);
         ContactForm form = ContactForm.builder()

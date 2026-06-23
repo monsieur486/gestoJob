@@ -53,6 +53,37 @@
             </form>
         </div>
 
+        <nav aria-label="Pagination file d'attente" class="mt-3" th:if="${totalPages > 1}">
+            <ul class="pagination">
+
+                <!-- Précédent -->
+                <li class="page-item" th:classappend="${currentPage == 1} ? ' disabled' : ''">
+                    <a aria-label="Précédent"
+                       class="page-link"
+                       th:href="@{/file(page=${currentPage - 1})}">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+
+                <!-- Pages cliquables -->
+                <li class="page-item"
+                    th:classappend="${p == currentPage} ? ' active' : ''"
+                    th:each="p : ${#numbers.sequence(1, totalPages)}">
+                    <a class="page-link" th:href="@{/file(page=${p})}" th:text="${p}">1</a>
+                </li>
+
+                <!-- Suivant -->
+                <li class="page-item" th:classappend="${currentPage >= totalPages} ? ' disabled' : ''">
+                    <a aria-label="Suivant"
+                       class="page-link"
+                       th:href="@{/file(page=${currentPage + 1})}">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+
     </div>
 </div>
 

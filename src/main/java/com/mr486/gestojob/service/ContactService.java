@@ -38,7 +38,9 @@ public class ContactService {
         if (!entrepriseService.existe(entrepriseId)) {
             throw new RuntimeException("Entreprise introuvable avec id: " + entrepriseId);
         }
-        if (contactForm.getFormuleDePolitesse() > 0 && contactForm.getEmail().isBlank()) {
+        Integer formuleDePolitesse = contactForm.getFormuleDePolitesse();
+        String email = contactForm.getEmail();
+        if (formuleDePolitesse != null && formuleDePolitesse > 0 && (email == null || email.isBlank())) {
             throw new RuntimeException("Veuillez renseigner un email");
         }
 
