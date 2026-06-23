@@ -1,9 +1,11 @@
 package com.mr486.gestojob.service;
 
+import com.mr486.gestojob.configuration.ApplicationConfiguration;
 import com.mr486.gestojob.dto.AnnonceForm;
 import com.mr486.gestojob.dto.AnnonceListe;
 import com.mr486.gestojob.dto.RechercheAnnonceForm;
 import com.mr486.gestojob.model.Annonce;
+import com.mr486.gestojob.model.StatutAnnonce;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -68,7 +70,7 @@ public class AnnonceService {
     public String getMessageDePolitesse(Long annonceId) {
         Long contactId = getAnnonce(annonceId).getContactId();
         if (contactId == null) {
-            return "Madame, Monsieur,";
+            return ApplicationConfiguration.SALUTATION_GENERIQUE;
         }
         return contactService.getContact(contactId).getMessageDePolitesse();
     }
@@ -134,7 +136,7 @@ public class AnnonceService {
                 .typeContenu(form.getContenuId())
                 .poste(form.getPoste())
                 .reference(form.getReference())
-                .statusAnnonce(site ? 2 : 1)
+                .statusAnnonce(site ? StatutAnnonce.EN_COURS.getCode() : StatutAnnonce.BOITE_ENVOI.getCode())
                 .dateEnvoi(site ? OffsetDateTime.now() : null)
                 .build();
 
@@ -154,7 +156,8 @@ public class AnnonceService {
         int safePageIndex = Math.max(0, pageIndex);
         var pageable = PageRequest.of(safePageIndex, maxAnnoncesParPage);
         return annonceListeMapper.toAnnonceListePage(
-                annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(1, pageable));
+                annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(
+                        StatutAnnonce.BOITE_ENVOI.getCode(), pageable));
     }
 
     // Met à jour le statut d'une annonce en base.
@@ -171,7 +174,7 @@ public class AnnonceService {
      */
     @Transactional
     public void setDepasse(Long annonceId) {
-        updateStatusAnnonce(annonceId, 3);
+        updateStatusAnnonce(annonceId, StatutAnnonce.DEPASSE.getCode());
         log.info("annonce marquée dépassée : {}", annonceId);
     }
 
@@ -184,7 +187,7 @@ public class AnnonceService {
      */
     @Transactional
     public void setRefus(Long annonceId) {
-        updateStatusAnnonce(annonceId, 4);
+        updateStatusAnnonce(annonceId, StatutAnnonce.NEGATIF.getCode());
         log.info("annonce marquée refusée : {}", annonceId);
     }
 
@@ -197,7 +200,7 @@ public class AnnonceService {
      */
     @Transactional
     public void setAccepte(Long annonceId) {
-        updateStatusAnnonce(annonceId, 5);
+        updateStatusAnnonce(annonceId, StatutAnnonce.POSITIF.getCode());
         log.info("annonce marquée acceptée (positif) : {}", annonceId);
     }
 
@@ -223,7 +226,8 @@ public class AnnonceService {
             // ✅ Pas de texte : si archives=true => toutes les annonces, sinon seulement "en attente"
             return annonceListeMapper.toAnnonceListePage(includeArchives
                     ? annonceRepository.findAllOrderByDateEnvoiDesc(pageable)
-                    : annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(2, pageable));
+                    : annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(
+                            StatutAnnonce.EN_COURS.getCode(), pageable));
         }
 
         // ✅ Texte présent : recherche multi-champs, et archives=true => tous status
@@ -253,7 +257,8 @@ public class AnnonceService {
     public Page<AnnonceListe> getAllPositifListePage(int pageIndex) {
         var pageable = PageRequest.of(pageIndex, maxPositifsParPage);
         return annonceListeMapper.toAnnonceListePage(
-                annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(5, pageable));
+                annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(
+                        StatutAnnonce.POSITIF.getCode(), pageable));
     }
 
     /**
@@ -264,13 +269,10 @@ public class AnnonceService {
      *
      * @param id identifiant de l'annonce
      * @return le contenu texte de l'annonce
-     * @throws IllegalArgumentException si l'annonce est introuvable
+     * @throws java.util.NoSuchElementException si l'annonce est introuvable
      */
     public String getAnnonceTxtContenuById(Long id) {
         Annonce annonce = getAnnonce(id);
-        if (annonce == null) {
-            throw new IllegalArgumentException("Contenu non trouvé");
-        }
         String result = annonce.getLibelle() + "\n\n";
         String messageDePolitesse = getMessageDePolitesse(id);
 

@@ -1,7 +1,9 @@
 package com.mr486.gestojob.service;
 
+import com.mr486.gestojob.configuration.ApplicationConfiguration;
 import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.Contact;
+import com.mr486.gestojob.model.StatutAnnonce;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import com.mr486.gestojob.tools.MailTools;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +45,8 @@ public class AnnonceMailService {
      */
     @Transactional
     public void sendEmailForPendingAnnonces() {
-        List<Annonce> annoncesEnAttente = annonceRepository.findAllByStatusAnnonce(1);
+        List<Annonce> annoncesEnAttente =
+                annonceRepository.findAllByStatusAnnonce(StatutAnnonce.BOITE_ENVOI.getCode());
         // Chargement groupé des contacts (une seule requête) pour éviter le N+1
         // d'un getContact par annonce dans la boucle d'envoi.
         Set<Long> contactIds = annoncesEnAttente.stream()
@@ -101,13 +104,20 @@ public class AnnonceMailService {
 
     // Marque l'annonce comme envoyée (statut 2) et fixe sa date d'envoi à maintenant.
     private void marquerEnvoye(Long annonceId) {
-        annonceRepository.updateStatusAnnonceEtDateEnvoi(annonceId, 2, OffsetDateTime.now());
+        annonceRepository.updateStatusAnnonceEtDateEnvoi(
+                annonceId, StatutAnnonce.EN_COURS.getCode(), OffsetDateTime.now());
     }
 
     // Construit et envoie l'email à partir du contact déjà résolu. Lève une
     // exception si l'envoi échoue, pour que l'appelant ne marque pas l'annonce
     // comme envoyée à tort.
     private void sendMail(Annonce annonce, Contact contact) {
+        if (contact == null) {
+            // Une annonce sans contact (candidature « site ») ne doit jamais passer
+            // par l'envoi d'email : on échoue explicitement plutôt que de risquer une NPE.
+            throw new IllegalStateException(
+                    "Envoi impossible : l'annonce id=" + annonce.getId() + " n'a pas de contact.");
+        }
         String recipient = contact.getEmail();
         String subject = annonce.getLibelle();
         String content = buildHtmlContent(annonce, contact);
@@ -118,7 +128,7 @@ public class AnnonceMailService {
     // une formule générique), sans relire la base.
     private String buildHtmlContent(Annonce annonce, Contact contact) {
         String messageDePolitesse = (contact == null)
-                ? "Madame, Monsieur,"
+                ? ApplicationConfiguration.SALUTATION_GENERIQUE
                 : contact.getMessageDePolitesse();
 
         return contenuService.getHtmlContenu(
