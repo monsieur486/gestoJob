@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -169,48 +168,50 @@ public class EntrepriseService {
 
         return entrepriseRepository
                 .findAllByOrderByNomAsc(PageRequest.of(safePageIndex, maxEntreprisesParPage))
-                .map(e -> EntrepriseListe.builder()
-                        .id(e.getId())
-                        .nom(e.getNom())
-                        .estActive(e.getEstActive())
-                        .build());
+                .map(EntrepriseService::toListe);
+    }
+
+    // Convertit une entité entreprise en ligne de liste (DTO d'affichage).
+    private static EntrepriseListe toListe(Entreprise e) {
+        return EntrepriseListe.builder()
+                .id(e.getId())
+                .nom(e.getNom())
+                .estActive(e.getEstActive())
+                .build();
     }
 
     /**
-     * Recherche les entreprises dont le nom contient la chaîne fournie (insensible à la casse).
+     * Recherche paginée des entreprises dont le nom contient la chaîne fournie
+     * (insensible à la casse), triées par nom croissant. Les index de page
+     * négatifs sont ramenés à 0.
      *
-     * <p><b>Exemple :</b> rechercheEntrepriseParNom(« cm ») retourne l'entreprise « Acme » (recherche insensible à la casse sur un fragment du nom).</p>
+     * <p><b>Exemple :</b> rechercheEntrepriseParNomPage(« cm », 0) retourne la première page des entreprises dont le nom contient « cm » (ex. « Acme »).</p>
      *
-     * @param nom fragment de nom recherché
-     * @return la liste des entreprises correspondantes au format DTO
+     * @param nom       fragment de nom recherché
+     * @param pageIndex index de la page (commençant à 0)
+     * @return la page d'entreprises correspondantes au format DTO
      */
-    public List<EntrepriseListe> rechercheEntrepriseParNom(String nom) {
-        return entrepriseRepository.findAllByNomContainingIgnoreCase(nom)
-                .stream()
-                .map(e -> EntrepriseListe.builder()
-                        .id(e.getId())
-                        .nom(e.getNom())
-                        .estActive(e.getEstActive())
-                        .build())
-                .collect(Collectors.toList());
+    public Page<EntrepriseListe> rechercheEntrepriseParNomPage(String nom, int pageIndex) {
+        int safePageIndex = Math.max(0, pageIndex);
+        return entrepriseRepository
+                .findAllByNomContainingIgnoreCaseOrderByNomAsc(nom, PageRequest.of(safePageIndex, maxEntreprisesParPage))
+                .map(EntrepriseService::toListe);
     }
 
     /**
-     * Retourne la liste des entreprises actives au format DTO.
+     * Retourne une page d'entreprises actives au format DTO, triées par nom
+     * croissant. Les index de page négatifs sont ramenés à 0.
      *
-     * <p><b>Exemple :</b> sur deux entreprises dont une seule a estActive=true, ne retourne que cette dernière.</p>
+     * <p><b>Exemple :</b> rechercheEntrepriseActivePage(0) retourne la première page des entreprises dont estActive=true.</p>
      *
-     * @return la liste des entreprises actives
+     * @param pageIndex index de la page (commençant à 0)
+     * @return la page d'entreprises actives au format DTO
      */
-    public List<EntrepriseListe> rechercheEntrepriseActive() {
-        return entrepriseRepository.findAllByEstActiveTrue()
-                .stream()
-                .map(e -> EntrepriseListe.builder()
-                        .id(e.getId())
-                        .nom(e.getNom())
-                        .estActive(e.getEstActive())
-                        .build())
-                .collect(Collectors.toList());
+    public Page<EntrepriseListe> rechercheEntrepriseActivePage(int pageIndex) {
+        int safePageIndex = Math.max(0, pageIndex);
+        return entrepriseRepository
+                .findAllByEstActiveTrueOrderByNomAsc(PageRequest.of(safePageIndex, maxEntreprisesParPage))
+                .map(EntrepriseService::toListe);
     }
 
     /**

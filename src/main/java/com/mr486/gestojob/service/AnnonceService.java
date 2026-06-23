@@ -141,14 +141,19 @@ public class AnnonceService {
     }
 
     /**
-     * Retourne la liste des annonces en attente d'envoi par email (statut 1).
+     * Retourne une page d'annonces en attente d'envoi par email (statut 1),
+     * triées par date d'envoi décroissante.
      *
-     * <p><b>Exemple :</b> ne retourne que les annonces au statut 1 ; les annonces aux statuts 2 à 6 sont exclues.</p>
+     * <p><b>Exemple :</b> annoncesEnAttenteEnvoiEmailPage(0) retourne la première page des annonces au statut 1 ; les annonces aux statuts 2 à 6 sont exclues.</p>
      *
-     * @return la liste des annonces en attente
+     * @param pageIndex index de la page (commençant à 0, les valeurs négatives sont ramenées à 0)
+     * @return la page d'annonces en attente au format DTO
      */
-    public List<AnnonceListe> annoncesEnAttenteEnvoiEmail() {
-        return toAnnonceListe(annonceRepository.findAllByStatusAnnonce(1));
+    public Page<AnnonceListe> annoncesEnAttenteEnvoiEmailPage(int pageIndex) {
+        int safePageIndex = Math.max(0, pageIndex);
+        var pageable = PageRequest.of(safePageIndex, maxAnnoncesParPage);
+        return toAnnonceListePage(
+                annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(1, pageable));
     }
 
     // Met à jour le statut d'une annonce en base.

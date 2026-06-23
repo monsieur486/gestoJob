@@ -1,12 +1,15 @@
 package com.mr486.gestojob.controller;
 
+import com.mr486.gestojob.dto.AnnonceListe;
 import com.mr486.gestojob.service.AnnonceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * Contrôleur MVC gérant la file d'attente des annonces dont l'e-mail reste à
@@ -21,15 +24,23 @@ public class FileAttenteController {
     /**
      * Affiche la liste des annonces en attente d'envoi d'e-mail.
      *
-     * <p><b>Exemple :</b> GET /file place la liste des annonces renvoyées par annoncesEnAttenteEnvoiEmail() dans le modèle et retourne la vue {@code file}.</p>
+     * <p><b>Exemple :</b> GET /file?page=2 place la page 2 (index 1) des annonces en attente dans le modèle et retourne la vue {@code file}.</p>
      *
      * @param model le modèle Thymeleaf alimenté pour la vue
+     * @param page  le numéro de page demandé (commence à 1)
      * @return le nom de la vue Thymeleaf {@code file}
      */
     @GetMapping("/file")
-    public String fileAttenteView(Model model) {
+    public String fileAttenteView(
+            Model model,
+            @RequestParam(name = "page", defaultValue = "1") int page
+    ) {
         model.addAttribute("page_active", "file");
-        model.addAttribute("annoncesEnAttenteEnvoiEmail", annonceService.annoncesEnAttenteEnvoiEmail());
+        int pageIndex = Math.max(0, page - 1);
+        Page<AnnonceListe> pageResult = annonceService.annoncesEnAttenteEnvoiEmailPage(pageIndex);
+        model.addAttribute("annoncesEnAttenteEnvoiEmail", pageResult.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", pageResult.getTotalPages());
         return "file";
     }
 

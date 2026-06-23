@@ -51,21 +51,24 @@ public class EntreprisesPageController {
         model.addAttribute("searchQuery", q);
         model.addAttribute("activeOnly", active);
 
+        int pageIndex = Math.max(0, page - 1);
+
         if (active) {
-            model.addAttribute("entreprises", entrepriseService.rechercheEntrepriseActive());
-            model.addAttribute("currentPage", 1);
-            model.addAttribute("totalPages", 0);
+            var pageResult = entrepriseService.rechercheEntrepriseActivePage(pageIndex);
+            model.addAttribute("entreprises", pageResult.getContent());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", pageResult.getTotalPages());
             return "entreprises";
         }
 
         if (StringUtils.hasText(q)) {
-            model.addAttribute("entreprises", entrepriseService.rechercheEntrepriseParNom(q));
-            model.addAttribute("currentPage", 1);
-            model.addAttribute("totalPages", 0);
+            var pageResult = entrepriseService.rechercheEntrepriseParNomPage(q, pageIndex);
+            model.addAttribute("entreprises", pageResult.getContent());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", pageResult.getTotalPages());
             return "entreprises";
         }
 
-        int pageIndex = Math.max(0, page - 1);
         var pageResult = entrepriseService.getAllListePage(pageIndex);
 
         model.addAttribute("entreprisesPage", pageResult);

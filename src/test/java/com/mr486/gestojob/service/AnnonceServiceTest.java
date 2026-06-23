@@ -281,34 +281,46 @@ class AnnonceServiceTest {
     }
 
     @Test
-    void annoncesEnAttenteEnvoiEmail_construitLesInfos_avecEntrepriseEtContact() {
+    void annoncesEnAttenteEnvoiEmailPage_construitLesInfos_avecEntrepriseEtContact() {
         Annonce a = Annonce.builder().id(1L).entrepriseId(10).contactId(5L)
                 .typeAnnonce(1).typeContenu(1).poste("Dev").reference("R").statusAnnonce(1).build();
-        when(annonceRepository.findAllByStatusAnnonce(1)).thenReturn(List.of(a));
+        when(annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(eq(1), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(a)));
         when(entrepriseService.getEntreprisesByIds(any()))
                 .thenReturn(Map.of(10, Entreprise.builder().id(10).nom("ACME").build()));
         when(contactService.getContactsByIds(any()))
                 .thenReturn(Map.of(5L, Contact.builder().id(5L).entrepriseId(10).email("c@acme.fr").build()));
 
-        List<AnnonceListe> result = annonceService.annoncesEnAttenteEnvoiEmail();
+        Page<AnnonceListe> result = annonceService.annoncesEnAttenteEnvoiEmailPage(0);
 
-        assertThat(result).hasSize(1);
-        AnnonceListe liste = result.get(0);
+        assertThat(result.getContent()).hasSize(1);
+        AnnonceListe liste = result.getContent().get(0);
         assertThat(liste.getInfo()).contains("ACME").contains("c@acme.fr").contains("MS");
         assertThat(liste.getType()).contains("A");
     }
 
     @Test
-    void annoncesEnAttenteEnvoiEmail_infosSite_siPasDeContact() {
+    void annoncesEnAttenteEnvoiEmailPage_chercheLeStatut1Pagine() {
+        when(annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(eq(1), any(Pageable.class)))
+                .thenReturn(Page.empty());
+
+        annonceService.annoncesEnAttenteEnvoiEmailPage(0);
+
+        verify(annonceRepository).findAllByStatusAnnonceOrderByDateEnvoiDesc(eq(1), any(Pageable.class));
+    }
+
+    @Test
+    void annoncesEnAttenteEnvoiEmailPage_infosSite_siPasDeContact() {
         Annonce a = Annonce.builder().id(2L).entrepriseId(10).contactId(null)
                 .typeAnnonce(0).typeContenu(0).statusAnnonce(2).build();
-        when(annonceRepository.findAllByStatusAnnonce(1)).thenReturn(List.of(a));
+        when(annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(eq(1), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(a)));
         when(entrepriseService.getEntreprisesByIds(any()))
                 .thenReturn(Map.of(10, Entreprise.builder().id(10).nom("ACME").build()));
 
-        List<AnnonceListe> result = annonceService.annoncesEnAttenteEnvoiEmail();
+        Page<AnnonceListe> result = annonceService.annoncesEnAttenteEnvoiEmailPage(0);
 
-        assertThat(result.get(0).getInfo()).contains("site").contains("G");
-        assertThat(result.get(0).getType()).contains("S");
+        assertThat(result.getContent().get(0).getInfo()).contains("site").contains("G");
+        assertThat(result.getContent().get(0).getType()).contains("S");
     }
 }

@@ -14,6 +14,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -44,26 +46,27 @@ class EntreprisesPageControllerTest {
 
     @Test
     void entreprisesView_filtreActives_quandActiveTrue() {
-        when(entrepriseService.rechercheEntrepriseActive()).thenReturn(List.of());
+        when(entrepriseService.rechercheEntrepriseActivePage(0))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 7), 0));
 
         Model model = new ExtendedModelMap();
         String view = controller.entreprisesView(model, 1, null, true);
 
         assertThat(view).isEqualTo("entreprises");
         assertThat(model.getAttribute("totalPages")).isEqualTo(0);
-        verify(entrepriseService).rechercheEntrepriseActive();
+        verify(entrepriseService).rechercheEntrepriseActivePage(0);
         verify(entrepriseService, never()).getAllListePage(0);
     }
 
     @Test
     void entreprisesView_rechercheParNom_quandTextePresent() {
-        when(entrepriseService.rechercheEntrepriseParNom("acme")).thenReturn(List.of());
+        when(entrepriseService.rechercheEntrepriseParNomPage("acme", 0)).thenReturn(Page.empty());
 
         Model model = new ExtendedModelMap();
         String view = controller.entreprisesView(model, 1, "acme", false);
 
         assertThat(view).isEqualTo("entreprises");
-        verify(entrepriseService).rechercheEntrepriseParNom("acme");
+        verify(entrepriseService).rechercheEntrepriseParNomPage("acme", 0);
     }
 
     @Test
