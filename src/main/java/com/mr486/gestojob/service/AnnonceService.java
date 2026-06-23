@@ -206,11 +206,11 @@ public class AnnonceService {
 
     /**
      * Recherche paginée d'annonces. Sans texte de recherche : retourne soit toutes
-     * les annonces (avec archives), soit uniquement les envoyées (statut 2). Avec un
-     * texte : effectue une recherche multi-champs, élargie à tous les statuts si les
+     * les annonces (avec archives), soit toutes sauf les archivées (statut 6). Avec
+     * un texte : effectue une recherche multi-champs, élargie aux archivées si les
      * archives sont incluses.
      *
-     * <p><b>Exemple :</b> sans texte et avecArchives=false, ne retourne que les annonces au statut 2 ; avec le texte « Java » et avecArchives=true, recherche « Java » sur tous les statuts.</p>
+     * <p><b>Exemple :</b> sans texte et avecArchives=false, retourne toutes les annonces sauf les archivées (statut 6) ; avec le texte « Java » et avecArchives=true, recherche « Java » sur tous les statuts.</p>
      *
      * @param form      critères de recherche (texte et inclusion des archives), peut être null
      * @param pageIndex index de la page (commençant à 0)
@@ -223,14 +223,15 @@ public class AnnonceService {
         var pageable = PageRequest.of(pageIndex, maxAnnoncesParPage);
 
         if (q.isBlank()) {
-            // ✅ Pas de texte : si archives=true => toutes les annonces, sinon seulement "en attente"
+            // Pas de texte : avec archives => toutes les annonces ; sinon toutes
+            // sauf les archivées (statut 6).
             return annonceListeMapper.toAnnonceListePage(includeArchives
                     ? annonceRepository.findAllOrderByDateEnvoiDesc(pageable)
-                    : annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(
-                            StatutAnnonce.EN_COURS.getCode(), pageable));
+                    : annonceRepository.findAllByStatusAnnonceNotOrderByDateEnvoiDesc(
+                            StatutAnnonce.ARCHIVE.getCode(), pageable));
         }
 
-        // ✅ Texte présent : recherche multi-champs, et archives=true => tous status
+        // Texte présent : recherche multi-champs ; archives=true => tous les statuts
         return annonceListeMapper.toAnnonceListePage(annonceRepository.search(q, includeArchives, pageable));
     }
 
