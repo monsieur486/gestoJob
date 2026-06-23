@@ -42,21 +42,21 @@ public class Contact {
      * Construit le message de politesse (en-tête de courrier) adapté au contact,
      * en fonction de la formule de politesse renseignée.
      *
-     * <p><b>Exemple :</b> formuleDePolitesse = 2 et nom = « Durand » donne « Madame Durand, » ; formuleDePolitesse = 1 donne « Monsieur Durand, » ; toute autre valeur donne « Madame, Monsieur, ».</p>
+     * <p><b>Exemple :</b> formuleDePolitesse = 2 et nom = « Durand » donne « Madame Durand, » ; formuleDePolitesse = 1 sans nom (null ou vide) donne « Monsieur, » ; formuleDePolitesse null ou toute autre valeur donne « Madame, Monsieur, ».</p>
      *
      * @return la formule de politesse formatée ; {@code "Madame, Monsieur,"}
      *         lorsque aucune formule spécifique n'est définie
      */
     public String getMessageDePolitesse() {
-        String message = "";
-        if (formuleDePolitesse == 2) {
-            message = "Madame " + nom + ",";
-        } else if (formuleDePolitesse == 1) {
-            message = "Monsieur " + nom + ",";
-        } else {
-            message = "Madame, Monsieur,";
+        // Suffixe « Nom » uniquement si un nom exploitable est renseigné, pour
+        // éviter une salutation du type « Monsieur null, » dans le corps de l'email.
+        String suffixeNom = (nom != null && !nom.isBlank()) ? " " + nom.trim() : "";
+        if (Integer.valueOf(2).equals(formuleDePolitesse)) {
+            return "Madame" + suffixeNom + ",";
         }
-
-        return message;
+        if (Integer.valueOf(1).equals(formuleDePolitesse)) {
+            return "Monsieur" + suffixeNom + ",";
+        }
+        return "Madame, Monsieur,";
     }
 }
