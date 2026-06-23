@@ -33,12 +33,15 @@ class AnnonceFormTest {
     }
 
     @Test
-    void entrepriseId_estObligatoire() {
+    void entrepriseId_nullNeProduitPasDeViolation() {
+        // entrepriseId est posé par le contrôleur depuis le chemin, APRÈS la
+        // validation @Valid : il ne doit donc PAS être contraint sur le formulaire,
+        // sinon la création d'annonce échoue silencieusement (régression connue).
         AnnonceForm form = AnnonceForm.builder().entrepriseId(null).poste("Développeur").build();
 
         Set<ConstraintViolation<AnnonceForm>> violations = validator.validate(form);
 
-        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("entrepriseId"));
+        assertThat(violations).noneMatch(v -> v.getPropertyPath().toString().equals("entrepriseId"));
     }
 
     @Test

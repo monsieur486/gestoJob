@@ -1,6 +1,5 @@
 package com.mr486.gestojob.dto;
 
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +19,9 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 @Builder
 public class AnnonceForm {
-    @NotNull(message = "L'entreprise est obligatoire.")
+    // Renseigné par le contrôleur depuis le chemin (/entreprises/{id}/...), pas
+    // par le formulaire : donc PAS de @NotNull ici (la validation @Valid s'exécute
+    // avant que l'id ne soit posé). Le service garde un contrôle anti-null.
     private Integer entrepriseId;
     private Integer contenuId = 0;
     private Long contactId;
