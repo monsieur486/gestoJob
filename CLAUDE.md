@@ -43,10 +43,10 @@ Standard layered MVC under `com.mr486.gestojob`:
 - `controller/` — `@Controller` classes returning Thymeleaf view names (`accueil`, `annonces`, `entreprises`, `file`, `parametres`). POST endpoints mutate then `redirect:` (PRG pattern). `ContenuController` is the lone `@RestController`, serving plain-text cover-letter content at `/contenu/{id}`.
 - `service/` — business logic. `AnnonceService` is the core orchestrator (CRUD, status transitions, email sending, search/pagination). `ContenuService` holds the cover-letter templates as Java text blocks (HTML + plain-text variants) and does `{{POLITESSE}}`/`{{POSTE}}` substitution.
 - `persistance/` — Spring Data JPA repositories (note the French spelling of the package).
-- `model/` — JPA entities (`Entreprise`, `Contact`, `Annonce`).
+- `model/` — JPA entities (`Entreprise`, `Contact`, `Annonce`) and domain enums (`StatutAnnonce`, `TypeAnnonce`, `TypeContenu`).
 - `dto/` — form-backing objects (`*Form`) and view rows (`*Liste`).
 - `tools/` — `MailTools` (MimeMessage HTML mail) and `HtmlToPlainText` (jsoup-based HTML→text).
-- `configuration/ApplicationConfiguration` — app-wide constants (sender name, default subject line).
+- `configuration/ApplicationConfiguration` — centralized **business constants** (candidate name, civilities, generic salutation, default subject). Put new business constants here, not as scattered literals (deployment/secret config stays in `.env`).
 
 ### Database / migrations
 
@@ -54,10 +54,10 @@ Schema is owned by **Liquibase**, not Hibernate (`spring.jpa.hibernate.ddl-auto:
 
 ### Magic-number conventions (important)
 
-The domain encodes state as bare integers; these meanings live in code, not in an enum, so know them before touching `Annonce` logic (see `Annonce.getStatusAnnonceString()` and `AnnonceService`):
+The domain encodes state as integer codes, now centralized in enums under `model/` (`StatutAnnonce`, `TypeAnnonce`, `TypeContenu`), each carrying the code + libellé. Use `EnumX.Y.getCode()` in services/code instead of bare literals; JPQL `@Query` strings still hold the literal (commented). Codes:
 
-- `statusAnnonce`: 1 = boîte d'envoi (queued for email), 2 = en cours (sent), 3 = dépassé, 4 = négatif, 5 = positif, 6 = archivé.
-- `typeAnnonce`: 0 = spontanée (S), 1 = candidature à une référence (A) — drives `getLibelle()` subject.
-- `typeContenu`: 1 = microservices template, else = général template.
+- `statusAnnonce` (`StatutAnnonce`): 1 = boîte d'envoi (queued for email), 2 = en cours (sent), 3 = dépassé, 4 = négatif, 5 = positif, 6 = archivé.
+- `typeAnnonce` (`TypeAnnonce`): 0 = spontanée (S), 1 = candidature à une référence (A) — drives `getLibelle()` subject.
+- `typeContenu` (`TypeContenu`): 1 = microservices, 2 = IA agentique, else = général template.
 
 An annonce with no `contactId` is treated as a "site" application: created already-sent (`status=2`, `dateEnvoi=now`); with a contact it is queued (`status=1`) for later email dispatch via the file d'attente (`/file`).
