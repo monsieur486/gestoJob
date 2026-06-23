@@ -1,7 +1,6 @@
 package com.mr486.gestojob.dto;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +18,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ContactForm {
 
-    @NotNull(message = "Le nom est obligatoire.")
+    // Email facultatif au niveau du formulaire (un contact « site » n'en a pas) ;
+    // s'il est fourni, son format doit être valide. L'obligation lorsqu'une formule
+    // de politesse est choisie est portée par ContactService.saveContact.
     @Email(message = "Le format de l'email est invalide.")
     private String email;
     private Integer formuleDePolitesse = 0; // formule de politesse : 1 = Monsieur, 2 = Madame, autre = Madame, Monsieur

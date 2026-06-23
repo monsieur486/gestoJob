@@ -75,13 +75,12 @@ public class EntrepriseService {
      * @throws RuntimeException si l'entreprise est introuvable
      */
     public void update(Integer entrepriseId, EntrepriseForm form) {
-        try {
-            Entreprise e = entrepriseRepository.findById(entrepriseId).orElseThrow();
-            Convert(form, e);
-            entrepriseRepository.save(e);
-        } catch (Exception ex) {
-            throw new RuntimeException("Entreprise introuvable avec id: " + entrepriseId);
-        }
+        // On ne traduit en « introuvable » que l'absence d'entreprise : toute autre
+        // erreur (échec de persistance, etc.) doit remonter sans être masquée.
+        Entreprise e = entrepriseRepository.findById(entrepriseId)
+                .orElseThrow(() -> new RuntimeException("Entreprise introuvable avec id: " + entrepriseId));
+        Convert(form, e);
+        entrepriseRepository.save(e);
     }
 
     /**

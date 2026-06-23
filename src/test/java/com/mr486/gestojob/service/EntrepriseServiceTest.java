@@ -90,6 +90,19 @@ class EntrepriseServiceTest {
     }
 
     @Test
+    void update_propageLErreur_siEchecDePersistance() {
+        Entreprise e = entreprise(5, "Ancien");
+        when(entrepriseRepository.findById(5)).thenReturn(Optional.of(e));
+        when(entrepriseRepository.save(any())).thenThrow(new IllegalStateException("erreur SGBD"));
+        EntrepriseForm form = EntrepriseForm.builder().nom("Nouveau").build();
+
+        // L'erreur réelle de persistance ne doit PAS être masquée en « introuvable ».
+        assertThatThrownBy(() -> entrepriseService.update(5, form))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("SGBD");
+    }
+
+    @Test
     void getForm_renvoieLeFormulairePrerempli() {
         when(entrepriseRepository.findById(5)).thenReturn(Optional.of(entreprise(5, "ACME")));
 

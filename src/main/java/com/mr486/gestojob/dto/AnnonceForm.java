@@ -1,5 +1,7 @@
 package com.mr486.gestojob.dto;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,11 +20,14 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 @Builder
 public class AnnonceForm {
+    @NotNull(message = "L'entreprise est obligatoire.")
     private Integer entrepriseId;
     private Integer contenuId = 0;
     private Long contactId;
     private Integer typeAnnonce = 0; // type d'annonce : 1 = candidature à une offre, sinon = demande spontanée
+    @Size(max = 255, message = "Le poste ne doit pas dépasser 255 caractères.")
     private String poste;
+    @Size(max = 255, message = "La référence ne doit pas dépasser 255 caractères.")
     private String reference;
     private OffsetDateTime dateEnvoi;
 }
