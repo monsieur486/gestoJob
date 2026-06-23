@@ -7,4 +7,5 @@
     <include file="db/changelog/002-creation_contacts.sql"/>
     <include file="db/changelog/003-creation_annonces.sql.sql"/>
     <include file="db/changelog/004-indexes.sql"/>
+    <include file="db/changelog/005-renommage_colonnes_contacts.sql"/>
 </databaseChangeLog>

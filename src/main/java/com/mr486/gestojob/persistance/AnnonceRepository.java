@@ -125,7 +125,7 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
                 or lower(coalesce(a.reference, '')) like lower(concat('%', :q, '%'))
                 or lower(coalesce(e.nom, '')) like lower(concat('%', :q, '%'))
                 or lower(coalesce(c.email, '')) like lower(concat('%', :q, '%'))
-                or lower(coalesce(c.contact, '')) like lower(concat('%', :q, '%'))
+                or lower(coalesce(c.nom, '')) like lower(concat('%', :q, '%'))
             )
             and (:includeArchives = true or a.statusAnnonce = 2)
             order by a.dateEnvoi desc nulls last

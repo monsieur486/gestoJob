@@ -24,5 +24,5 @@ public class ContactForm {
     @Email(message = "Le format de l'email est invalide.")
     private String email;
     private Integer formuleDePolitesse = 0; // formule de politesse : 1 = Monsieur, 2 = Madame, autre = Madame, Monsieur
-    private String contact;
+    private String nom;
 }

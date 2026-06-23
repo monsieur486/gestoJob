@@ -47,7 +47,7 @@ class AnnonceMailServiceTest {
 
     private Annonce annonce(long id, long contactId, String email) {
         Contact contact = Contact.builder()
-                .id(contactId).entrepriseId(10).email(email).formuleDePolistesse(0).build();
+                .id(contactId).entrepriseId(10).email(email).formuleDePolitesse(0).build();
         when(contactService.getContact(contactId)).thenReturn(contact);
         return Annonce.builder()
                 .id(id).entrepriseId(10).contactId(contactId)
@@ -97,8 +97,8 @@ class AnnonceMailServiceTest {
                 .typeAnnonce(0).typeContenu(0).poste("Dev").reference("R").statusAnnonce(1).build();
         when(annonceRepository.findAllByStatusAnnonce(1)).thenReturn(List.of(ok, ko));
         when(contactService.getContactsByIds(any())).thenReturn(Map.of(
-                5L, Contact.builder().id(5L).entrepriseId(10).email("ok@exemple.fr").formuleDePolistesse(0).build(),
-                6L, Contact.builder().id(6L).entrepriseId(10).email("ko@exemple.fr").formuleDePolistesse(0).build()));
+                5L, Contact.builder().id(5L).entrepriseId(10).email("ok@exemple.fr").formuleDePolitesse(0).build(),
+                6L, Contact.builder().id(6L).entrepriseId(10).email("ko@exemple.fr").formuleDePolitesse(0).build()));
         when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
         doNothing().when(mailTools).sendHtmlMail(eq("ok@exemple.fr"), any(), any());
         doThrow(new MailSendException("smtp down"))
@@ -119,8 +119,8 @@ class AnnonceMailServiceTest {
                 .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1).build();
         when(annonceRepository.findAllByStatusAnnonce(1)).thenReturn(List.of(a1, a2));
         when(contactService.getContactsByIds(any())).thenReturn(Map.of(
-                5L, Contact.builder().id(5L).entrepriseId(10).email("a@x.fr").formuleDePolistesse(0).build(),
-                6L, Contact.builder().id(6L).entrepriseId(10).email("b@x.fr").formuleDePolistesse(0).build()));
+                5L, Contact.builder().id(5L).entrepriseId(10).email("a@x.fr").formuleDePolitesse(0).build(),
+                6L, Contact.builder().id(6L).entrepriseId(10).email("b@x.fr").formuleDePolitesse(0).build()));
         when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
         doNothing().when(mailTools).sendHtmlMail(any(), any(), any());
 

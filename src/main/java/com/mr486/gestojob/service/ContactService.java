@@ -46,9 +46,9 @@ public class ContactService {
 
         Contact contact = new Contact();
         contact.setEntrepriseId(entrepriseId);
-        contact.setFormuleDePolistesse(contactForm.getFormuleDePolitesse());
+        contact.setFormuleDePolitesse(contactForm.getFormuleDePolitesse());
         contact.setEmail(contactForm.getEmail());
-        contact.setContact(contactForm.getContact());
+        contact.setNom(contactForm.getNom());
         contactRepository.save(contact);
     }
 

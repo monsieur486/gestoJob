@@ -87,7 +87,7 @@ class AnnonceServiceTest {
         when(annonceRepository.findById(1L)).thenReturn(Optional.of(a));
         when(contactService.getContact(5L)).thenReturn(
                 Contact.builder().id(5L).entrepriseId(10).email("a@b.fr")
-                        .formuleDePolistesse(1).contact("Durand").build());
+                        .formuleDePolitesse(1).nom("Durand").build());
 
         assertThat(annonceService.getMessageDePolitesse(1L)).isEqualTo("Monsieur Durand,");
     }

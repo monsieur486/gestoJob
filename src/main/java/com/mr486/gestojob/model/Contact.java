@@ -35,24 +35,24 @@ public class Contact {
     private Integer entrepriseId;
     @NotNull
     private String email;
-    private Integer formuleDePolistesse; // formule de politesse : 1 = Monsieur, 2 = Madame, autre = Madame, Monsieur
-    private String contact;
+    private Integer formuleDePolitesse; // formule de politesse : 1 = Monsieur, 2 = Madame, autre = Madame, Monsieur
+    private String nom;
 
     /**
      * Construit le message de politesse (en-tête de courrier) adapté au contact,
      * en fonction de la formule de politesse renseignée.
      *
-     * <p><b>Exemple :</b> formuleDePolistesse = 2 et contact = « Durand » donne « Madame Durand, » ; formuleDePolistesse = 1 donne « Monsieur Durand, » ; toute autre valeur donne « Madame, Monsieur, ».</p>
+     * <p><b>Exemple :</b> formuleDePolitesse = 2 et nom = « Durand » donne « Madame Durand, » ; formuleDePolitesse = 1 donne « Monsieur Durand, » ; toute autre valeur donne « Madame, Monsieur, ».</p>
      *
      * @return la formule de politesse formatée ; {@code "Madame, Monsieur,"}
      *         lorsque aucune formule spécifique n'est définie
      */
     public String getMessageDePolitesse() {
         String message = "";
-        if (formuleDePolistesse == 2) {
-            message = "Madame " + contact + ",";
-        } else if (formuleDePolistesse == 1) {
-            message = "Monsieur " + contact + ",";
+        if (formuleDePolitesse == 2) {
+            message = "Madame " + nom + ",";
+        } else if (formuleDePolitesse == 1) {
+            message = "Monsieur " + nom + ",";
         } else {
             message = "Madame, Monsieur,";
         }

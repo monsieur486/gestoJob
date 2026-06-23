@@ -72,7 +72,7 @@ class ContactServiceTest {
     @Test
     void saveContact_enregistre_siFormuleNulleEtSansEmail() {
         when(entrepriseService.existe(7)).thenReturn(true);
-        ContactForm form = ContactForm.builder().email(null).formuleDePolitesse(null).contact("Durand").build();
+        ContactForm form = ContactForm.builder().email(null).formuleDePolitesse(null).nom("Durand").build();
 
         contactService.saveContact(form, 7);
 
@@ -83,7 +83,7 @@ class ContactServiceTest {
     void saveContact_enregistre_siValide() {
         when(entrepriseService.existe(7)).thenReturn(true);
         ContactForm form = ContactForm.builder()
-                .email("contact@acme.fr").formuleDePolitesse(0).contact("Durand").build();
+                .email("contact@acme.fr").formuleDePolitesse(0).nom("Durand").build();
 
         contactService.saveContact(form, 7);
 

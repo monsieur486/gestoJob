@@ -36,7 +36,7 @@ class ContactFormTest {
 
     @Test
     void emailAbsent_estTolere() {
-        ContactForm form = ContactForm.builder().email(null).formuleDePolitesse(0).contact("Durand").build();
+        ContactForm form = ContactForm.builder().email(null).formuleDePolitesse(0).nom("Durand").build();
 
         assertThat(validator.validate(form)).isEmpty();
     }
