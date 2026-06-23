@@ -9,7 +9,6 @@ import com.mr486.gestojob.persistance.AnnonceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -47,11 +46,15 @@ class AnnonceServiceTest {
     @Mock
     private ContenuService contenuService;
 
-    @InjectMocks
     private AnnonceService annonceService;
 
     @BeforeEach
     void setUp() {
+        // Le mapper (chargement des entreprises/contacts) est utilisé en vrai pour
+        // que les tests de construction d'AnnonceListe restent significatifs ;
+        // ses dépendances restent mockées.
+        AnnonceListeMapper annonceListeMapper = new AnnonceListeMapper(entrepriseService, contactService);
+        annonceService = new AnnonceService(annonceRepository, contactService, contenuService, annonceListeMapper);
         ReflectionTestUtils.setField(annonceService, "maxAnnoncesParPage", 10);
         ReflectionTestUtils.setField(annonceService, "maxPositifsParPage", 10);
         when(entrepriseService.getEntreprisesByIds(any())).thenReturn(Collections.emptyMap());

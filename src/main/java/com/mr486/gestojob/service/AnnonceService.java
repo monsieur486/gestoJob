@@ -4,27 +4,17 @@ import com.mr486.gestojob.dto.AnnonceForm;
 import com.mr486.gestojob.dto.AnnonceListe;
 import com.mr486.gestojob.dto.RechercheAnnonceForm;
 import com.mr486.gestojob.model.Annonce;
-import com.mr486.gestojob.model.Contact;
-import com.mr486.gestojob.model.Entreprise;
-import com.mr486.gestojob.model.TypeAnnonce;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Service métier de gestion des annonces (candidatures).
@@ -34,15 +24,12 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class AnnonceService {
 
-    private static final DateTimeFormatter FR_DATE_TIME =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private final AnnonceRepository annonceRepository;
-    private final EntrepriseService entrepriseService;
     private final ContactService contactService;
     private final ContenuService contenuService;
+    private final AnnonceListeMapper annonceListeMapper;
     @Value("${gestojob.max-annonces-par-page:7}")
     private int maxAnnoncesParPage;
 
@@ -100,7 +87,7 @@ public class AnnonceService {
         annoncesEntreprise.sort(
                 Comparator.comparing(Annonce::getDateEnvoi,
                         Comparator.nullsLast(Comparator.reverseOrder())));
-        return toAnnonceListe(annoncesEntreprise);
+        return annonceListeMapper.toAnnonceListe(annoncesEntreprise);
     }
 
     // Persiste une annonce en base.
@@ -152,7 +139,7 @@ public class AnnonceService {
     public Page<AnnonceListe> annoncesEnAttenteEnvoiEmailPage(int pageIndex) {
         int safePageIndex = Math.max(0, pageIndex);
         var pageable = PageRequest.of(safePageIndex, maxAnnoncesParPage);
-        return toAnnonceListePage(
+        return annonceListeMapper.toAnnonceListePage(
                 annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(1, pageable));
     }
 
@@ -197,72 +184,6 @@ public class AnnonceService {
         updateStatusAnnonce(annonceId, 5);
     }
 
-    // Construit la cha\u00EEne d'information affich\u00E9e dans la liste (entreprise, canal
-    // de contact email ou site, et type de contenu : MS pour microservices, G sinon).
-    private String getInfos(Annonce annonce, Entreprise entreprise, Contact contact) {
-        String result = "\uD83C\uDFE2";
-        result += (entreprise != null ? entreprise.getNom() : "?");
-        if (annonce.getContactId() != null && contact != null) {
-            result += " \uD83D\uDD82" + contact.getEmail();
-        } else {
-            result += " \uD83C\uDF10site";
-        }
-        if (annonce.getTypeContenu() != null && annonce.getTypeContenu() == 1) {
-            result += " MS";
-        } else {
-            result += " G";
-        }
-        return result;
-    }
-
-    /**
-     * Convertit une page d'annonces en page de DTO en chargeant les entreprises
-     * et contacts li\u00E9s en lot (\u00E9vite le N+1).
-     */
-    private Page<AnnonceListe> toAnnonceListePage(Page<Annonce> page) {
-        List<AnnonceListe> content = toAnnonceListe(page.getContent());
-        return new PageImpl<>(content, page.getPageable(), page.getTotalElements());
-    }
-
-    /**
-     * Convertit une liste d'annonces en DTO en chargeant en deux requ\u00EAtes
-     * (une pour les entreprises, une pour les contacts) toutes les r\u00E9f\u00E9rences.
-     */
-    private List<AnnonceListe> toAnnonceListe(List<Annonce> annonces) {
-        Set<Integer> entrepriseIds = annonces.stream()
-                .map(Annonce::getEntrepriseId).filter(Objects::nonNull).collect(Collectors.toSet());
-        Set<Long> contactIds = annonces.stream()
-                .map(Annonce::getContactId).filter(Objects::nonNull).collect(Collectors.toSet());
-
-        Map<Integer, Entreprise> entreprises = entrepriseService.getEntreprisesByIds(entrepriseIds);
-        Map<Long, Contact> contacts = contactService.getContactsByIds(contactIds);
-
-        return annonces.stream()
-                .map(a -> fromEntity(a, entreprises, contacts))
-                .collect(Collectors.toList());
-    }
-
-    // Convertit une annonce en DTO d'affichage en résolvant l'entreprise et le
-    // contact depuis les maps pré-chargées, et en formatant date, type et statut.
-    private AnnonceListe fromEntity(Annonce annonce, Map<Integer, Entreprise> entreprises,
-                                    Map<Long, Contact> contacts) {
-        Entreprise entreprise = entreprises.get(annonce.getEntrepriseId());
-        Contact contact = annonce.getContactId() != null ? contacts.get(annonce.getContactId()) : null;
-
-        AnnonceListe liste = new AnnonceListe();
-        liste.setId(annonce.getId());
-        String dateEnvoi = annonce.getDateEnvoi() != null
-                ? annonce.getDateEnvoi().format(FR_DATE_TIME)
-                : "--";
-        liste.setDateEnvoi(dateEnvoi);
-        liste.setType(TypeAnnonce.libelleCourt(annonce.getTypeAnnonce()));
-        liste.setLibelle(annonce.getLibelle());
-        liste.setStatus(annonce.getStatusAnnonceString());
-        liste.setInfo(getInfos(annonce, entreprise, contact));
-        liste.setEntrepriseId(annonce.getEntrepriseId());
-        return liste;
-    }
-
     /**
      * Recherche paginée d'annonces. Sans texte de recherche : retourne soit toutes
      * les annonces (avec archives), soit uniquement les envoyées (statut 2). Avec un
@@ -283,13 +204,13 @@ public class AnnonceService {
 
         if (q.isBlank()) {
             // ✅ Pas de texte : si archives=true => toutes les annonces, sinon seulement "en attente"
-            return toAnnonceListePage(includeArchives
+            return annonceListeMapper.toAnnonceListePage(includeArchives
                     ? annonceRepository.findAllOrderByDateEnvoiDesc(pageable)
                     : annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(2, pageable));
         }
 
         // ✅ Texte présent : recherche multi-champs, et archives=true => tous status
-        return toAnnonceListePage(annonceRepository.search(q, includeArchives, pageable));
+        return annonceListeMapper.toAnnonceListePage(annonceRepository.search(q, includeArchives, pageable));
     }
 
     /**
@@ -314,7 +235,7 @@ public class AnnonceService {
      */
     public Page<AnnonceListe> getAllPositifListePage(int pageIndex) {
         var pageable = PageRequest.of(pageIndex, maxPositifsParPage);
-        return toAnnonceListePage(annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(5, pageable));
+        return annonceListeMapper.toAnnonceListePage(annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(5, pageable));
     }
 
     /**
