@@ -195,8 +195,8 @@ class AnnonceServiceTest {
     }
 
     @Test
-    void setDepace_metLeStatutA3() {
-        annonceService.setDepace(7L);
+    void setDepasse_metLeStatutA3() {
+        annonceService.setDepasse(7L);
         verify(annonceRepository).updateStatusAnnonce(7L, 3);
     }
 

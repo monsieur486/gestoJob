@@ -193,7 +193,7 @@ class EntrepriseServiceTest {
                 .codePostal("67000").ville("Strasbourg").build();
         Entreprise e = new Entreprise();
 
-        EntrepriseService.Convert(form, e);
+        EntrepriseService.convert(form, e);
 
         assertThat(e.getNom()).isEqualTo("ACME");
         assertThat(e.getCodePostal()).isEqualTo("67000");

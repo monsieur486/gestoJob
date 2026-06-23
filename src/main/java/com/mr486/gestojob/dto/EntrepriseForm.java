@@ -63,7 +63,7 @@ public class EntrepriseForm {
      */
     public Entreprise entity(EntrepriseForm form) {
         Entreprise e = new Entreprise();
-        EntrepriseService.Convert(form, e);
+        EntrepriseService.convert(form, e);
         return e;
     }
 }

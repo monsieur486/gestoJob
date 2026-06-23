@@ -38,7 +38,7 @@ public class EntrepriseService {
      * @param form formulaire source
      * @param e    entité entreprise à mettre à jour
      */
-    public static void Convert(EntrepriseForm form, Entreprise e) {
+    public static void convert(EntrepriseForm form, Entreprise e) {
         e.setNom(form.getNom());
         e.setEstActive(form.getEstActive());
         e.setAdresse1(form.getAdresse1());
@@ -78,7 +78,7 @@ public class EntrepriseService {
         // erreur (échec de persistance, etc.) doit remonter sans être masquée.
         Entreprise e = entrepriseRepository.findById(entrepriseId)
                 .orElseThrow(() -> new RuntimeException("Entreprise introuvable avec id: " + entrepriseId));
-        Convert(form, e);
+        convert(form, e);
         entrepriseRepository.save(e);
     }
 

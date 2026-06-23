@@ -33,7 +33,7 @@ class ContactControllerTest {
         when(bindingResult.hasErrors()).thenReturn(false);
         ContactForm form = ContactForm.builder().email("a@b.fr").formuleDePolitesse(0).build();
 
-        String view = controller.ajoutEntrepriseSubmit(form, 5, bindingResult, new ExtendedModelMap());
+        String view = controller.ajoutContactSubmit(form, 5, bindingResult, new ExtendedModelMap());
 
         assertThat(view).isEqualTo("redirect:/entreprises/5");
         verify(contactService).saveContact(form, 5);
@@ -44,7 +44,7 @@ class ContactControllerTest {
         when(bindingResult.hasErrors()).thenReturn(true);
         ContactForm form = ContactForm.builder().build();
 
-        controller.ajoutEntrepriseSubmit(form, 5, bindingResult, new ExtendedModelMap());
+        controller.ajoutContactSubmit(form, 5, bindingResult, new ExtendedModelMap());
 
         verify(contactService, never()).saveContact(form, 5);
     }
@@ -57,7 +57,7 @@ class ContactControllerTest {
                 .when(contactService).saveContact(form, 5);
 
         Model model = new ExtendedModelMap();
-        controller.ajoutEntrepriseSubmit(form, 5, bindingResult, model);
+        controller.ajoutContactSubmit(form, 5, bindingResult, model);
 
         assertThat(model.getAttribute("errorMessage")).isEqualTo("Veuillez renseigner un email");
     }

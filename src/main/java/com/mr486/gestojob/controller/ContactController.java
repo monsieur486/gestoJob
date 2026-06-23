@@ -32,7 +32,7 @@ public class ContactController {
      * @return le nom de la vue Thymeleaf {@code add-contact}
      */
     @GetMapping("/entreprises/{id}/contacts/ajout")
-    public String ajoutEntrepriseView(Model model) {
+    public String ajoutContactView(Model model) {
         model.addAttribute("page_active", "entreprises");
         model.addAttribute("form", new ContactForm());
         return "add-contact";
@@ -54,7 +54,7 @@ public class ContactController {
      *         vers la fiche de l'entreprise en cas de succès
      */
     @PostMapping("/entreprises/{id}/contacts/ajout")
-    public String ajoutEntrepriseSubmit(
+    public String ajoutContactSubmit(
             @Valid @ModelAttribute("form") ContactForm form,
             @PathVariable Integer id,
             BindingResult bindingResult,

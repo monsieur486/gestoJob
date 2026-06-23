@@ -176,12 +176,12 @@ public class AnnonceService {
     /**
      * Marque l'annonce comme dépassée / sans suite (statut 3).
      *
-     * <p><b>Exemple :</b> setDepace(7L) fait passer l'annonce 7 au statut 3 (dépassée).</p>
+     * <p><b>Exemple :</b> setDepasse(7L) fait passer l'annonce 7 au statut 3 (dépassée).</p>
      *
      * @param annonceId identifiant de l'annonce
      */
     @Transactional
-    public void setDepace(Long annonceId) {
+    public void setDepasse(Long annonceId) {
         updateStatusAnnonce(annonceId, 3);
     }
 
