@@ -1,6 +1,7 @@
 package com.mr486.gestojob.controller;
 
 import com.mr486.gestojob.dto.AnnonceListe;
+import com.mr486.gestojob.service.AnnonceMailService;
 import com.mr486.gestojob.service.AnnonceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class FileAttenteController {
 
     private final AnnonceService annonceService;
+    private final AnnonceMailService annonceMailService;
 
     /**
      * Affiche la liste des annonces en attente d'envoi d'e-mail.
@@ -53,7 +55,7 @@ public class FileAttenteController {
      */
     @PostMapping("/file/postMail")
     public String postMail() {
-        annonceService.sendEmailForPendingAnnonces();
+        annonceMailService.sendEmailForPendingAnnonces();
         return "redirect:/file";
     }
 
@@ -67,7 +69,7 @@ public class FileAttenteController {
      */
     @PostMapping("/file/postMail/{annonceId}")
     public String postDirectMail(@PathVariable Long annonceId) {
-        annonceService.sendDirectEmail(annonceId);
+        annonceMailService.sendDirectEmail(annonceId);
         return "redirect:/file";
     }
 }

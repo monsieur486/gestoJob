@@ -8,7 +8,6 @@ import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.model.TypeAnnonce;
 import com.mr486.gestojob.persistance.AnnonceRepository;
-import com.mr486.gestojob.tools.MailTools;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,8 +28,9 @@ import java.util.stream.Collectors;
 
 /**
  * Service métier de gestion des annonces (candidatures).
- * Gère la création, la consultation, le changement de statut, l'envoi par email
- * et la construction des contenus (HTML et texte) des annonces.
+ * Gère la création, la consultation, le changement de statut, la recherche
+ * paginée et la construction du contenu texte des annonces. L'envoi des emails
+ * est délégué à {@link AnnonceMailService}.
  */
 @Service
 @RequiredArgsConstructor
@@ -42,7 +42,6 @@ public class AnnonceService {
     private final AnnonceRepository annonceRepository;
     private final EntrepriseService entrepriseService;
     private final ContactService contactService;
-    private final MailTools mailTools;
     private final ContenuService contenuService;
     @Value("${gestojob.max-annonces-par-page:7}")
     private int maxAnnoncesParPage;
@@ -163,18 +162,6 @@ public class AnnonceService {
     }
 
     /**
-     * Marque l'annonce comme envoyée (statut 2) et fixe sa date d'envoi à maintenant.
-     *
-     * <p><b>Exemple :</b> setEnvoye(7L) fait passer l'annonce 7 au statut 2 et fixe sa date d'envoi à l'instant courant.</p>
-     *
-     * @param annonceId identifiant de l'annonce
-     */
-    @Transactional
-    public void setEnvoye(Long annonceId) {
-        annonceRepository.updateStatusAnnonceEtDateEnvoi(annonceId, 2, java.time.OffsetDateTime.now());
-    }
-
-    /**
      * Marque l'annonce comme dépassée / sans suite (statut 3).
      *
      * <p><b>Exemple :</b> setDepasse(7L) fait passer l'annonce 7 au statut 3 (dépassée).</p>
@@ -208,98 +195,6 @@ public class AnnonceService {
     @Transactional
     public void setAccepte(Long annonceId) {
         updateStatusAnnonce(annonceId, 5);
-    }
-
-    /**
-     * Tente d'envoyer chaque annonce en attente. Un échec sur une annonce est
-     * journalisé mais n'interrompt pas la boucle ; seules les annonces réellement
-     * envoyées passent au statut "envoyé".
-     *
-     * <p><b>Exemple :</b> sur 3 annonces au statut 1, si l'envoi de la deuxième échoue, les annonces 1 et 3 passent au statut 2 tandis que la 2 reste au statut 1.</p>
-     */
-    @Transactional
-    public void sendEmailForPendingAnnonces() {
-        List<Annonce> annoncesEnAttente = annonceRepository.findAllByStatusAnnonce(1);
-        // Chargement groupé des contacts (une seule requête) pour éviter le N+1
-        // d'un getContact par annonce dans la boucle d'envoi.
-        Set<Long> contactIds = annoncesEnAttente.stream()
-                .map(Annonce::getContactId).filter(Objects::nonNull).collect(Collectors.toSet());
-        Map<Long, Contact> contacts = contactService.getContactsByIds(contactIds);
-        for (Annonce a : annoncesEnAttente) {
-            try {
-                log.info("Envoi de l'email pour l'annonce id: {}", a.getId());
-                sendMail(a, contacts.get(a.getContactId()));
-                setEnvoye(a.getId());
-            } catch (RuntimeException ex) {
-                log.error("Échec de l'envoi de l'email pour l'annonce id={}, statut inchangé : {}",
-                        a.getId(), ex.getMessage(), ex);
-            }
-        }
-    }
-
-    /**
-     * Envoie immédiatement l'email d'une annonce puis la marque comme envoyée.
-     * Si l'envoi échoue, l'exception remonte et le statut n'est pas modifié.
-     *
-     * <p><b>Exemple :</b> sendDirectEmail(7L) envoie l'email puis passe l'annonce 7 au statut 2 ; si l'envoi échoue, l'annonce reste au statut 1.</p>
-     *
-     * @param annonceId identifiant de l'annonce
-     * @throws IllegalArgumentException si l'annonce est introuvable
-     */
-    @Transactional
-    public void sendDirectEmail(Long annonceId) {
-        Annonce annonce = annonceRepository.findById(annonceId)
-                .orElseThrow(() -> new IllegalArgumentException("Annonce introuvable avec id: " + annonceId));
-        log.info("Envoi de l'email pour l'annonce id: {}", annonce.getId());
-        // Si l'envoi échoue, l'exception remonte et le statut n'est PAS modifié.
-        Contact contact = (annonce.getContactId() == null)
-                ? null
-                : contactService.getContact(annonce.getContactId());
-        sendMail(annonce, contact);
-        setEnvoye(annonce.getId());
-    }
-
-    /**
-     * Construit et envoie l'email à partir du contact déjà résolu. Lève une
-     * exception si l'envoi échoue, pour que l'appelant ne marque pas l'annonce
-     * comme envoyée à tort.
-     */
-    private void sendMail(Annonce annonce, Contact contact) {
-        String recipient = contact.getEmail();
-        String subject = annonce.getLibelle();
-        String content = buildHtmlContent(annonce, contact);
-        mailTools.sendHtmlMail(recipient, subject, content);
-    }
-
-    /**
-     * Construit le corps HTML de l'email pour une annonce, en y insérant la
-     * formule de politesse adaptée au contact (ou générique si absent).
-     *
-     * <p><b>Exemple :</b> pour une annonce sans contact, le HTML produit contient la formule « Madame, Monsieur, » ; avec un contact, il reprend sa formule de politesse personnalisée.</p>
-     *
-     * @param annonce l'annonce concernée
-     * @return le contenu HTML de l'email
-     */
-    public String getHtmlContent(Annonce annonce) {
-        Contact contact = (annonce.getContactId() == null)
-                ? null
-                : contactService.getContact(annonce.getContactId());
-        return buildHtmlContent(annonce, contact);
-    }
-
-    // Construit le corps HTML à partir d'un contact déjà résolu (ou null pour
-    // une formule générique), sans relire la base — réutilisé par la boucle
-    // d'envoi groupée et par getHtmlContent.
-    private String buildHtmlContent(Annonce annonce, Contact contact) {
-        String messageDePolitesse = (contact == null)
-                ? "Madame, Monsieur,"
-                : contact.getMessageDePolitesse();
-
-        return contenuService.getHtmlContenu(
-                annonce.getPoste(),
-                annonce.getTypeContenu(),
-                messageDePolitesse
-        );
     }
 
     // Construit la cha\u00EEne d'information affich\u00E9e dans la liste (entreprise, canal

@@ -6,7 +6,6 @@ import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.persistance.AnnonceRepository;
-import com.mr486.gestojob.tools.MailTools;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +17,6 @@ import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.mail.MailSendException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.OffsetDateTime;
@@ -31,10 +29,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,8 +45,6 @@ class AnnonceServiceTest {
     @Mock
     private ContactService contactService;
     @Mock
-    private MailTools mailTools;
-    @Mock
     private ContenuService contenuService;
 
     @InjectMocks
@@ -63,94 +56,6 @@ class AnnonceServiceTest {
         ReflectionTestUtils.setField(annonceService, "maxPositifsParPage", 10);
         when(entrepriseService.getEntreprisesByIds(any())).thenReturn(Collections.emptyMap());
         when(contactService.getContactsByIds(any())).thenReturn(Collections.emptyMap());
-    }
-
-    private Annonce annonce(long id, long contactId, String email) {
-        Contact contact = Contact.builder()
-                .id(contactId).entrepriseId(10).email(email).formuleDePolistesse(0).build();
-        when(contactService.getContact(contactId)).thenReturn(contact);
-        return Annonce.builder()
-                .id(id).entrepriseId(10).contactId(contactId)
-                .typeAnnonce(0).typeContenu(0).poste("Dev").reference("R")
-                .statusAnnonce(1).build();
-    }
-
-    @Test
-    void sendDirectEmail_marqueEnvoye_siSucces() {
-        Annonce a = annonce(1L, 5L, "ok@exemple.fr");
-        when(annonceRepository.findById(1L)).thenReturn(Optional.of(a));
-        when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
-        doNothing().when(mailTools).sendHtmlMail(any(), any(), any());
-
-        annonceService.sendDirectEmail(1L);
-
-        verify(annonceRepository).updateStatusAnnonceEtDateEnvoi(eq(1L), eq(2), any(OffsetDateTime.class));
-    }
-
-    @Test
-    void sendDirectEmail_neMarquePasEnvoye_siEchecMail() {
-        Annonce a = annonce(1L, 5L, "ko@exemple.fr");
-        when(annonceRepository.findById(1L)).thenReturn(Optional.of(a));
-        when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
-        doThrow(new MailSendException("smtp down")).when(mailTools).sendHtmlMail(any(), any(), any());
-
-        assertThatThrownBy(() -> annonceService.sendDirectEmail(1L))
-                .isInstanceOf(MailSendException.class);
-
-        verify(annonceRepository, never()).updateStatusAnnonceEtDateEnvoi(any(), any(), any());
-    }
-
-    @Test
-    void sendDirectEmail_leveUneException_siAnnonceIntrouvable() {
-        when(annonceRepository.findById(404L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> annonceService.sendDirectEmail(404L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("introuvable");
-    }
-
-    @Test
-    void sendEmailForPendingAnnonces_continueApresEchec_etNeMarqueQueLesSucces() {
-        Annonce ok = Annonce.builder().id(1L).entrepriseId(10).contactId(5L)
-                .typeAnnonce(0).typeContenu(0).poste("Dev").reference("R").statusAnnonce(1).build();
-        Annonce ko = Annonce.builder().id(2L).entrepriseId(10).contactId(6L)
-                .typeAnnonce(0).typeContenu(0).poste("Dev").reference("R").statusAnnonce(1).build();
-        when(annonceRepository.findAllByStatusAnnonce(1)).thenReturn(List.of(ok, ko));
-        when(contactService.getContactsByIds(any())).thenReturn(Map.of(
-                5L, Contact.builder().id(5L).entrepriseId(10).email("ok@exemple.fr").formuleDePolistesse(0).build(),
-                6L, Contact.builder().id(6L).entrepriseId(10).email("ko@exemple.fr").formuleDePolistesse(0).build()));
-        when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
-        doNothing().when(mailTools).sendHtmlMail(eq("ok@exemple.fr"), any(), any());
-        doThrow(new MailSendException("smtp down"))
-                .when(mailTools).sendHtmlMail(eq("ko@exemple.fr"), any(), any());
-
-        annonceService.sendEmailForPendingAnnonces();
-
-        verify(annonceRepository).updateStatusAnnonceEtDateEnvoi(eq(1L), eq(2), any(OffsetDateTime.class));
-        verify(annonceRepository, never())
-                .updateStatusAnnonceEtDateEnvoi(eq(2L), any(), any());
-    }
-
-    @Test
-    void sendEmailForPendingAnnonces_chargeLesContactsEnLot_sansN1() {
-        Annonce a1 = Annonce.builder().id(1L).entrepriseId(10).contactId(5L)
-                .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1).build();
-        Annonce a2 = Annonce.builder().id(2L).entrepriseId(10).contactId(6L)
-                .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1).build();
-        when(annonceRepository.findAllByStatusAnnonce(1)).thenReturn(List.of(a1, a2));
-        when(contactService.getContactsByIds(any())).thenReturn(Map.of(
-                5L, Contact.builder().id(5L).entrepriseId(10).email("a@x.fr").formuleDePolistesse(0).build(),
-                6L, Contact.builder().id(6L).entrepriseId(10).email("b@x.fr").formuleDePolistesse(0).build()));
-        when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
-        doNothing().when(mailTools).sendHtmlMail(any(), any(), any());
-
-        annonceService.sendEmailForPendingAnnonces();
-
-        // Les contacts sont chargés en un seul lot, et plus un par annonce (N+1).
-        verify(contactService).getContactsByIds(any());
-        verify(contactService, never()).getContact(any());
-        verify(mailTools).sendHtmlMail(eq("a@x.fr"), any(), any());
-        verify(mailTools).sendHtmlMail(eq("b@x.fr"), any(), any());
     }
 
     @Test
@@ -210,20 +115,6 @@ class AnnonceServiceTest {
     void setAccepte_metLeStatutA5() {
         annonceService.setAccepte(7L);
         verify(annonceRepository).updateStatusAnnonce(7L, 5);
-    }
-
-    @Test
-    void setEnvoye_metLeStatutA2AvecDate() {
-        annonceService.setEnvoye(7L);
-        verify(annonceRepository).updateStatusAnnonceEtDateEnvoi(eq(7L), eq(2), any(OffsetDateTime.class));
-    }
-
-    @Test
-    void getHtmlContent_utiliseFormuleGenerique_siPasDeContact() {
-        Annonce a = Annonce.builder().id(1L).contactId(null).poste("Dev").typeContenu(0).build();
-        when(contenuService.getHtmlContenu("Dev", 0, "Madame, Monsieur,")).thenReturn("HTML");
-
-        assertThat(annonceService.getHtmlContent(a)).isEqualTo("HTML");
     }
 
     @Test

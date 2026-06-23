@@ -1,5 +1,6 @@
 package com.mr486.gestojob.controller;
 
+import com.mr486.gestojob.service.AnnonceMailService;
 import com.mr486.gestojob.service.AnnonceService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +23,8 @@ class FileAttenteControllerTest {
 
     @Mock
     private AnnonceService annonceService;
+    @Mock
+    private AnnonceMailService annonceMailService;
 
     @InjectMocks
     private FileAttenteController controller;
@@ -44,12 +47,12 @@ class FileAttenteControllerTest {
     @Test
     void postMail_envoieToutesLesAnnoncesEnAttente_etRedirige() {
         assertThat(controller.postMail()).isEqualTo("redirect:/file");
-        verify(annonceService).sendEmailForPendingAnnonces();
+        verify(annonceMailService).sendEmailForPendingAnnonces();
     }
 
     @Test
     void postDirectMail_envoieUneAnnonce_etRedirige() {
         assertThat(controller.postDirectMail(9L)).isEqualTo("redirect:/file");
-        verify(annonceService).sendDirectEmail(9L);
+        verify(annonceMailService).sendDirectEmail(9L);
     }
 }
