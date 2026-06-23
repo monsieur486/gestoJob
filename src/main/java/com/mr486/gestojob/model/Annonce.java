@@ -70,8 +70,11 @@ public class Annonce {
      * @return le libellé textuel de l'annonce
      */
     public String getLibelle() {
-        if (typeAnnonce == 1) {
-            return "Réf [" + reference + "] Laurent Touret - candidature au poste " + poste;
+        // Comparaison null-safe via l'enum : seule une candidature à une référence
+        // produit le libellé détaillé ; tout autre type (ou null) reste spontané.
+        if (Integer.valueOf(TypeAnnonce.REFERENCE.getCode()).equals(typeAnnonce)) {
+            return "Réf [" + reference + "] " + ApplicationConfiguration.CANDIDAT_NOM
+                    + " - candidature au poste " + poste;
         } else {
             return ApplicationConfiguration.DEMANDE_SPONTANEE_TXT;
         }

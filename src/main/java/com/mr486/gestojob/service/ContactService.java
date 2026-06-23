@@ -7,6 +7,7 @@ import com.mr486.gestojob.persistance.ContactRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -36,6 +37,7 @@ public class ContactService {
      * @param contactId identifiant du contact à supprimer
      * @throws RuntimeException si le contact est encore référencé par une annonce
      */
+    @Transactional
     public void deleteContact(Long contactId) {
         if (annonceRepository.existsByContactId(contactId)) {
             log.warn("suppression refusée : le contact {} est rattaché à des annonces", contactId);

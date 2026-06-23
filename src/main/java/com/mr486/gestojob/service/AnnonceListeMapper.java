@@ -5,6 +5,7 @@ import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.model.TypeAnnonce;
+import com.mr486.gestojob.model.TypeContenu;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -94,7 +95,7 @@ public class AnnonceListeMapper {
     }
 
     // Construit la chaîne d'information affichée dans la liste (entreprise, canal
-    // de contact email ou site, et type de contenu : MS pour microservices, G sinon).
+    // de contact email ou site, et étiquette du type de contenu via TypeContenu).
     private String getInfos(Annonce annonce, Entreprise entreprise, Contact contact) {
         String result = "🏢";
         result += (entreprise != null ? entreprise.getNom() : "?");
@@ -103,13 +104,7 @@ public class AnnonceListeMapper {
         } else {
             result += " 🌐site";
         }
-        if (annonce.getTypeContenu() != null && annonce.getTypeContenu() == 1) {
-            result += " MS";
-        } else if (annonce.getTypeContenu() != null && annonce.getTypeContenu() == 2) {
-            result += " IA";
-        } else {
-            result += " G";
-        }
+        result += " " + TypeContenu.libelleCourt(annonce.getTypeContenu());
         return result;
     }
 }

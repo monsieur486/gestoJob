@@ -138,14 +138,14 @@ class AnnonceServiceTest {
     }
 
     @Test
-    void searchAnnoncesPage_texteVideSansArchives_chercheLesEnvoyees() {
-        when(annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(eq(2), any(Pageable.class)))
+    void searchAnnoncesPage_texteVideSansArchives_chercheToutSaufArchive() {
+        when(annonceRepository.findAllByStatusAnnonceNotOrderByDateEnvoiDesc(eq(6), any(Pageable.class)))
                 .thenReturn(Page.empty());
 
         RechercheAnnonceForm form = RechercheAnnonceForm.builder().recherche("").avecArchives(false).build();
         annonceService.searchAnnoncesPage(form, 0);
 
-        verify(annonceRepository).findAllByStatusAnnonceOrderByDateEnvoiDesc(eq(2), any(Pageable.class));
+        verify(annonceRepository).findAllByStatusAnnonceNotOrderByDateEnvoiDesc(eq(6), any(Pageable.class));
     }
 
     @Test

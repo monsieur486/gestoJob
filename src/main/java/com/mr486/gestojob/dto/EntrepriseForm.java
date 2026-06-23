@@ -61,7 +61,7 @@ public class EntrepriseForm {
      * @param form le formulaire source contenant les données saisies
      * @return une nouvelle entité {@link Entreprise} alimentée à partir du formulaire
      */
-    public Entreprise entity(EntrepriseForm form) {
+    public static Entreprise entity(EntrepriseForm form) {
         Entreprise e = new Entreprise();
         EntrepriseService.convert(form, e);
         return e;

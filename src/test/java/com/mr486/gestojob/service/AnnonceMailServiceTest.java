@@ -90,6 +90,21 @@ class AnnonceMailServiceTest {
     }
 
     @Test
+    void sendDirectEmail_leveUneException_siAnnonceSansContact() {
+        Annonce sansContact = Annonce.builder()
+                .id(1L).entrepriseId(10).contactId(null)
+                .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1).build();
+        when(annonceRepository.findById(1L)).thenReturn(Optional.of(sansContact));
+
+        assertThatThrownBy(() -> annonceMailService.sendDirectEmail(1L))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("contact");
+
+        verify(mailTools, never()).sendHtmlMail(any(), any(), any());
+        verify(annonceRepository, never()).updateStatusAnnonceEtDateEnvoi(any(), any(), any());
+    }
+
+    @Test
     void sendEmailForPendingAnnonces_continueApresEchec_etNeMarqueQueLesSucces() {
         Annonce ok = Annonce.builder().id(1L).entrepriseId(10).contactId(5L)
                 .typeAnnonce(0).typeContenu(0).poste("Dev").reference("R").statusAnnonce(1).build();

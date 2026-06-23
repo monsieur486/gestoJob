@@ -110,15 +110,35 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
     Page<Annonce> findAllOrderByDateEnvoiDesc(Pageable pageable);
 
     /**
+     * Récupère, de façon paginée, toutes les annonces dont le statut diffère de
+     * celui fourni, triées par date d'envoi décroissante (annonces sans date en fin).
+     *
+     * <p><b>Exemple :</b> findAllByStatusAnnonceNotOrderByDateEnvoiDesc(6, PageRequest.of(0, 20)) renvoie toutes les annonces sauf les archivées (statut 6), la plus récemment envoyée en tête.</p>
+     *
+     * @param status   le statut à exclure des résultats
+     * @param pageable les informations de pagination et de tri
+     * @return une page d'annonces dont le statut diffère de {@code status}
+     */
+    @Query("""
+            select a
+            from Annonce a
+            where a.statusAnnonce <> :status
+            order by a.dateEnvoi desc nulls last
+            """)
+    Page<Annonce> findAllByStatusAnnonceNotOrderByDateEnvoiDesc(@Param("status") Integer status,
+                                                                Pageable pageable);
+
+    /**
      * Recherche les annonces correspondant à un terme de recherche.
      * <p>
      * La recherche est insensible à la casse et porte sur le poste, la référence
      * de l'annonce, le nom de l'entreprise, l'email et le nom du contact. Les
-     * annonces archivées (statut 2) ne sont incluses que si {@code includeArchives}
-     * vaut {@code true}. Les résultats sont triés par date d'envoi décroissante,
-     * les annonces sans date d'envoi étant placées en fin.
+     * annonces archivées (statut 6) ne sont incluses que si {@code includeArchives}
+     * vaut {@code true} ; sinon tous les autres statuts sont retournés. Les
+     * résultats sont triés par date d'envoi décroissante, les annonces sans date
+     * d'envoi étant placées en fin.
      *
-     * <p><b>Exemple :</b> search("java", false, pageable) renvoie les annonces non archivées dont le poste, la référence, le nom de l'entreprise, l'email ou le nom du contact contient « java » (ex. poste « Développeur Java »), tandis que search("java", true, pageable) inclut aussi les annonces archivées (statut 2).</p>
+     * <p><b>Exemple :</b> search("java", false, pageable) renvoie les annonces non archivées dont le poste, la référence, le nom de l'entreprise, l'email ou le nom du contact contient « java » (ex. poste « Développeur Java »), tandis que search("java", true, pageable) inclut aussi les annonces archivées (statut 6).</p>
      *
      * @param q               le terme de recherche
      * @param includeArchives {@code true} pour inclure également les annonces archivées
@@ -137,7 +157,7 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
                 or lower(coalesce(c.email, '')) like lower(concat('%', :q, '%'))
                 or lower(coalesce(c.nom, '')) like lower(concat('%', :q, '%'))
             )
-            and (:includeArchives = true or a.statusAnnonce = 2)
+            and (:includeArchives = true or a.statusAnnonce <> 6)
             order by a.dateEnvoi desc nulls last
             """)
     Page<Annonce> search(@Param("q") String q,

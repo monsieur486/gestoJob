@@ -1,5 +1,6 @@
 package com.mr486.gestojob.service;
 
+import com.mr486.gestojob.model.TypeContenu;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
@@ -156,14 +157,14 @@ public class ContenuService {
             // toute injection HTML dans le corps de l'email. Les valeurs par défaut
             // ci-dessous sont des littéraux déjà encodés (&eacute;, ...) et ne le sont pas.
             String safePolitesse = HtmlUtils.htmlEscape(messageDePolitesse == null ? "" : messageDePolitesse);
-            if (typeContenu == 1) {
+            if (typeContenu == TypeContenu.MICROSERVICES.getCode()) {
                 String safePoste = (poste == null || poste.isEmpty())
                         ? "de d&eacute;veloppeur Java orient&eacute; microservices"
                         : HtmlUtils.htmlEscape(poste);
                 htmlContenu = annoncePosteMicroserviceHtmlTemplate()
                         .replace("{{POLITESSE}}", safePolitesse)
                         .replace("{{POSTE}}", safePoste);
-            } else if (typeContenu == 2) {
+            } else if (typeContenu == TypeContenu.IA.getCode()) {
                 String safePoste = (poste == null || poste.isEmpty())
                         ? "de d&eacute;veloppeur Java back-end orient&eacute; IA agentique"
                         : HtmlUtils.htmlEscape(poste);
@@ -179,12 +180,12 @@ public class ContenuService {
                         .replace("{{POSTE}}", safePoste);
             }
         } else {
-            if (typeContenu == 1) {
+            if (typeContenu == TypeContenu.MICROSERVICES.getCode()) {
                 if (poste == null || poste.isEmpty()) poste = "de développeur Java orienté microservices";
                 htmlContenu = annoncePosteMicroserviceTxtTemplate()
                         .replace("{{POLITESSE}}", messageDePolitesse)
                         .replace("{{POSTE}}", poste);
-            } else if (typeContenu == 2) {
+            } else if (typeContenu == TypeContenu.IA.getCode()) {
                 if (poste == null || poste.isEmpty()) poste = "de développeur Java back-end orienté IA agentique";
                 htmlContenu = annoncePosteIaAgentiqueTxtTemplate()
                         .replace("{{POLITESSE}}", messageDePolitesse)

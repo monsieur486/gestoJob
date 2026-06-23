@@ -53,11 +53,12 @@ public class MailTools {
 
             mailSender.send(mimeMessage);
         } catch (MailException e) {
-            log.error("Erreur lors de l'envoi de l'email à {} : {}", emailDestinataire, e.getMessage(), e);
+            // L'adresse destinataire n'est pas journalisée (donnée personnelle).
+            log.error("Erreur lors de l'envoi d'un email : {}", e.getMessage(), e);
             throw e;
         } catch (Exception e) {
-            log.error("Erreur lors de la préparation de l'email à {} : {}", emailDestinataire, e.getMessage(), e);
-            throw new MailSendException("Échec de l'envoi de l'email à " + emailDestinataire, e);
+            log.error("Erreur lors de la préparation d'un email : {}", e.getMessage(), e);
+            throw new MailSendException("Échec de l'envoi de l'email", e);
         }
     }
 
