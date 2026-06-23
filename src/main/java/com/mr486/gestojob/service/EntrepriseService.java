@@ -5,6 +5,7 @@ import com.mr486.gestojob.dto.EntrepriseListe;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.persistance.EntrepriseRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EntrepriseService {
 
     private final EntrepriseRepository entrepriseRepository;
@@ -58,9 +60,11 @@ public class EntrepriseService {
      */
     public int save(EntrepriseForm form) {
         if (entrepriseRepository.existsByNomIgnoreCase(form.getNom())) {
+            log.warn("création d'entreprise refusée : « {} » existe déjà", form.getNom());
             throw new RuntimeException("L'entreprise existe déjà");
         }
         Entreprise entreprise = entrepriseRepository.save(form.entity(form));
+        log.info("entreprise créée : « {} » (id {})", entreprise.getNom(), entreprise.getId());
         return entreprise.getId();
     }
 
@@ -80,6 +84,7 @@ public class EntrepriseService {
                 .orElseThrow(() -> new RuntimeException("Entreprise introuvable avec id: " + entrepriseId));
         convert(form, e);
         entrepriseRepository.save(e);
+        log.info("entreprise modifiée : « {} » (id {})", e.getNom(), entrepriseId);
     }
 
     /**
@@ -138,6 +143,7 @@ public class EntrepriseService {
         Entreprise e = entrepriseRepository.findById(entrepriseId).orElseThrow();
         e.setEstActive(false);
         entrepriseRepository.save(e);
+        log.info("entreprise désactivée : « {} » (id {})", e.getNom(), entrepriseId);
     }
 
     /**
@@ -152,6 +158,7 @@ public class EntrepriseService {
         Entreprise e = entrepriseRepository.findById(entrepriseId).orElseThrow();
         e.setEstActive(true);
         entrepriseRepository.save(e);
+        log.info("entreprise activée : « {} » (id {})", e.getNom(), entrepriseId);
     }
 
     /**

@@ -172,6 +172,7 @@ public class AnnonceService {
     @Transactional
     public void setDepasse(Long annonceId) {
         updateStatusAnnonce(annonceId, 3);
+        log.info("annonce marquée dépassée : {}", annonceId);
     }
 
     /**
@@ -184,6 +185,7 @@ public class AnnonceService {
     @Transactional
     public void setRefus(Long annonceId) {
         updateStatusAnnonce(annonceId, 4);
+        log.info("annonce marquée refusée : {}", annonceId);
     }
 
     /**
@@ -196,6 +198,7 @@ public class AnnonceService {
     @Transactional
     public void setAccepte(Long annonceId) {
         updateStatusAnnonce(annonceId, 5);
+        log.info("annonce marquée acceptée (positif) : {}", annonceId);
     }
 
     /**

@@ -5,6 +5,7 @@ import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import com.mr486.gestojob.persistance.ContactRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ContactService {
 
     private final ContactRepository contactRepository;
@@ -36,9 +38,11 @@ public class ContactService {
      */
     public void deleteContact(Long contactId) {
         if (annonceRepository.existsByContactId(contactId)) {
+            log.warn("suppression refusée : le contact {} est rattaché à des annonces", contactId);
             throw new RuntimeException("Ce contact est rattaché à des annonces ; supprimez-les d'abord.");
         }
         contactRepository.deleteById(contactId);
+        log.info("contact supprimé : {}", contactId);
     }
 
     /**
@@ -54,15 +58,18 @@ public class ContactService {
      */
     public void saveContact(ContactForm contactForm, int entrepriseId) {
         if (!entrepriseService.existe(entrepriseId)) {
+            log.warn("création de contact refusée : entreprise {} introuvable", entrepriseId);
             throw new RuntimeException("Entreprise introuvable avec id: " + entrepriseId);
         }
         Integer formuleDePolitesse = contactForm.getFormuleDePolitesse();
         String email = contactForm.getEmail();
         if (formuleDePolitesse != null && formuleDePolitesse > 0 && (email == null || email.isBlank())) {
+            log.warn("création de contact refusée : formule de politesse sans email (entreprise {})", entrepriseId);
             throw new RuntimeException("Veuillez renseigner un email");
         }
         if (email != null && !email.isBlank()
                 && contactRepository.existsByEntrepriseIdAndEmailIgnoreCase(entrepriseId, email)) {
+            log.warn("création de contact refusée : email en doublon pour l'entreprise {}", entrepriseId);
             throw new RuntimeException("Un contact avec cet email existe déjà pour cette entreprise.");
         }
 
@@ -72,6 +79,7 @@ public class ContactService {
         contact.setEmail(contactForm.getEmail());
         contact.setNom(contactForm.getNom());
         contactRepository.save(contact);
+        log.info("contact créé pour l'entreprise {}", entrepriseId);
     }
 
     /**
