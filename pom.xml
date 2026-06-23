@@ -207,7 +207,76 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Génération du site Maven (versionné : le super-pom en fournit une
+                 version trop ancienne pour le reporting moderne). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.21.0</version>
+            </plugin>
         </plugins>
     </build>
+
+    <!-- Rapports du site (./mvnw clean verify site) : informations projet,
+         Javadoc française, tableau de couverture JaCoCo, résultats Surefire. -->
+    <reporting>
+        <plugins>
+            <!-- INFORMATIONS du projet : résumé, dépendances, plugins, etc. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>3.9.0</version>
+            </plugin>
+
+            <!-- JAVADOC en français (doclint désactivé pour ne pas casser le site ;
+                 limité au rapport principal, les classes de test étant package-private). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.11.2</version>
+                <configuration>
+                    <locale>fr</locale>
+                    <doclint>none</doclint>
+                    <quiet>true</quiet>
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>javadoc</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+
+            <!-- TABLEAU de couverture JaCoCo (lit target/jacoco.exec). -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.13</version>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>report</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+
+            <!-- RAPPORT Surefire : résultats des tests (lit target/surefire-reports). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>3.5.4</version>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>report-only</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+        </plugins>
+    </reporting>
 
 </project>
