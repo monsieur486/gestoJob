@@ -33,6 +33,16 @@ spring:
 
 server:
   port: ${DOCKER_UI_PORT}
+  # L'application tourne derrière un reverse proxy qui termine le HTTPS
+  # (https://nomdedomaine.ext). On fait confiance aux en-têtes X-Forwarded-*
+  # pour générer des URL/redirections en https et reconnaître le schéma réel.
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        secure: true
+        http-only: true
+        same-site: lax
 
 gestojob:
   max-entreprises-par-page: ${MAX_ENTREPRISES_PAR_PAGE}

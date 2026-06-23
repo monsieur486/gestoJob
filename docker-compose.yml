@@ -8,7 +8,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      # Base accessible uniquement en local (dev + conteneurs) — jamais exposée publiquement.
+      - "127.0.0.1:5432:5432"
     volumes:
       - gestojob_db_data:/var/lib/postgresql/data
 
@@ -24,7 +25,10 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
     ports:
-      - "${DOCKER_UI_PORT}:${DOCKER_UI_PORT}"
+      # Exposé uniquement sur la loopback : seul le reverse proxy de l'hôte y accède
+      # (indispensable puisqu'on fait confiance aux en-têtes X-Forwarded-*).
+      # Si le proxy tourne sur une AUTRE machine, remplacer par "${DOCKER_UI_PORT}:${DOCKER_UI_PORT}".
+      - "127.0.0.1:${DOCKER_UI_PORT}:${DOCKER_UI_PORT}"
 
 volumes:
   gestojob_db_data:
