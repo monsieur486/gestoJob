@@ -111,9 +111,14 @@ class AnnonceServiceTest {
 
     @Test
     void sendEmailForPendingAnnonces_continueApresEchec_etNeMarqueQueLesSucces() {
-        Annonce ok = annonce(1L, 5L, "ok@exemple.fr");
-        Annonce ko = annonce(2L, 6L, "ko@exemple.fr");
+        Annonce ok = Annonce.builder().id(1L).entrepriseId(10).contactId(5L)
+                .typeAnnonce(0).typeContenu(0).poste("Dev").reference("R").statusAnnonce(1).build();
+        Annonce ko = Annonce.builder().id(2L).entrepriseId(10).contactId(6L)
+                .typeAnnonce(0).typeContenu(0).poste("Dev").reference("R").statusAnnonce(1).build();
         when(annonceRepository.findAllByStatusAnnonce(1)).thenReturn(List.of(ok, ko));
+        when(contactService.getContactsByIds(any())).thenReturn(Map.of(
+                5L, Contact.builder().id(5L).entrepriseId(10).email("ok@exemple.fr").formuleDePolistesse(0).build(),
+                6L, Contact.builder().id(6L).entrepriseId(10).email("ko@exemple.fr").formuleDePolistesse(0).build()));
         when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
         doNothing().when(mailTools).sendHtmlMail(eq("ok@exemple.fr"), any(), any());
         doThrow(new MailSendException("smtp down"))
@@ -124,6 +129,28 @@ class AnnonceServiceTest {
         verify(annonceRepository).updateStatusAnnonceEtDateEnvoi(eq(1L), eq(2), any(OffsetDateTime.class));
         verify(annonceRepository, never())
                 .updateStatusAnnonceEtDateEnvoi(eq(2L), any(), any());
+    }
+
+    @Test
+    void sendEmailForPendingAnnonces_chargeLesContactsEnLot_sansN1() {
+        Annonce a1 = Annonce.builder().id(1L).entrepriseId(10).contactId(5L)
+                .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1).build();
+        Annonce a2 = Annonce.builder().id(2L).entrepriseId(10).contactId(6L)
+                .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1).build();
+        when(annonceRepository.findAllByStatusAnnonce(1)).thenReturn(List.of(a1, a2));
+        when(contactService.getContactsByIds(any())).thenReturn(Map.of(
+                5L, Contact.builder().id(5L).entrepriseId(10).email("a@x.fr").formuleDePolistesse(0).build(),
+                6L, Contact.builder().id(6L).entrepriseId(10).email("b@x.fr").formuleDePolistesse(0).build()));
+        when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
+        doNothing().when(mailTools).sendHtmlMail(any(), any(), any());
+
+        annonceService.sendEmailForPendingAnnonces();
+
+        // Les contacts sont chargés en un seul lot, et plus un par annonce (N+1).
+        verify(contactService).getContactsByIds(any());
+        verify(contactService, never()).getContact(any());
+        verify(mailTools).sendHtmlMail(eq("a@x.fr"), any(), any());
+        verify(mailTools).sendHtmlMail(eq("b@x.fr"), any(), any());
     }
 
     @Test
