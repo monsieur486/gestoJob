@@ -58,6 +58,20 @@ class ContenuServiceTest {
     }
 
     @Test
+    void html_templateIaAgentique_siTypeContenu2() {
+        String html = contenuService.getHtmlContenu("Développeur", 2, "Madame, Monsieur,");
+
+        assertThat(html).contains("IA agentique");
+    }
+
+    @Test
+    void texte_templateIaAgentique_siTypeContenu2() {
+        String txt = contenuService.getTextContenu("Développeur", 2, "Madame, Monsieur,");
+
+        assertThat(txt).contains("agents IA");
+    }
+
+    @Test
     void texte_utiliseLePosteParDefaut_siVide() {
         String txt = contenuService.getTextContenu("", 0, "Madame, Monsieur,");
 

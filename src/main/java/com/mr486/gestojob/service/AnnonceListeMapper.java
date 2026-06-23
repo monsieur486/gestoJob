@@ -105,6 +105,8 @@ public class AnnonceListeMapper {
         }
         if (annonce.getTypeContenu() != null && annonce.getTypeContenu() == 1) {
             result += " MS";
+        } else if (annonce.getTypeContenu() != null && annonce.getTypeContenu() == 2) {
+            result += " IA";
         } else {
             result += " G";
         }

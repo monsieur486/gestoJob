@@ -23,7 +23,7 @@ public class AnnonceForm {
     // par le formulaire : donc PAS de @NotNull ici (la validation @Valid s'exécute
     // avant que l'id ne soit posé). Le service garde un contrôle anti-null.
     private Integer entrepriseId;
-    private Integer contenuId = 0;
+    private Integer contenuId = 2; // 0 = général, 1 = microservices, 2 = IA agentique (par défaut)
     private Long contactId;
     private Integer typeAnnonce = 0; // type d'annonce : 1 = candidature à une offre, sinon = demande spontanée
     @Size(max = 255, message = "Le poste ne doit pas dépasser 255 caractères.")

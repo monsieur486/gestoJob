@@ -100,9 +100,54 @@ public class ContenuService {
                 """;
     }
 
-    // Sélectionne le modèle selon le type de contenu (1 = microservices, sinon
-    // généraliste) et la sortie souhaitée (HTML ou texte), applique un poste par
-    // défaut si absent, puis substitue la politesse et le poste dans le modèle.
+    // Modèle HTML pour une candidature « nouvelle génération » axée IA agentique.
+    private static String annoncePosteIaAgentiqueHtmlTemplate() {
+        return """
+                <p>{{POLITESSE}}</p>
+                <p>Développeur Java back-end qui place l'<strong>IA agentique</strong> au cœur de sa méthode, je vous propose ma candidature au poste <strong>{{POSTE}}</strong>. Ma conviction tient en une phrase : <em>je développe autant avec mon expertise qu'avec une équipe d'agents IA spécialisés</em>, pour livrer plus vite, élargir mon périmètre et tenir une exigence de qualité constante.</p>
+                <p>Côté socle technique, je m'appuie sur une formation diplômante de <strong>Développeur d'applications Java (niveau 6 – OpenClassrooms)</strong> et une solide maîtrise de <strong>Java 17/21</strong>, <strong>Spring Boot 3</strong>, <strong>Hibernate/JPA</strong>, des <strong>architectures microservices</strong> (Spring Cloud, REST/OpenAPI), avec une attention constante aux bonnes pratiques : <strong>SOLID</strong>, <strong>TDD</strong>, tests JUnit 5 / Mockito, intégration continue (GitHub Actions) et conteneurisation Docker.</p>
+                <p>Ce qui distingue ma façon de travailler, c'est l'<strong>orchestration d'agents IA</strong> au quotidien. Avec des outils comme <strong>Claude Code</strong> et une pratique rigoureuse du <strong>prompt engineering</strong>, je délègue à des agents spécialisés l'exploration de code, la génération de tests, la revue et la refactorisation, tout en gardant la maîtrise de l'architecture et l'entière responsabilité des choix. Cette approche prolonge naturellement mon expertise du back-end vers le <strong>full-stack</strong>, sans rien céder sur la qualité ni la sécurité.</p>
+                <p>Cette méthode, je l'ai éprouvée sur des projets concrets menés de bout en bout : <strong>GestoMS</strong>, un générateur de plateforme microservices complète (Keycloak, OAuth2), et <strong>Tarot Des Amis</strong>, une application temps réel en production (WebSocket, interface mobile-first) — du code aux tests jusqu'au déploiement.</p>
+                <p>Vous rejoindre, c'est mettre cette productivité augmentée au service de vos projets : des livraisons accélérées, un périmètre élargi et une qualité de code outillée et mesurable. Une manière de développer résolument tournée vers demain, que je serais heureux d'apporter à votre équipe.</p>
+                <p>Je serais ravi d'échanger avec vous lors d'un entretien afin de vous présenter ma démarche, mes projets et ma motivation.</p>
+                <p>Je vous prie d'agréer, {{POLITESSE}} l'expression de ma parfaite considération.</p>
+                <p>Laurent Touret</p>
+                        <p><a href="https://mr486.com/assets/files/CV-Laurent-Touret.pdf" target="_blank" rel="noopener noreferrer">🎓 CV Lien cliquable</a></p>
+                        <p><a href="https://mr486.com" target="_blank" rel="noopener noreferrer">🌐 Site de présentation https://mr486.com</a></p>
+                """;
+    }
+
+    // Modèle texte pour une candidature « nouvelle génération » axée IA agentique.
+    private static String annoncePosteIaAgentiqueTxtTemplate() {
+        return """
+                {{POLITESSE}}
+
+                Développeur Java back-end qui place l'IA agentique au cœur de sa méthode, je vous propose ma candidature au poste {{POSTE}}. Ma conviction tient en une phrase : je développe autant avec mon expertise qu'avec une équipe d'agents IA spécialisés, pour livrer plus vite, élargir mon périmètre et tenir une exigence de qualité constante.
+
+                Côté socle technique, je m'appuie sur une formation diplômante de Développeur d'applications Java (niveau 6 – OpenClassrooms) et une solide maîtrise de Java 17/21, Spring Boot 3, Hibernate/JPA, des architectures microservices (Spring Cloud, REST/OpenAPI), avec une attention constante aux bonnes pratiques : SOLID, TDD, tests JUnit 5 / Mockito, intégration continue (GitHub Actions) et conteneurisation Docker.
+
+                Ce qui distingue ma façon de travailler, c'est l'orchestration d'agents IA au quotidien. Avec des outils comme Claude Code et une pratique rigoureuse du prompt engineering, je délègue à des agents spécialisés l'exploration de code, la génération de tests, la revue et la refactorisation, tout en gardant la maîtrise de l'architecture et l'entière responsabilité des choix. Cette approche prolonge naturellement mon expertise du back-end vers le full-stack, sans rien céder sur la qualité ni la sécurité.
+
+                Cette méthode, je l'ai éprouvée sur des projets concrets menés de bout en bout : GestoMS, un générateur de plateforme microservices complète (Keycloak, OAuth2), et Tarot Des Amis, une application temps réel en production (WebSocket, interface mobile-first) — du code aux tests jusqu'au déploiement.
+
+                Vous rejoindre, c'est mettre cette productivité augmentée au service de vos projets : des livraisons accélérées, un périmètre élargi et une qualité de code outillée et mesurable. Une manière de développer résolument tournée vers demain, que je serais heureux d'apporter à votre équipe.
+
+                Je serais ravi d'échanger avec vous lors d'un entretien afin de vous présenter ma démarche, mes projets et ma motivation.
+
+                Je vous prie d'agréer, {{POLITESSE}} l'expression de ma parfaite considération.
+
+
+                Laurent Touret
+
+                CV https://www.mr486.com/assets/files/CV-Laurent-Touret.pdf
+                Site de présentation https://mr486.com
+                """;
+    }
+
+    // Sélectionne le modèle selon le type de contenu (1 = microservices,
+    // 2 = IA agentique, sinon généraliste) et la sortie souhaitée (HTML ou texte),
+    // applique un poste par défaut si absent, puis substitue la politesse et le
+    // poste dans le modèle.
     // En HTML, les saisies utilisateur sont échappées pour éviter l'injection.
     private String getContent(String poste, int typeContenu, String messageDePolitesse, Boolean isHtml) {
         String htmlContenu = "";
@@ -118,6 +163,13 @@ public class ContenuService {
                 htmlContenu = annoncePosteMicroserviceHtmlTemplate()
                         .replace("{{POLITESSE}}", safePolitesse)
                         .replace("{{POSTE}}", safePoste);
+            } else if (typeContenu == 2) {
+                String safePoste = (poste == null || poste.isEmpty())
+                        ? "de d&eacute;veloppeur Java back-end orient&eacute; IA agentique"
+                        : HtmlUtils.htmlEscape(poste);
+                htmlContenu = annoncePosteIaAgentiqueHtmlTemplate()
+                        .replace("{{POLITESSE}}", safePolitesse)
+                        .replace("{{POSTE}}", safePoste);
             } else {
                 String safePoste = (poste == null || poste.isEmpty())
                         ? "de d&eacute;veloppeur Java"
@@ -130,6 +182,11 @@ public class ContenuService {
             if (typeContenu == 1) {
                 if (poste == null || poste.isEmpty()) poste = "de développeur Java orienté microservices";
                 htmlContenu = annoncePosteMicroserviceTxtTemplate()
+                        .replace("{{POLITESSE}}", messageDePolitesse)
+                        .replace("{{POSTE}}", poste);
+            } else if (typeContenu == 2) {
+                if (poste == null || poste.isEmpty()) poste = "de développeur Java back-end orienté IA agentique";
+                htmlContenu = annoncePosteIaAgentiqueTxtTemplate()
                         .replace("{{POLITESSE}}", messageDePolitesse)
                         .replace("{{POSTE}}", poste);
             } else {
@@ -150,7 +207,7 @@ public class ContenuService {
      * <p><b>Exemple :</b> un poste contenant « &lt;script&gt; » est échappé en « &amp;lt;script&amp;gt; » dans le HTML produit.</p>
      *
      * @param poste              intitulé du poste visé (une valeur par défaut est utilisée si vide)
-     * @param typeContenu        type de contenu (1 = microservices, sinon généraliste)
+     * @param typeContenu        type de contenu (1 = microservices, 2 = IA agentique, sinon généraliste)
      * @param messageDePolitesse formule de politesse à insérer
      * @return le contenu HTML de la candidature
      */
@@ -164,7 +221,7 @@ public class ContenuService {
      * <p><b>Exemple :</b> avec typeContenu=1 et un poste vide, le texte produit utilise le poste par défaut « de développeur Java orienté microservices » ; le poste fourni n'est pas échappé (sortie texte brut).</p>
      *
      * @param poste              intitulé du poste visé (une valeur par défaut est utilisée si vide)
-     * @param typeContenu        type de contenu (1 = microservices, sinon généraliste)
+     * @param typeContenu        type de contenu (1 = microservices, 2 = IA agentique, sinon généraliste)
      * @param messageDePolitesse formule de politesse à insérer
      * @return le contenu texte de la candidature
      */
