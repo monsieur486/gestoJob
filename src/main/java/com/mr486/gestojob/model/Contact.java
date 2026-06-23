@@ -1,5 +1,6 @@
 package com.mr486.gestojob.model;
 
+import com.mr486.gestojob.configuration.ApplicationConfiguration;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -52,11 +53,11 @@ public class Contact {
         // éviter une salutation du type « Monsieur null, » dans le corps de l'email.
         String suffixeNom = (nom != null && !nom.isBlank()) ? " " + nom.trim() : "";
         if (Integer.valueOf(2).equals(formuleDePolitesse)) {
-            return "Madame" + suffixeNom + ",";
+            return ApplicationConfiguration.CIVILITE_MADAME + suffixeNom + ",";
         }
         if (Integer.valueOf(1).equals(formuleDePolitesse)) {
-            return "Monsieur" + suffixeNom + ",";
+            return ApplicationConfiguration.CIVILITE_MONSIEUR + suffixeNom + ",";
         }
-        return "Madame, Monsieur,";
+        return ApplicationConfiguration.SALUTATION_GENERIQUE;
     }
 }
