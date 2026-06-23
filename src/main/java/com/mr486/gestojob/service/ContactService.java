@@ -2,6 +2,7 @@ package com.mr486.gestojob.service;
 
 import com.mr486.gestojob.dto.ContactForm;
 import com.mr486.gestojob.model.Contact;
+import com.mr486.gestojob.persistance.AnnonceRepository;
 import com.mr486.gestojob.persistance.ContactRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,22 @@ public class ContactService {
 
     private final ContactRepository contactRepository;
     private final EntrepriseService entrepriseService;
+    private final AnnonceRepository annonceRepository;
+
+    /**
+     * Supprime un contact, sauf s'il est encore rattaché à des annonces.
+     *
+     * <p><b>Exemple :</b> deleteContact(9L) supprime le contact 9 s'il n'est lié à aucune annonce ; sinon lève RuntimeException(« … rattaché à des annonces … »).</p>
+     *
+     * @param contactId identifiant du contact à supprimer
+     * @throws RuntimeException si le contact est encore référencé par une annonce
+     */
+    public void deleteContact(Long contactId) {
+        if (annonceRepository.existsByContactId(contactId)) {
+            throw new RuntimeException("Ce contact est rattaché à des annonces ; supprimez-les d'abord.");
+        }
+        contactRepository.deleteById(contactId);
+    }
 
     /**
      * Crée et enregistre un contact pour une entreprise.
@@ -31,8 +48,9 @@ public class ContactService {
      *
      * @param contactForm  formulaire du contact
      * @param entrepriseId identifiant de l'entreprise rattachée
-     * @throws RuntimeException si l'entreprise est introuvable, ou si une formule de
-     *                          politesse est choisie sans email renseigné
+     * @throws RuntimeException si l'entreprise est introuvable, si une formule de
+     *                          politesse est choisie sans email renseigné, ou si un
+     *                          contact avec le même email existe déjà pour l'entreprise
      */
     public void saveContact(ContactForm contactForm, int entrepriseId) {
         if (!entrepriseService.existe(entrepriseId)) {
@@ -42,6 +60,10 @@ public class ContactService {
         String email = contactForm.getEmail();
         if (formuleDePolitesse != null && formuleDePolitesse > 0 && (email == null || email.isBlank())) {
             throw new RuntimeException("Veuillez renseigner un email");
+        }
+        if (email != null && !email.isBlank()
+                && contactRepository.existsByEntrepriseIdAndEmailIgnoreCase(entrepriseId, email)) {
+            throw new RuntimeException("Un contact avec cet email existe déjà pour cette entreprise.");
         }
 
         Contact contact = new Contact();

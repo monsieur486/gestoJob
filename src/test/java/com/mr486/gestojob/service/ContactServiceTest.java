@@ -2,6 +2,7 @@ package com.mr486.gestojob.service;
 
 import com.mr486.gestojob.dto.ContactForm;
 import com.mr486.gestojob.model.Contact;
+import com.mr486.gestojob.persistance.AnnonceRepository;
 import com.mr486.gestojob.persistance.ContactRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,9 +30,31 @@ class ContactServiceTest {
     private ContactRepository contactRepository;
     @Mock
     private EntrepriseService entrepriseService;
+    @Mock
+    private AnnonceRepository annonceRepository;
 
     @InjectMocks
     private ContactService contactService;
+
+    @Test
+    void deleteContact_supprime_siNonRattacheADesAnnonces() {
+        when(annonceRepository.existsByContactId(9L)).thenReturn(false);
+
+        contactService.deleteContact(9L);
+
+        verify(contactRepository).deleteById(9L);
+    }
+
+    @Test
+    void deleteContact_leveUneException_siRattacheADesAnnonces() {
+        when(annonceRepository.existsByContactId(9L)).thenReturn(true);
+
+        assertThatThrownBy(() -> contactService.deleteContact(9L))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("annonce");
+
+        verify(contactRepository, never()).deleteById(any());
+    }
 
     @Test
     void saveContact_leveUneException_siEntrepriseInconnue() {
@@ -77,6 +100,19 @@ class ContactServiceTest {
         contactService.saveContact(form, 7);
 
         verify(contactRepository).save(any(Contact.class));
+    }
+
+    @Test
+    void saveContact_leveUneException_siEmailDejaUtilisePourLEntreprise() {
+        when(entrepriseService.existe(7)).thenReturn(true);
+        when(contactRepository.existsByEntrepriseIdAndEmailIgnoreCase(7, "doublon@acme.fr")).thenReturn(true);
+        ContactForm form = ContactForm.builder().email("doublon@acme.fr").formuleDePolitesse(0).nom("Durand").build();
+
+        assertThatThrownBy(() -> contactService.saveContact(form, 7))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("existe déjà");
+
+        verify(contactRepository, never()).save(any());
     }
 
     @Test

@@ -22,6 +22,16 @@ import java.util.List;
 public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
 
     /**
+     * Indique si au moins une annonce est rattachée au contact donné.
+     *
+     * <p><b>Exemple :</b> existsByContactId(5L) renvoie true si une annonce référence le contact 5, false sinon.</p>
+     *
+     * @param contactId l'identifiant du contact concerné
+     * @return {@code true} si une annonce référence ce contact, {@code false} sinon
+     */
+    boolean existsByContactId(Long contactId);
+
+    /**
      * Récupère toutes les annonces possédant le statut indiqué.
      *
      * <p><b>Exemple :</b> findAllByStatusAnnonce(1) renvoie les annonces en attente d'envoi.</p>

@@ -23,4 +23,16 @@ public interface ContactRepository extends JpaRepository<Contact, Long> {
      * @return la liste des contacts de l'entreprise
      */
     List<Contact> findAllByEntrepriseId(Integer id);
+
+    /**
+     * Indique si un contact possédant l'email donné existe déjà pour une
+     * entreprise, sans tenir compte de la casse.
+     *
+     * <p><b>Exemple :</b> existsByEntrepriseIdAndEmailIgnoreCase(7, "a@b.fr") renvoie true si l'entreprise 7 a déjà un contact dont l'email vaut « a@b.fr » (ou « A@B.FR »), false sinon.</p>
+     *
+     * @param entrepriseId l'identifiant de l'entreprise concernée
+     * @param email        l'email à vérifier
+     * @return {@code true} si un tel contact existe déjà, {@code false} sinon
+     */
+    boolean existsByEntrepriseIdAndEmailIgnoreCase(Integer entrepriseId, String email);
 }

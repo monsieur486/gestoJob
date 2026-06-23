@@ -7,9 +7,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.ui.ExtendedModelMap;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doThrow;
@@ -33,7 +32,7 @@ class ContactControllerTest {
         when(bindingResult.hasErrors()).thenReturn(false);
         ContactForm form = ContactForm.builder().email("a@b.fr").formuleDePolitesse(0).build();
 
-        String view = controller.ajoutContactSubmit(form, 5, bindingResult, new ExtendedModelMap());
+        String view = controller.ajoutContactSubmit(form, 5, bindingResult, new RedirectAttributesModelMap());
 
         assertThat(view).isEqualTo("redirect:/entreprises/5");
         verify(contactService).saveContact(form, 5);
@@ -44,7 +43,7 @@ class ContactControllerTest {
         when(bindingResult.hasErrors()).thenReturn(true);
         ContactForm form = ContactForm.builder().build();
 
-        controller.ajoutContactSubmit(form, 5, bindingResult, new ExtendedModelMap());
+        controller.ajoutContactSubmit(form, 5, bindingResult, new RedirectAttributesModelMap());
 
         verify(contactService, never()).saveContact(form, 5);
     }
@@ -56,9 +55,31 @@ class ContactControllerTest {
         doThrow(new RuntimeException("Veuillez renseigner un email"))
                 .when(contactService).saveContact(form, 5);
 
-        Model model = new ExtendedModelMap();
-        controller.ajoutContactSubmit(form, 5, bindingResult, model);
+        RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
+        String view = controller.ajoutContactSubmit(form, 5, bindingResult, redirectAttributes);
 
-        assertThat(model.getAttribute("errorMessage")).isEqualTo("Veuillez renseigner un email");
+        assertThat(view).isEqualTo("redirect:/entreprises/5");
+        assertThat(redirectAttributes.getFlashAttributes().get("errorMessage"))
+                .isEqualTo("Veuillez renseigner un email");
+    }
+
+    @Test
+    void supprimerContact_supprime_etRedirige() {
+        String view = controller.supprimerContact(5, 9L, new RedirectAttributesModelMap());
+
+        assertThat(view).isEqualTo("redirect:/entreprises/5");
+        verify(contactService).deleteContact(9L);
+    }
+
+    @Test
+    void supprimerContact_exposeLErreur_siServiceLeve() {
+        doThrow(new RuntimeException("Ce contact est rattaché à des annonces ; supprimez-les d'abord."))
+                .when(contactService).deleteContact(9L);
+
+        RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
+        String view = controller.supprimerContact(5, 9L, redirectAttributes);
+
+        assertThat(view).isEqualTo("redirect:/entreprises/5");
+        assertThat(redirectAttributes.getFlashAttributes().get("errorMessage")).asString().contains("annonces");
     }
 }
