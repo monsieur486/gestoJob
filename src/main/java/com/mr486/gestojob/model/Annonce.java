@@ -42,7 +42,8 @@ public class Annonce {
     private Integer typeContenu; // identifiant du type de contenu associé à l'annonce
     private String poste;
     private String reference;
-    private Integer statusAnnonce; // statut de suivi : 1=Boîte d'envoi, 2=En cours, 3=Dépassé, 4=Négatif, 5=Positif, 6=Archivé
+    // statut de suivi : 1=Boîte d'envoi, 2=En cours, 3=Dépassé, 4=Négatif, 5=Positif, 6=Archivé
+    private Integer statusAnnonce;
     private OffsetDateTime dateEnvoi;
 
     /**

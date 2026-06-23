@@ -44,7 +44,8 @@ public class MailTools {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
-            helper.setFrom(mailNotificationSender, ApplicationConfiguration.DEFAULT_EMAIL_FROM);                 // expéditeur
+            // expéditeur
+            helper.setFrom(mailNotificationSender, ApplicationConfiguration.DEFAULT_EMAIL_FROM);
 
             helper.setTo(emailDestinataire);
             helper.setSubject(libelle);

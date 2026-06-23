@@ -235,7 +235,8 @@ public class AnnonceService {
      */
     public Page<AnnonceListe> getAllPositifListePage(int pageIndex) {
         var pageable = PageRequest.of(pageIndex, maxPositifsParPage);
-        return annonceListeMapper.toAnnonceListePage(annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(5, pageable));
+        return annonceListeMapper.toAnnonceListePage(
+                annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(5, pageable));
     }
 
     /**

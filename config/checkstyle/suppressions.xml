@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+        "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+        "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<suppressions>
+    <!-- ContenuService héberge les modèles de lettre (longs littéraux HTML/texte) :
+         la longueur de ligne n'y a pas de sens. -->
+    <suppress files="ContenuService\.java" checks="LineLength"/>
+</suppressions>

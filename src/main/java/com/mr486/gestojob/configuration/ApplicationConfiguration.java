@@ -15,5 +15,6 @@ public class ApplicationConfiguration {
     public static final String DEFAULT_EMAIL_FROM = "Laurent Touret";
 
     /** Objet par défaut utilisé pour les courriels de candidature spontanée. */
-    public static final String DEMANDE_SPONTANEE_TXT = "Laurent Touret - Candidature spontanée pour un poste de développeur Java - Springboot";
+    public static final String DEMANDE_SPONTANEE_TXT =
+            "Laurent Touret - Candidature spontanée pour un poste de développeur Java - Springboot";
 }

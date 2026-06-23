@@ -194,7 +194,8 @@ public class EntrepriseService {
     public Page<EntrepriseListe> rechercheEntrepriseParNomPage(String nom, int pageIndex) {
         int safePageIndex = Math.max(0, pageIndex);
         return entrepriseRepository
-                .findAllByNomContainingIgnoreCaseOrderByNomAsc(nom, PageRequest.of(safePageIndex, maxEntreprisesParPage))
+                .findAllByNomContainingIgnoreCaseOrderByNomAsc(
+                        nom, PageRequest.of(safePageIndex, maxEntreprisesParPage))
                 .map(EntrepriseService::toListe);
     }
 

@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+  Règles de style GestoJob — volontairement ciblées sur ce que l'évaluation
+  qualité a corrigé, pour empêcher toute régression :
+    - aucun import wildcard (import xxx.*)
+    - aucun import inutile / redondant
+    - méthodes en camelCase (pas de majuscule initiale)
+    - lignes de code <= 120 caractères (les commentaires/Javadoc et les
+      modèles de lettre de ContenuService sont tolérés, cf. suppressions.xml)
+-->
+<module name="Checker">
+    <property name="severity" value="error"/>
+    <property name="charset" value="UTF-8"/>
+    <property name="fileExtensions" value="java"/>
+
+    <module name="SuppressionFilter">
+        <property name="file" value="${checkstyle.suppressions.file}"/>
+        <property name="optional" value="true"/>
+    </module>
+
+    <module name="LineLength">
+        <property name="max" value="120"/>
+        <!-- Ignore les lignes de commentaire et de Javadoc (les exemples du
+             projet tiennent sur une seule ligne, par convention). -->
+        <property name="ignorePattern" value="^\s*(\*|//).*$"/>
+    </module>
+
+    <module name="TreeWalker">
+        <module name="AvoidStarImport"/>
+        <module name="RedundantImport"/>
+        <module name="UnusedImports"/>
+        <module name="MethodName">
+            <!-- camelCase, mais on autorise les underscores des noms de tests
+                 (ex. saveContact_enregistre_siValide). -->
+            <property name="format" value="^[a-z][a-zA-Z0-9_]*$"/>
+        </module>
+    </module>
+</module>
