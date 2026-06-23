@@ -58,6 +58,7 @@ public class ContactService {
      *                          politesse est choisie sans email renseigné, ou si un
      *                          contact avec le même email existe déjà pour l'entreprise
      */
+    @Transactional
     public void saveContact(ContactForm contactForm, int entrepriseId) {
         if (!entrepriseService.existe(entrepriseId)) {
             log.warn("création de contact refusée : entreprise {} introuvable", entrepriseId);

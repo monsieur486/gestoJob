@@ -113,16 +113,16 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
      * Récupère, de façon paginée, toutes les annonces dont le statut diffère de
      * celui fourni, triées par date d'envoi décroissante (annonces sans date en fin).
      *
-     * <p><b>Exemple :</b> findAllByStatusAnnonceNotOrderByDateEnvoiDesc(6, PageRequest.of(0, 20)) renvoie toutes les annonces sauf les archivées (statut 6), la plus récemment envoyée en tête.</p>
+     * <p><b>Exemple :</b> findAllByStatusAnnonceNotOrderByDateEnvoiDesc(6, PageRequest.of(0, 20)) renvoie toutes les annonces sauf les archivées (statut 6), y compris celles sans statut, la plus récemment envoyée en tête.</p>
      *
      * @param status   le statut à exclure des résultats
      * @param pageable les informations de pagination et de tri
-     * @return une page d'annonces dont le statut diffère de {@code status}
+     * @return une page d'annonces dont le statut diffère de {@code status} (les statuts nuls sont inclus)
      */
     @Query("""
             select a
             from Annonce a
-            where a.statusAnnonce <> :status
+            where (a.statusAnnonce <> :status or a.statusAnnonce is null)
             order by a.dateEnvoi desc nulls last
             """)
     Page<Annonce> findAllByStatusAnnonceNotOrderByDateEnvoiDesc(@Param("status") Integer status,
@@ -157,7 +157,7 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
                 or lower(coalesce(c.email, '')) like lower(concat('%', :q, '%'))
                 or lower(coalesce(c.nom, '')) like lower(concat('%', :q, '%'))
             )
-            and (:includeArchives = true or a.statusAnnonce <> 6)
+            and (:includeArchives = true or a.statusAnnonce <> 6 or a.statusAnnonce is null)
             order by a.dateEnvoi desc nulls last
             """)
     Page<Annonce> search(@Param("q") String q,

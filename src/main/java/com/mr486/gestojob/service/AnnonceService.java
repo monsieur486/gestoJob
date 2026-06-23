@@ -68,7 +68,13 @@ public class AnnonceService {
      * @return la formule de politesse, ou "Madame, Monsieur," par défaut
      */
     public String getMessageDePolitesse(Long annonceId) {
-        Long contactId = getAnnonce(annonceId).getContactId();
+        return messageDePolitesse(getAnnonce(annonceId));
+    }
+
+    // Formule de politesse d'une annonce déjà chargée (générique si aucun contact),
+    // sans relire l'annonce en base.
+    private String messageDePolitesse(Annonce annonce) {
+        Long contactId = annonce.getContactId();
         if (contactId == null) {
             return ApplicationConfiguration.SALUTATION_GENERIQUE;
         }
@@ -121,6 +127,7 @@ public class AnnonceService {
      * @param form formulaire de l'annonce
      * @throws RuntimeException si aucune entreprise n'est renseignée
      */
+    @Transactional
     public void saveForm(AnnonceForm form) {
         if (form.getEntrepriseId() == null) {
             throw new RuntimeException("Entreprise obligatoire pour créer une annonce.");
@@ -275,7 +282,7 @@ public class AnnonceService {
     public String getAnnonceTxtContenuById(Long id) {
         Annonce annonce = getAnnonce(id);
         String result = annonce.getLibelle() + "\n\n";
-        String messageDePolitesse = getMessageDePolitesse(id);
+        String messageDePolitesse = messageDePolitesse(annonce);
 
         result += contenuService.getTextContenu(annonce.getPoste(), annonce.getTypeContenu(), messageDePolitesse);
 
