@@ -6,6 +6,7 @@ import com.mr486.gestojob.dto.RechercheAnnonceForm;
 import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.Entreprise;
+import com.mr486.gestojob.model.TypeAnnonce;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import com.mr486.gestojob.tools.MailTools;
 import lombok.RequiredArgsConstructor;
@@ -359,11 +360,7 @@ public class AnnonceService {
                 ? annonce.getDateEnvoi().format(FR_DATE_TIME)
                 : "--";
         liste.setDateEnvoi(dateEnvoi);
-        if (annonce.getTypeAnnonce() != null && annonce.getTypeAnnonce() == 0) {
-            liste.setType("\uD83C\uDD93 S");
-        } else {
-            liste.setType("\uD83D\uDCDD A");
-        }
+        liste.setType(TypeAnnonce.libelleCourt(annonce.getTypeAnnonce()));
         liste.setLibelle(annonce.getLibelle());
         liste.setStatus(annonce.getStatusAnnonceString());
         liste.setInfo(getInfos(annonce, entreprise, contact));

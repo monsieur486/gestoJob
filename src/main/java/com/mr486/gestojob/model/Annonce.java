@@ -55,15 +55,7 @@ public class Annonce {
      *         n'est pas reconnu
      */
     public String getStatusAnnonceString() {
-        return switch (statusAnnonce) {
-            case 1 -> "\uD83D\uDD82 Boîte d'envoi";
-            case 2 -> "\uD83D\uDFE0 En cours";
-            case 3 -> "⏳ Dépassé";
-            case 4 -> "\uD83D\uDD34 Négatif";
-            case 5 -> "\uD83D\uDFE2 Positif";
-            case 6 -> "\uD83D\uDCE6 Archivé";
-            default -> "Inconnu";
-        };
+        return StatutAnnonce.libelle(statusAnnonce);
     }
 
     /**
