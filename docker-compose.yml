@@ -7,6 +7,14 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    restart: unless-stopped
+    # Sonde de disponibilité : l'app n'est démarrée qu'une fois la base prête
+    # à accepter des connexions (évite la course au démarrage).
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     # Aucun port publié sur l'hôte : la base n'est jointe qu'en interne
     # (gestojob-db:5432) par l'app conteneurisée → aucun conflit avec un
     # postgres déjà présent sur le serveur. Le port n'est exposé qu'en dev
@@ -21,8 +29,10 @@ services:
       dockerfile: Dockerfile
     profiles: [ "fullstack" ]
     container_name: gestojob-webclient
+    restart: unless-stopped
     depends_on:
-      - gestojob-db
+      gestojob-db:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
     ports:
