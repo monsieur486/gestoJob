@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -63,7 +64,7 @@ public class EntrepriseService {
             log.warn("création d'entreprise refusée : « {} » existe déjà", form.getNom());
             throw new RuntimeException("L'entreprise existe déjà");
         }
-        Entreprise entreprise = entrepriseRepository.save(form.entity(form));
+        Entreprise entreprise = entrepriseRepository.save(EntrepriseForm.entity(form));
         log.info("entreprise créée : « {} » (id {})", entreprise.getNom(), entreprise.getId());
         return entreprise.getId();
     }
@@ -77,6 +78,7 @@ public class EntrepriseService {
      * @param form         formulaire contenant les nouvelles valeurs
      * @throws RuntimeException si l'entreprise est introuvable
      */
+    @Transactional
     public void update(Integer entrepriseId, EntrepriseForm form) {
         // On ne traduit en « introuvable » que l'absence d'entreprise : toute autre
         // erreur (échec de persistance, etc.) doit remonter sans être masquée.
@@ -139,6 +141,7 @@ public class EntrepriseService {
      * @param entrepriseId identifiant de l'entreprise
      * @throws java.util.NoSuchElementException si l'entreprise est introuvable
      */
+    @Transactional
     public void desactiveEntreprise(Integer entrepriseId) {
         Entreprise e = entrepriseRepository.findById(entrepriseId).orElseThrow();
         e.setEstActive(false);
@@ -154,6 +157,7 @@ public class EntrepriseService {
      * @param entrepriseId identifiant de l'entreprise
      * @throws java.util.NoSuchElementException si l'entreprise est introuvable
      */
+    @Transactional
     public void activeEntreprise(Integer entrepriseId) {
         Entreprise e = entrepriseRepository.findById(entrepriseId).orElseThrow();
         e.setEstActive(true);
