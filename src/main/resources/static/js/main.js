@@ -117,16 +117,18 @@ async function copyAnnonceTxtToClipboard(buttonEl) {
 
 // Éditeurs Quill des modèles d'email : barre limitée au gras et aux listes à puce.
 // Le HTML de chaque éditeur est recopié dans le champ caché ciblé à la soumission.
-document.querySelectorAll('.editeur-modele').forEach(function (zone) {
-    var editeur = new Quill(zone, {
-        theme: 'snow',
-        modules: {toolbar: [['bold'], [{list: 'bullet'}]]}
-    });
-    var champ = document.getElementById(zone.getAttribute('data-cible'));
-    var form = zone.closest('form');
-    if (form && champ) {
-        form.addEventListener('submit', function () {
-            champ.value = editeur.root.innerHTML;
+if (typeof Quill !== 'undefined') {
+    document.querySelectorAll('.editeur-modele').forEach(function (zone) {
+        var editeur = new Quill(zone, {
+            theme: 'snow',
+            modules: {toolbar: [['bold'], [{list: 'bullet'}]]}
         });
-    }
-});
+        var champ = document.getElementById(zone.getAttribute('data-cible'));
+        var form = zone.closest('form');
+        if (form && champ) {
+            form.addEventListener('submit', function () {
+                champ.value = editeur.root.innerHTML;
+            });
+        }
+    });
+}

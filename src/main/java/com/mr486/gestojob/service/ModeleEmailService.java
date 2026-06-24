@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentMap;
 public class ModeleEmailService {
 
     private final ModeleEmailRepository modeleEmailRepository;
+    // Cohérence garantie : chaque écriture passe par enregistrer() (instance unique supposée).
     private final ConcurrentMap<String, String> cache = new ConcurrentHashMap<>();
 
     /**
