@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -53,16 +54,16 @@ public class EntrepriseService {
     /**
      * Crée et enregistre une nouvelle entreprise à partir du formulaire.
      *
-     * <p><b>Exemple :</b> save(form avec nom « Acme ») retourne l'id généré ; si une entreprise « acme » existe déjà (casse ignorée), lève RuntimeException(« L'entreprise existe déjà »).</p>
+     * <p><b>Exemple :</b> save(form avec nom « Acme ») retourne l'id généré ; si une entreprise « acme » existe déjà (casse ignorée), lève IllegalStateException(« L'entreprise existe déjà »).</p>
      *
      * @param form formulaire de l'entreprise
      * @return l'identifiant de l'entreprise créée
-     * @throws RuntimeException si une entreprise du même nom existe déjà
+     * @throws IllegalStateException si une entreprise du même nom existe déjà
      */
     public int save(EntrepriseForm form) {
         if (entrepriseRepository.existsByNomIgnoreCase(form.getNom())) {
             log.warn("création d'entreprise refusée : « {} » existe déjà", form.getNom());
-            throw new RuntimeException("L'entreprise existe déjà");
+            throw new IllegalStateException("L'entreprise existe déjà");
         }
         Entreprise entreprise = entrepriseRepository.save(EntrepriseForm.entity(form));
         log.info("entreprise créée : « {} » (id {})", entreprise.getNom(), entreprise.getId());
@@ -72,18 +73,18 @@ public class EntrepriseService {
     /**
      * Met à jour une entreprise existante à partir du formulaire.
      *
-     * <p><b>Exemple :</b> update(3, form) met à jour l'entreprise 3 avec les valeurs du formulaire ; un id inexistant lève RuntimeException(« Entreprise introuvable avec id: 3 »).</p>
+     * <p><b>Exemple :</b> update(3, form) met à jour l'entreprise 3 avec les valeurs du formulaire ; un id inexistant lève NoSuchElementException(« Entreprise introuvable avec id: 3 »).</p>
      *
      * @param entrepriseId identifiant de l'entreprise à modifier
      * @param form         formulaire contenant les nouvelles valeurs
-     * @throws RuntimeException si l'entreprise est introuvable
+     * @throws java.util.NoSuchElementException si l'entreprise est introuvable
      */
     @Transactional
     public void update(Integer entrepriseId, EntrepriseForm form) {
         // On ne traduit en « introuvable » que l'absence d'entreprise : toute autre
         // erreur (échec de persistance, etc.) doit remonter sans être masquée.
         Entreprise e = entrepriseRepository.findById(entrepriseId)
-                .orElseThrow(() -> new RuntimeException("Entreprise introuvable avec id: " + entrepriseId));
+                .orElseThrow(() -> new NoSuchElementException("Entreprise introuvable avec id: " + entrepriseId));
         convert(form, e);
         entrepriseRepository.save(e);
         log.info("entreprise modifiée : « {} » (id {})", e.getNom(), entrepriseId);
@@ -105,15 +106,15 @@ public class EntrepriseService {
     /**
      * Récupère une entreprise par son identifiant.
      *
-     * <p><b>Exemple :</b> getEntreprise(3) retourne l'entreprise 3 ; un id inexistant lève RuntimeException(« Entreprise introuvable avec id: 3 »).</p>
+     * <p><b>Exemple :</b> getEntreprise(3) retourne l'entreprise 3 ; un id inexistant lève NoSuchElementException(« Entreprise introuvable avec id: 3 »).</p>
      *
      * @param entrepriseId identifiant de l'entreprise
      * @return l'entreprise correspondante
-     * @throws RuntimeException si l'entreprise est introuvable
+     * @throws java.util.NoSuchElementException si l'entreprise est introuvable
      */
     public Entreprise getEntreprise(Integer entrepriseId) {
         return entrepriseRepository.findById(entrepriseId)
-                .orElseThrow(() -> new RuntimeException("Entreprise introuvable avec id: " + entrepriseId));
+                .orElseThrow(() -> new NoSuchElementException("Entreprise introuvable avec id: " + entrepriseId));
     }
 
     /**

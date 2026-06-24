@@ -52,16 +52,20 @@ public class AnnonceMailService {
         Set<Long> contactIds = annoncesEnAttente.stream()
                 .map(Annonce::getContactId).filter(Objects::nonNull).collect(Collectors.toSet());
         Map<Long, Contact> contacts = contactService.getContactsByIds(contactIds);
+        int envoyees = 0;
         for (Annonce a : annoncesEnAttente) {
             try {
-                log.info("Envoi de l'email pour l'annonce id: {}", a.getId());
                 sendMail(a, contacts.get(a.getContactId()));
                 marquerEnvoye(a.getId());
+                envoyees++;
+                log.info("email envoyé pour l'annonce id={}", a.getId());
             } catch (RuntimeException ex) {
-                log.error("Échec de l'envoi de l'email pour l'annonce id={}, statut inchangé : {}",
+                log.error("échec de l'envoi de l'email pour l'annonce id={}, statut inchangé : {}",
                         a.getId(), ex.getMessage(), ex);
             }
         }
+        log.info("envoi de la file d'attente terminé : {} annonce(s) envoyée(s) sur {}",
+                envoyees, annoncesEnAttente.size());
     }
 
     /**
@@ -77,7 +81,7 @@ public class AnnonceMailService {
     public void sendDirectEmail(Long annonceId) {
         Annonce annonce = annonceRepository.findById(annonceId)
                 .orElseThrow(() -> new IllegalArgumentException("Annonce introuvable avec id: " + annonceId));
-        log.info("Envoi de l'email pour l'annonce id: {}", annonce.getId());
+        log.info("envoi direct de l'email pour l'annonce id={}", annonce.getId());
         // Si l'envoi échoue, l'exception remonte et le statut n'est PAS modifié.
         Contact contact = (annonce.getContactId() == null)
                 ? null
