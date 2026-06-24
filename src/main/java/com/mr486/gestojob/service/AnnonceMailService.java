@@ -35,6 +35,7 @@ public class AnnonceMailService {
     private final ContactService contactService;
     private final ContenuService contenuService;
     private final MailTools mailTools;
+    private final LibelleService libelleService;
 
     /**
      * Tente d'envoyer chaque annonce en attente. Un échec sur une annonce est
@@ -123,7 +124,7 @@ public class AnnonceMailService {
                     "Envoi impossible : l'annonce id=" + annonce.getId() + " n'a pas de contact.");
         }
         String recipient = contact.getEmail();
-        String subject = annonce.getLibelle();
+        String subject = libelleService.construitLibelle(annonce);
         String content = buildHtmlContent(annonce, contact);
         mailTools.sendHtmlMail(recipient, subject, content);
     }

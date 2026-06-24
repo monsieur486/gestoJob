@@ -41,6 +41,8 @@ class AnnonceMailServiceTest {
     private ContenuService contenuService;
     @Mock
     private MailTools mailTools;
+    @Mock
+    private LibelleService libelleService;
 
     @InjectMocks
     private AnnonceMailService annonceMailService;
@@ -60,6 +62,7 @@ class AnnonceMailServiceTest {
         Annonce a = annonce(1L, 5L, "ok@exemple.fr");
         when(annonceRepository.findById(1L)).thenReturn(Optional.of(a));
         when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
+        when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
         doNothing().when(mailTools).sendHtmlMail(any(), any(), any());
 
         annonceMailService.sendDirectEmail(1L);
@@ -72,6 +75,7 @@ class AnnonceMailServiceTest {
         Annonce a = annonce(1L, 5L, "ko@exemple.fr");
         when(annonceRepository.findById(1L)).thenReturn(Optional.of(a));
         when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
+        when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
         doThrow(new MailSendException("smtp down")).when(mailTools).sendHtmlMail(any(), any(), any());
 
         assertThatThrownBy(() -> annonceMailService.sendDirectEmail(1L))
@@ -115,6 +119,7 @@ class AnnonceMailServiceTest {
                 5L, Contact.builder().id(5L).entrepriseId(10).email("ok@exemple.fr").formuleDePolitesse(0).build(),
                 6L, Contact.builder().id(6L).entrepriseId(10).email("ko@exemple.fr").formuleDePolitesse(0).build()));
         when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
+        when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
         doNothing().when(mailTools).sendHtmlMail(eq("ok@exemple.fr"), any(), any());
         doThrow(new MailSendException("smtp down"))
                 .when(mailTools).sendHtmlMail(eq("ko@exemple.fr"), any(), any());
@@ -137,6 +142,7 @@ class AnnonceMailServiceTest {
                 5L, Contact.builder().id(5L).entrepriseId(10).email("a@x.fr").formuleDePolitesse(0).build(),
                 6L, Contact.builder().id(6L).entrepriseId(10).email("b@x.fr").formuleDePolitesse(0).build()));
         when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
+        when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
         doNothing().when(mailTools).sendHtmlMail(any(), any(), any());
 
         annonceMailService.sendEmailForPendingAnnonces();
