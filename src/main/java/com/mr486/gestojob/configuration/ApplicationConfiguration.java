@@ -20,10 +20,6 @@ public class ApplicationConfiguration {
     /** Nom affiché par défaut comme expéditeur des courriels envoyés. */
     public static final String DEFAULT_EMAIL_FROM = CANDIDAT_NOM;
 
-    /** Objet par défaut utilisé pour les courriels de candidature spontanée. */
-    public static final String DEMANDE_SPONTANEE_TXT =
-            CANDIDAT_NOM + " - Candidature spontanée pour un poste de développeur Java - Springboot";
-
     /** Salutation générique employée à défaut de civilité connue. */
     public static final String SALUTATION_GENERIQUE = "Madame, Monsieur,";
 
@@ -32,4 +28,13 @@ public class ApplicationConfiguration {
 
     /** Civilité « Monsieur » (préfixe d'une formule de politesse personnalisée). */
     public static final String CIVILITE_MONSIEUR = "Monsieur";
+
+    /** Intitulé de poste par défaut, modèle généraliste. */
+    public static final String POSTE_DEFAUT_GENERAL = "de développeur Java";
+
+    /** Intitulé de poste par défaut, modèle microservices. */
+    public static final String POSTE_DEFAUT_MICROSERVICES = "de développeur Java orienté microservices";
+
+    /** Intitulé de poste par défaut, modèle IA agentique. */
+    public static final String POSTE_DEFAUT_IA = "de développeur Java back-end orienté IA agentique";
 }

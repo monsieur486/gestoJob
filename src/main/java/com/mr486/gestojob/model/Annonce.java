@@ -1,6 +1,5 @@
 package com.mr486.gestojob.model;
 
-import com.mr486.gestojob.configuration.ApplicationConfiguration;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -59,24 +58,4 @@ public class Annonce {
         return StatutAnnonce.libelle(statusAnnonce);
     }
 
-    /**
-     * Construit le libellé de l'annonce destiné à l'affichage ou à l'envoi.
-     * Pour une candidature à une offre ({@code typeAnnonce == 1}), le libellé
-     * mentionne la référence et le poste ; sinon, il s'agit du texte standard
-     * de demande spontanée.
-     *
-     * <p><b>Exemple :</b> pour typeAnnonce = 1, reference = « ABC123 » et poste = « Développeur », retourne « Réf [ABC123] Laurent Touret - candidature au poste Développeur » ; sinon, retourne le texte standard de demande spontanée ({@code ApplicationConfiguration.DEMANDE_SPONTANEE_TXT}).</p>
-     *
-     * @return le libellé textuel de l'annonce
-     */
-    public String getLibelle() {
-        // Comparaison null-safe via l'enum : seule une candidature à une référence
-        // produit le libellé détaillé ; tout autre type (ou null) reste spontané.
-        if (Integer.valueOf(TypeAnnonce.REFERENCE.getCode()).equals(typeAnnonce)) {
-            return "Réf [" + reference + "] " + ApplicationConfiguration.CANDIDAT_NOM
-                    + " - candidature au poste " + poste;
-        } else {
-            return ApplicationConfiguration.DEMANDE_SPONTANEE_TXT;
-        }
-    }
 }

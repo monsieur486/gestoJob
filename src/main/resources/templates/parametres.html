@@ -1,22 +1,47 @@
 <!DOCTYPE HTML>
-<html lang="fr"
-      xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org">
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>GestoJob</title>
     <div th:replace="~{fragments/header :: header-css}"></div>
+    <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet"/>
 </head>
 <body>
 <div th:replace="~{fragments/menu :: menu}"></div>
 <div class="container-fluid">
-    <div class="alert alert-danger" id="error" th:if="${errorMessage != null}">
-        <div th:text="${errorMessage}">Erreur</div>
+    <div class="alert alert-success" th:if="${successMessage != null}" th:text="${successMessage}">OK</div>
+    <div class="alert alert-danger" th:if="${errorMessage != null}" th:text="${errorMessage}">Erreur</div>
+    <h3>Paramètres — modèles d&apos;email</h3>
+
+    <div class="card mb-4" th:each="modele : ${modeles}">
+        <div class="card-header" th:text="${modele.libelleUi}">Modèle</div>
+        <div class="card-body">
+            <form method="post" th:action="@{'/parametres/modeles/' + ${modele.cle}}">
+                <!-- Contenu HTML : éditeur Quill + champ caché rempli à la soumission -->
+                <div th:if="${modele.html}">
+                    <div class="editeur-modele" th:attr="data-cible='champ_' + ${modele.cle}"
+                         th:utext="${modele.contenu}"></div>
+                    <input type="hidden" th:id="'champ_' + ${modele.cle}" name="contenu"
+                           th:value="${modele.contenu}"/>
+                </div>
+                <!-- Libellé : texte brut -->
+                <div th:unless="${modele.html}">
+                    <input type="text" class="form-control" name="contenu" th:value="${modele.contenu}"/>
+                </div>
+                <small class="text-muted">Variables : <span th:text="${modele.variables}"></span></small>
+                <div class="mt-2">
+                    <button type="submit" class="btn btn-primary btn-sm">Enregistrer</button>
+                </div>
+            </form>
+            <form method="post" class="mt-2"
+                  th:action="@{'/parametres/modeles/' + ${modele.cle} + '/reinitialiser'}">
+                <button type="submit" class="btn btn-outline-secondary btn-sm">Réinitialiser</button>
+            </form>
+        </div>
     </div>
-    <h3>Paramètres</h3>
 </div>
 
 <div th:replace="~{fragments/footer :: footer}"></div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
 <script src="" th:src="@{/js/main.js}" type="text/javascript"></script>
 </body>
 </html>

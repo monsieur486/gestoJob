@@ -43,6 +43,8 @@ class AnnonceServiceTest {
     private ContactService contactService;
     @Mock
     private ContenuService contenuService;
+    @Mock
+    private LibelleService libelleService;
 
     private AnnonceService annonceService;
 
@@ -51,8 +53,10 @@ class AnnonceServiceTest {
         // Le mapper (chargement des entreprises/contacts) est utilisé en vrai pour
         // que les tests de construction d'AnnonceListe restent significatifs ;
         // ses dépendances restent mockées.
-        AnnonceListeMapper annonceListeMapper = new AnnonceListeMapper(entrepriseService, contactService);
-        annonceService = new AnnonceService(annonceRepository, contactService, contenuService, annonceListeMapper);
+        AnnonceListeMapper annonceListeMapper =
+                new AnnonceListeMapper(entrepriseService, contactService, libelleService);
+        annonceService = new AnnonceService(
+                annonceRepository, contactService, contenuService, annonceListeMapper, libelleService);
         ReflectionTestUtils.setField(annonceService, "maxAnnoncesParPage", 10);
         ReflectionTestUtils.setField(annonceService, "maxPositifsParPage", 10);
         when(entrepriseService.getEntreprisesByIds(any())).thenReturn(Collections.emptyMap());
@@ -129,12 +133,13 @@ class AnnonceServiceTest {
         Annonce a = Annonce.builder().id(1L).contactId(null).typeAnnonce(1)
                 .reference("R1").poste("Dev").typeContenu(0).statusAnnonce(2).build();
         when(annonceRepository.findById(1L)).thenReturn(Optional.of(a));
+        when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("Objet");
         when(contenuService.getTextContenu(eq("Dev"), eq(0), any())).thenReturn("CORPS_TXT");
 
         String result = annonceService.getAnnonceTxtContenuById(1L);
 
+        assertThat(result).startsWith("Objet\n\n");
         assertThat(result).contains("CORPS_TXT");
-        assertThat(result).contains("R1");
     }
 
     @Test

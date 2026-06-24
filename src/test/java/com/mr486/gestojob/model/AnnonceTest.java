@@ -28,19 +28,4 @@ class AnnonceTest {
         assertThat(a.getStatusAnnonceString()).isEqualTo("Inconnu");
     }
 
-    @Test
-    void getLibelle_candidatureAOffre_mentionneReferenceEtPoste() {
-        Annonce a = Annonce.builder().typeAnnonce(1).reference("REF42").poste("Développeur Java").build();
-
-        String libelle = a.getLibelle();
-
-        assertThat(libelle).contains("REF42").contains("Développeur Java");
-    }
-
-    @Test
-    void getLibelle_candidatureSpontanee_utiliseLeTexteStandard() {
-        Annonce a = Annonce.builder().typeAnnonce(0).build();
-
-        assertThat(a.getLibelle()).contains("spontanée");
-    }
 }

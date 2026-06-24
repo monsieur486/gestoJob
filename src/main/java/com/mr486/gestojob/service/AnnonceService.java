@@ -34,6 +34,7 @@ public class AnnonceService {
     private final ContactService contactService;
     private final ContenuService contenuService;
     private final AnnonceListeMapper annonceListeMapper;
+    private final LibelleService libelleService;
     @Value("${gestojob.max-annonces-par-page:7}")
     private int maxAnnoncesParPage;
 
@@ -281,7 +282,7 @@ public class AnnonceService {
      */
     public String getAnnonceTxtContenuById(Long id) {
         Annonce annonce = getAnnonce(id);
-        String result = annonce.getLibelle() + "\n\n";
+        String result = libelleService.construitLibelle(annonce) + "\n\n";
         String messageDePolitesse = messageDePolitesse(annonce);
 
         result += contenuService.getTextContenu(annonce.getPoste(), annonce.getTypeContenu(), messageDePolitesse);

@@ -35,6 +35,7 @@ public class AnnonceListeMapper {
 
     private final EntrepriseService entrepriseService;
     private final ContactService contactService;
+    private final LibelleService libelleService;
 
     /**
      * Convertit une page d'annonces en page de DTO en chargeant les entreprises
@@ -87,7 +88,7 @@ public class AnnonceListeMapper {
                 : "--";
         liste.setDateEnvoi(dateEnvoi);
         liste.setType(TypeAnnonce.libelleCourt(annonce.getTypeAnnonce()));
-        liste.setLibelle(annonce.getLibelle());
+        liste.setLibelle(libelleService.construitLibelle(annonce));
         liste.setStatus(annonce.getStatusAnnonceString());
         liste.setInfo(getInfos(annonce, entreprise, contact));
         liste.setEntrepriseId(annonce.getEntrepriseId());
