@@ -41,6 +41,7 @@ Connexion par défaut (modifiable dans `.env`) : **utilisateur** / **Mdp12345\**
 
 ```bash
 ./prod-start.sh   # construit l'image et démarre la pile complète (base + application) via Docker Compose
+./prod-stop.sh    # arrête la pile complète
 ./maj.sh          # mise à jour : arrêt, git pull, reconstruction et redémarrage de la pile
 ```
 
