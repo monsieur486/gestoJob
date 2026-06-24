@@ -14,6 +14,13 @@ class HtmlSanitizerTest {
     }
 
     @Test
+    void conserveItaliqueEtSoulignement() {
+        String html = "<p><em>italique</em> et <u>souligné</u></p>";
+        String resultat = HtmlSanitizer.nettoie(html);
+        assertThat(resultat).contains("<em>").contains("<u>");
+    }
+
+    @Test
     void retireScriptEtAttributsDangereux() {
         String html = "<p onclick=\"vol()\">x</p><script>alert(1)</script>";
         String resultat = HtmlSanitizer.nettoie(html);
