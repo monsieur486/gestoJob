@@ -186,23 +186,30 @@ public class ContenuService {
                         .replace("{{POSTE}}", safePoste);
             }
         } else {
+            // Sortie texte brut : pas d'échappement, mais on n'altère pas le
+            // paramètre d'entrée (poste reste immuable, valeur par défaut en local).
             if (type == TypeContenu.MICROSERVICES.getCode()) {
-                if (poste == null || poste.isEmpty()) poste = "de développeur Java orienté microservices";
+                String posteTexte = (poste == null || poste.isEmpty())
+                        ? "de développeur Java orienté microservices"
+                        : poste;
                 contenu = annoncePosteMicroserviceTxtTemplate()
                         .replace("{{POLITESSE}}", politesse)
-                        .replace("{{POSTE}}", poste);
+                        .replace("{{POSTE}}", posteTexte);
             } else if (type == TypeContenu.IA.getCode()) {
-                if (poste == null || poste.isEmpty()) poste = "de développeur Java back-end orienté IA agentique";
+                String posteTexte = (poste == null || poste.isEmpty())
+                        ? "de développeur Java back-end orienté IA agentique"
+                        : poste;
                 contenu = annoncePosteIaAgentiqueTxtTemplate()
                         .replace("{{POLITESSE}}", politesse)
-                        .replace("{{POSTE}}", poste);
+                        .replace("{{POSTE}}", posteTexte);
             } else {
-                if (poste == null || poste.isEmpty()) poste = "de développeur Java";
+                String posteTexte = (poste == null || poste.isEmpty())
+                        ? "de développeur Java"
+                        : poste;
                 contenu = annoncePosteGeneralTxtTemplate()
                         .replace("{{POLITESSE}}", politesse)
-                        .replace("{{POSTE}}", poste);
+                        .replace("{{POSTE}}", posteTexte);
             }
-
         }
 
         return contenu;

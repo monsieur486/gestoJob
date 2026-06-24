@@ -162,8 +162,8 @@ public class EntreprisesPageController {
         }
 
         try {
-            int id=entrepriseService.save(form);
-            return "redirect:/entreprises/"+id;
+            int id = entrepriseService.save(form);
+            return "redirect:/entreprises/" + id;
         } catch (RuntimeException ex) {
             model.addAttribute("errorMessage", ex.getMessage());
             return "add-entreprise";

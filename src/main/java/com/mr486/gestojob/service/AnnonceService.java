@@ -125,12 +125,12 @@ public class AnnonceService {
      * <p><b>Exemple :</b> un formulaire avec contactId=null est enregistré au statut 2 (envoyé) avec la date du jour ; avec un contactId=3, l'annonce est créée au statut 1 (en attente) et sans date d'envoi.</p>
      *
      * @param form formulaire de l'annonce
-     * @throws RuntimeException si aucune entreprise n'est renseignée
+     * @throws IllegalArgumentException si aucune entreprise n'est renseignée
      */
     @Transactional
     public void saveForm(AnnonceForm form) {
         if (form.getEntrepriseId() == null) {
-            throw new RuntimeException("Entreprise obligatoire pour créer une annonce.");
+            throw new IllegalArgumentException("Entreprise obligatoire pour créer une annonce.");
         }
 
         Long contactId = form.getContactId();
