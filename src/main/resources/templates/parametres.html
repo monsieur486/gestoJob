@@ -3,7 +3,9 @@
 <head>
     <title>GestoJob</title>
     <div th:replace="~{fragments/header :: header-css}"></div>
-    <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet"
+          integrity="sha384-ecIckRi4QlKYya/FQUbBUjS4qp65jF/J87Guw5uzTbO1C1Jfa/6kYmd6dXUF6D7i"
+          crossorigin="anonymous"/>
 </head>
 <body>
 <div th:replace="~{fragments/menu :: menu}"></div>
@@ -41,7 +43,9 @@
 </div>
 
 <div th:replace="~{fragments/footer :: footer}"></div>
-<script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"
+        integrity="sha384-utBUCeG4SYaCm4m7GQZYr8Hy8Fpy3V4KGjBZaf4WTKOcwhCYpt/0PfeEe3HNlwx8"
+        crossorigin="anonymous"></script>
 <script src="" th:src="@{/js/main.js}" type="text/javascript"></script>
 </body>
 </html>
