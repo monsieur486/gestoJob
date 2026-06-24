@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -160,9 +161,8 @@ public class ModeleEmailService {
 
     // Lit une ressource classpath en UTF-8.
     private String lireRessource(String chemin) {
-        try {
-            byte[] octets = new ClassPathResource(chemin).getInputStream().readAllBytes();
-            return new String(octets, StandardCharsets.UTF_8);
+        try (InputStream is = new ClassPathResource(chemin).getInputStream()) {
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException ex) {
             throw new UncheckedIOException("Ressource de modèle introuvable : " + chemin, ex);
         }
