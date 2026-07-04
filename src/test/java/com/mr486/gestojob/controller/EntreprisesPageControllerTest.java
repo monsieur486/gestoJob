@@ -13,6 +13,7 @@ import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.service.AnnonceService;
 import com.mr486.gestojob.service.ContactService;
+import com.mr486.gestojob.service.EntrepriseRechercheService;
 import com.mr486.gestojob.service.EntrepriseService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,8 @@ class EntreprisesPageControllerTest {
     @Mock
     private EntrepriseService entrepriseService;
     @Mock
+    private EntrepriseRechercheService entrepriseRechercheService;
+    @Mock
     private ContactService contactService;
     @Mock
     private AnnonceService annonceService;
@@ -49,7 +52,7 @@ class EntreprisesPageControllerTest {
 
     @Test
     void entreprisesView_filtreActives_quandActiveTrue() {
-        when(entrepriseService.rechercheEntrepriseActivePage(0))
+        when(entrepriseRechercheService.rechercheEntrepriseActivePage(0))
                 .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 7), 0));
 
         Model model = new ExtendedModelMap();
@@ -57,31 +60,31 @@ class EntreprisesPageControllerTest {
 
         assertThat(view).isEqualTo("entreprises");
         assertThat(model.getAttribute("totalPages")).isEqualTo(0);
-        verify(entrepriseService).rechercheEntrepriseActivePage(0);
-        verify(entrepriseService, never()).getAllListePage(0);
+        verify(entrepriseRechercheService).rechercheEntrepriseActivePage(0);
+        verify(entrepriseRechercheService, never()).getAllListePage(0);
     }
 
     @Test
     void entreprisesView_rechercheParNom_quandTextePresent() {
-        when(entrepriseService.rechercheEntrepriseParNomPage("acme", 0)).thenReturn(Page.empty());
+        when(entrepriseRechercheService.rechercheEntrepriseParNomPage("acme", 0)).thenReturn(Page.empty());
 
         Model model = new ExtendedModelMap();
         String view = controller.entreprisesView(model, 1, "acme", false);
 
         assertThat(view).isEqualTo("entreprises");
-        verify(entrepriseService).rechercheEntrepriseParNomPage("acme", 0);
+        verify(entrepriseRechercheService).rechercheEntrepriseParNomPage("acme", 0);
     }
 
     @Test
     void entreprisesView_pagine_quandNiActiveNiRecherche() {
-        when(entrepriseService.getAllListePage(0)).thenReturn(Page.empty());
+        when(entrepriseRechercheService.getAllListePage(0)).thenReturn(Page.empty());
 
         Model model = new ExtendedModelMap();
         String view = controller.entreprisesView(model, 1, null, false);
 
         assertThat(view).isEqualTo("entreprises");
         assertThat(model.getAttribute("currentPage")).isEqualTo(1);
-        verify(entrepriseService).getAllListePage(0);
+        verify(entrepriseRechercheService).getAllListePage(0);
     }
 
     @Test

@@ -1,7 +1,6 @@
 package com.mr486.gestojob.service;
 
 import com.mr486.gestojob.dto.EntrepriseForm;
-import com.mr486.gestojob.dto.EntrepriseListe;
 import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.persistance.EntrepriseRepository;
@@ -13,9 +12,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,9 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class EntrepriseService {
 
     private final EntrepriseRepository entrepriseRepository;
-
-    @Value("${gestojob.max-entreprises-par-page}")
-    private int maxEntreprisesParPage;
 
     /**
      * Recopie les champs d'un formulaire vers une entité entreprise existante.
@@ -164,67 +157,6 @@ public class EntrepriseService {
         e.setEstActive(true);
         entrepriseRepository.save(e);
         log.info("entreprise activée : « {} » (id {})", e.getNom(), entrepriseId);
-    }
-
-    /**
-     * Retourne une page d'entreprises au format DTO, triées par nom croissant.
-     * Les index de page négatifs sont ramenés à 0.
-     *
-     * <p><b>Exemple :</b> getAllListePage(-1) est traité comme la page 0 ; les entreprises sont triées par nom croissant (« Acme » avant « Beta »).</p>
-     *
-     * @param pageIndex index de la page (commençant à 0)
-     * @return la page d'entreprises
-     */
-    public Page<EntrepriseListe> getAllListePage(int pageIndex) {
-        int safePageIndex = Math.max(0, pageIndex);
-
-        return entrepriseRepository
-                .findAllByOrderByNomAsc(PageRequest.of(safePageIndex, maxEntreprisesParPage))
-                .map(EntrepriseService::toListe);
-    }
-
-    // Convertit une entité entreprise en ligne de liste (DTO d'affichage).
-    private static EntrepriseListe toListe(Entreprise e) {
-        return EntrepriseListe.builder()
-                .id(e.getId())
-                .nom(e.getNom())
-                .estActive(e.getEstActive())
-                .build();
-    }
-
-    /**
-     * Recherche paginée des entreprises dont le nom contient la chaîne fournie
-     * (insensible à la casse), triées par nom croissant. Les index de page
-     * négatifs sont ramenés à 0.
-     *
-     * <p><b>Exemple :</b> rechercheEntrepriseParNomPage(« cm », 0) retourne la première page des entreprises dont le nom contient « cm » (ex. « Acme »).</p>
-     *
-     * @param nom       fragment de nom recherché
-     * @param pageIndex index de la page (commençant à 0)
-     * @return la page d'entreprises correspondantes au format DTO
-     */
-    public Page<EntrepriseListe> rechercheEntrepriseParNomPage(String nom, int pageIndex) {
-        int safePageIndex = Math.max(0, pageIndex);
-        return entrepriseRepository
-                .findAllByNomContainingIgnoreCaseOrderByNomAsc(
-                        nom, PageRequest.of(safePageIndex, maxEntreprisesParPage))
-                .map(EntrepriseService::toListe);
-    }
-
-    /**
-     * Retourne une page d'entreprises actives au format DTO, triées par nom
-     * croissant. Les index de page négatifs sont ramenés à 0.
-     *
-     * <p><b>Exemple :</b> rechercheEntrepriseActivePage(0) retourne la première page des entreprises dont estActive=true.</p>
-     *
-     * @param pageIndex index de la page (commençant à 0)
-     * @return la page d'entreprises actives au format DTO
-     */
-    public Page<EntrepriseListe> rechercheEntrepriseActivePage(int pageIndex) {
-        int safePageIndex = Math.max(0, pageIndex);
-        return entrepriseRepository
-                .findAllByEstActiveTrueOrderByNomAsc(PageRequest.of(safePageIndex, maxEntreprisesParPage))
-                .map(EntrepriseService::toListe);
     }
 
     /**

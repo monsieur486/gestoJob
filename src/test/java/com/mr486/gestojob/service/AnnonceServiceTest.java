@@ -1,13 +1,17 @@
 package com.mr486.gestojob.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.mr486.gestojob.dto.AnnonceForm;
 import com.mr486.gestojob.dto.AnnonceListe;
 import com.mr486.gestojob.dto.RechercheAnnonceForm;
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.Entreprise;
@@ -17,10 +21,10 @@ import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -41,8 +45,6 @@ class AnnonceServiceTest {
     @Mock
     private ContactService contactService;
     @Mock
-    private ContenuService contenuService;
-    @Mock
     private LibelleService libelleService;
 
     private AnnonceService annonceService;
@@ -54,8 +56,7 @@ class AnnonceServiceTest {
         // ses dépendances restent mockées.
         AnnonceListeMapper annonceListeMapper =
                 new AnnonceListeMapper(entrepriseService, contactService, libelleService);
-        annonceService = new AnnonceService(
-                annonceRepository, contactService, contenuService, annonceListeMapper, libelleService);
+        annonceService = new AnnonceService(annonceRepository, annonceListeMapper);
         ReflectionTestUtils.setField(annonceService, "maxAnnoncesParPage", 10);
         ReflectionTestUtils.setField(annonceService, "maxPositifsParPage", 10);
         when(entrepriseService.getEntreprisesByIds(any())).thenReturn(Collections.emptyMap());
@@ -85,60 +86,52 @@ class AnnonceServiceTest {
     }
 
     @Test
-    void getMessageDePolitesse_avecContact_renvoieLaFormuleDuContact() {
-        Annonce a = Annonce.builder().id(1L).contactId(5L).statusAnnonce(1).build();
-        when(annonceRepository.findById(1L)).thenReturn(Optional.of(a));
-        when(contactService.getContact(5L)).thenReturn(
-                Contact.builder().id(5L).entrepriseId(10).email("a@b.fr")
-                        .formuleDePolitesse(1).nom("Durand").build());
-
-        assertThat(annonceService.getMessageDePolitesse(1L)).isEqualTo("Monsieur Durand,");
-    }
-
-    @Test
-    void getMessageDePolitesse_sansContact_renvoieFormuleGenerique() {
-        Annonce a = Annonce.builder().id(1L).contactId(null).statusAnnonce(2).build();
-        when(annonceRepository.findById(1L)).thenReturn(Optional.of(a));
-
-        assertThat(annonceService.getMessageDePolitesse(1L)).isEqualTo("Madame, Monsieur,");
-    }
-
-    @Test
-    void setDepasse_metLeStatutA3() {
-        annonceService.setDepasse(7L);
-        verify(annonceRepository).updateStatusAnnonce(7L, 3);
-    }
-
-    @Test
-    void setRefus_metLeStatutA4() {
-        annonceService.setRefus(7L);
-        verify(annonceRepository).updateStatusAnnonce(7L, 4);
-    }
-
-    @Test
-    void setAccepte_metLeStatutA5() {
-        annonceService.setAccepte(7L);
-        verify(annonceRepository).updateStatusAnnonce(7L, 5);
-    }
-
-    @Test
     void deleteAnnonce_supprimeViaLeRepository() {
         annonceService.deleteAnnonce(7L);
         verify(annonceRepository).deleteById(7L);
     }
 
     @Test
-    void getAnnonceTxtContenuById_concateneLibelleEtContenuTexte() {
-        Annonce a = Annonce.builder().id(1L).contactId(null).typeAnnonce(1)
-                .reference("R1").poste("Dev").typeContenu(0).statusAnnonce(2).build();
-        when(annonceRepository.findById(1L)).thenReturn(Optional.of(a));
-        when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("Objet");
-        when(contenuService.getTextContenu(eq("Dev"), eq(0), any())).thenReturn("CORPS_TXT");
+    void saveForm_sansContact_creeAnnonceEnvoyeeAvecDate() {
+        AnnonceForm form = AnnonceForm.builder()
+                .entrepriseId(10).contactId(null).typeAnnonce(1).contenuId(2)
+                .poste("Dev").reference("R1").build();
 
-        String result = annonceService.getAnnonceTxtContenuById(1L);
+        annonceService.saveForm(form);
 
-        assertThat(result).startsWith("Objet\n\n");
-        assertThat(result).contains("CORPS_TXT");
+        ArgumentCaptor<Annonce> captor = ArgumentCaptor.forClass(Annonce.class);
+        verify(annonceRepository).save(captor.capture());
+        Annonce saved = captor.getValue();
+        assertThat(saved.getStatusAnnonce()).isEqualTo(2);
+        assertThat(saved.getContactId()).isNull();
+        assertThat(saved.getDateEnvoi()).isNotNull();
+    }
+
+    @Test
+    void saveForm_avecContact_creeAnnonceEnAttenteSansDate() {
+        AnnonceForm form = AnnonceForm.builder()
+                .entrepriseId(10).contactId(3L).typeAnnonce(1).contenuId(2)
+                .poste("Dev").reference("R1").build();
+
+        annonceService.saveForm(form);
+
+        ArgumentCaptor<Annonce> captor = ArgumentCaptor.forClass(Annonce.class);
+        verify(annonceRepository).save(captor.capture());
+        Annonce saved = captor.getValue();
+        assertThat(saved.getStatusAnnonce()).isEqualTo(1);
+        assertThat(saved.getContactId()).isEqualTo(3L);
+        assertThat(saved.getDateEnvoi()).isNull();
+    }
+
+    @Test
+    void saveForm_sansEntreprise_leveMetierException() {
+        AnnonceForm form = AnnonceForm.builder().entrepriseId(null).build();
+
+        assertThatThrownBy(() -> annonceService.saveForm(form))
+                .isInstanceOf(MetierException.class)
+                .hasMessageContaining("Entreprise obligatoire");
+
+        verify(annonceRepository, never()).save(any());
     }
 
     @Test

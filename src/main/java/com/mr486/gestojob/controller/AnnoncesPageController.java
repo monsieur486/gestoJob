@@ -2,6 +2,7 @@ package com.mr486.gestojob.controller;
 
 import com.mr486.gestojob.dto.RechercheAnnonceForm;
 import com.mr486.gestojob.service.AnnonceService;
+import com.mr486.gestojob.service.AnnonceStatutService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class AnnoncesPageController {
 
     private final AnnonceService annonceService;
-
+    private final AnnonceStatutService annonceStatutService;
 
     /**
      * Affiche la liste paginée des annonces, avec recherche optionnelle et
@@ -72,7 +73,7 @@ public class AnnoncesPageController {
      */
     @PostMapping("/annonces/{id}/negatif")
     public String postReponse(@PathVariable Long id) {
-        annonceService.setRefus(id);
+        annonceStatutService.setRefus(id);
         return "redirect:/annonces";
     }
 
@@ -86,7 +87,7 @@ public class AnnoncesPageController {
      */
     @PostMapping("/annonces/{id}/positif")
     public String postReponseAccepte(@PathVariable Long id) {
-        annonceService.setAccepte(id);
+        annonceStatutService.setAccepte(id);
         return "redirect:/annonces";
     }
 

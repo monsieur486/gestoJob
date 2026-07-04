@@ -3,30 +3,23 @@ package com.mr486.gestojob.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.mr486.gestojob.dto.EntrepriseForm;
-import com.mr486.gestojob.dto.EntrepriseListe;
 import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.persistance.EntrepriseRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class EntrepriseServiceTest {
@@ -36,11 +29,6 @@ class EntrepriseServiceTest {
 
     @InjectMocks
     private EntrepriseService entrepriseService;
-
-    @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(entrepriseService, "maxEntreprisesParPage", 10);
-    }
 
     private Entreprise entreprise(int id, String nom) {
         return Entreprise.builder().id(id).nom(nom).estActive(true).build();
@@ -141,37 +129,6 @@ class EntrepriseServiceTest {
 
         assertThat(e.getEstActive()).isFalse();
         verify(entrepriseRepository).save(e);
-    }
-
-    @Test
-    void getAllListePage_mappeLesEntreprisesEnDTO() {
-        Page<Entreprise> page = new PageImpl<>(List.of(entreprise(1, "A"), entreprise(2, "B")));
-        when(entrepriseRepository.findAllByOrderByNomAsc(any(Pageable.class))).thenReturn(page);
-
-        Page<EntrepriseListe> result = entrepriseService.getAllListePage(0);
-
-        assertThat(result.getContent()).extracting(EntrepriseListe::getNom).containsExactly("A", "B");
-    }
-
-    @Test
-    void rechercheEntrepriseParNomPage_mappeLesResultats() {
-        when(entrepriseRepository.findAllByNomContainingIgnoreCaseOrderByNomAsc(eq("ac"), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(entreprise(1, "ACME"))));
-
-        Page<EntrepriseListe> result = entrepriseService.rechercheEntrepriseParNomPage("ac", 0);
-
-        assertThat(result.getContent()).extracting(EntrepriseListe::getNom).containsExactly("ACME");
-    }
-
-    @Test
-    void rechercheEntrepriseActivePage_mappeLesResultats() {
-        when(entrepriseRepository.findAllByEstActiveTrueOrderByNomAsc(any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(entreprise(1, "ACME"))));
-
-        Page<EntrepriseListe> result = entrepriseService.rechercheEntrepriseActivePage(0);
-
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getEstActive()).isTrue();
     }
 
     @Test
