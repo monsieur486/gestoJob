@@ -29,6 +29,30 @@
     <exclude name="LawOfDemeter"/>
     <exclude name="DataClass"/>
     <exclude name="LoosePackageCoupling"/>
+    <!-- Règles de taille structurelles réintroduites plus bas, restreintes au
+         code de production. -->
+    <exclude name="TooManyMethods"/>
+    <exclude name="ExcessiveImports"/>
+  </rule>
+
+  <!-- TooManyMethods et ExcessiveImports sont des règles de conception de
+       production : une classe de test porte légitimement de nombreuses méthodes
+       (une par cas) et de nombreux imports (mocks, DTO, fixtures). On les
+       conserve pour le code de production, mais on les neutralise sur les classes
+       de test (nom terminé par « Test ») plutôt que de morceler des tests
+       cohérents ou de brider leurs dépendances. -->
+  <rule ref="category/java/design.xml/TooManyMethods">
+    <properties>
+      <property name="violationSuppressXPath"
+                value="//*[matches(@SimpleName, '.*Test$')]"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/design.xml/ExcessiveImports">
+    <properties>
+      <property name="violationSuppressXPath"
+                value="//*[matches(@SimpleName, '.*Test$')]"/>
+    </properties>
   </rule>
 
   <rule ref="category/java/errorprone.xml">
