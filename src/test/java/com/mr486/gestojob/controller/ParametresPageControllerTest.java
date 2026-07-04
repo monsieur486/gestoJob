@@ -5,6 +5,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.service.ModeleEmailService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -49,7 +50,7 @@ class ParametresPageControllerTest {
 
     @Test
     void enregistrer_exposeLErreur_siServiceLeve() {
-        doThrow(new RuntimeException("boum")).when(modeleEmailService)
+        doThrow(new MetierException("boum")).when(modeleEmailService)
                 .mettreAJour("CONTENU_GENERAL", "x");
         RedirectAttributes redirect = new RedirectAttributesModelMap();
 

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import com.mr486.gestojob.dto.EntrepriseForm;
 import com.mr486.gestojob.dto.EntrepriseListe;
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.persistance.EntrepriseRepository;
 import java.util.List;
@@ -51,7 +52,7 @@ class EntrepriseServiceTest {
         when(entrepriseRepository.existsByNomIgnoreCase("ACME")).thenReturn(true);
 
         assertThatThrownBy(() -> entrepriseService.save(form))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(MetierException.class)
                 .hasMessageContaining("existe déjà");
 
         verify(entrepriseRepository, never()).save(any());

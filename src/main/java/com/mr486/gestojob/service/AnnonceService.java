@@ -4,6 +4,7 @@ import com.mr486.gestojob.configuration.ApplicationConfiguration;
 import com.mr486.gestojob.dto.AnnonceForm;
 import com.mr486.gestojob.dto.AnnonceListe;
 import com.mr486.gestojob.dto.RechercheAnnonceForm;
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.StatutAnnonce;
 import com.mr486.gestojob.persistance.AnnonceRepository;
@@ -130,7 +131,7 @@ public class AnnonceService {
     @Transactional
     public void saveForm(AnnonceForm form) {
         if (form.getEntrepriseId() == null) {
-            throw new IllegalArgumentException("Entreprise obligatoire pour créer une annonce.");
+            throw new MetierException("Entreprise obligatoire pour créer une annonce.");
         }
 
         Long contactId = form.getContactId();

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.mr486.gestojob.dto.ContactForm;
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.service.ContactService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,7 +54,7 @@ class ContactControllerTest {
     void ajoutContact_exposeLeMessageDErreur_siServiceLeve() {
         when(bindingResult.hasErrors()).thenReturn(false);
         ContactForm form = ContactForm.builder().email("a@b.fr").formuleDePolitesse(0).build();
-        doThrow(new RuntimeException("Veuillez renseigner un email"))
+        doThrow(new MetierException("Veuillez renseigner un email"))
                 .when(contactService).saveContact(form, 5);
 
         RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
@@ -74,7 +75,7 @@ class ContactControllerTest {
 
     @Test
     void supprimerContact_exposeLErreur_siServiceLeve() {
-        doThrow(new RuntimeException("Ce contact est rattaché à des annonces ; supprimez-les d'abord."))
+        doThrow(new MetierException("Ce contact est rattaché à des annonces ; supprimez-les d'abord."))
                 .when(contactService).deleteContact(9L);
 
         RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();

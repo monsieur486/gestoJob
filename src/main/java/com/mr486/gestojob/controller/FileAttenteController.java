@@ -4,6 +4,7 @@ import com.mr486.gestojob.dto.AnnonceListe;
 import com.mr486.gestojob.service.AnnonceMailService;
 import com.mr486.gestojob.service.AnnonceService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,12 +12,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * Contrôleur MVC gérant la file d'attente des annonces dont l'e-mail reste à
  * envoyer : affichage de la file, envoi groupé et envoi individuel.
  */
 @Controller
+@Slf4j
 @RequiredArgsConstructor
 public class FileAttenteController {
 
@@ -62,14 +65,30 @@ public class FileAttenteController {
     /**
      * Déclenche l'envoi de l'e-mail pour une annonce précise.
      *
-     * <p><b>Exemple :</b> POST /file/postMail/7 envoie l'e-mail de l'annonce 7 via sendDirectEmail(7) puis redirige vers /file.</p>
+     * <p><b>Exemple :</b> POST /file/postMail/7 envoie l'e-mail de l'annonce 7 via sendDirectEmail(7) puis redirige vers /file ; en cas d'échec, un message d'erreur est affiché et l'annonce reste en file d'attente.</p>
      *
-     * @param annonceId l'identifiant de l'annonce dont l'e-mail doit être envoyé
+     * @param annonceId          l'identifiant de l'annonce dont l'e-mail doit être envoyé
+     * @param redirectAttributes support des messages flash affichés après la redirection
      * @return une redirection vers la page {@code /file}
      */
+    // On capture volontairement toute RuntimeException (serveur mail indisponible,
+    // annonce introuvable ou sans contact) pour la convertir en message utilisateur
+    // générique plutôt que d'exposer une page d'erreur ; le détail technique reste
+    // journalisé et l'annonce n'est pas marquée comme envoyée.
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     @PostMapping("/file/postMail/{annonceId}")
-    public String postDirectMail(@PathVariable Long annonceId) {
-        annonceMailService.sendDirectEmail(annonceId);
+    public String postDirectMail(
+            @PathVariable Long annonceId,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            annonceMailService.sendDirectEmail(annonceId);
+            redirectAttributes.addFlashAttribute("successMessage", "E-mail envoyé.");
+        } catch (RuntimeException ex) {
+            log.warn("échec de l'envoi direct de l'annonce id={} : {}", annonceId, ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Échec de l'envoi de l'e-mail. Veuillez réessayer plus tard.");
+        }
         return "redirect:/file";
     }
 }

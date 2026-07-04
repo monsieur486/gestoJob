@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.mr486.gestojob.dto.AnnonceForm;
 import com.mr486.gestojob.dto.EntrepriseForm;
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.service.AnnonceService;
 import com.mr486.gestojob.service.ContactService;
@@ -121,7 +122,7 @@ class EntreprisesPageControllerTest {
     void ajoutEntreprise_exposeLErreur_siServiceLeve() {
         when(bindingResult.hasErrors()).thenReturn(false);
         when(entrepriseService.save(any(EntrepriseForm.class)))
-                .thenThrow(new RuntimeException("L'entreprise existe déjà"));
+                .thenThrow(new MetierException("L'entreprise existe déjà"));
 
         Model model = new ExtendedModelMap();
         String view = controller.ajoutEntrepriseSubmit(
@@ -180,7 +181,7 @@ class EntreprisesPageControllerTest {
 
     @Test
     void supprimerAnnonce_exposeLErreur_siServiceLeve() {
-        doThrow(new RuntimeException("suppression impossible"))
+        doThrow(new MetierException("suppression impossible"))
                 .when(annonceService).deleteAnnonce(7L);
 
         RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();

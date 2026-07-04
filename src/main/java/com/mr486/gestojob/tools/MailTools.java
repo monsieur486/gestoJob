@@ -1,7 +1,9 @@
 package com.mr486.gestojob.tools;
 
 import com.mr486.gestojob.configuration.ApplicationConfiguration;
+import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import java.io.UnsupportedEncodingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,7 +58,7 @@ public class MailTools {
             // L'adresse destinataire n'est pas journalisée (donnée personnelle).
             log.error("erreur lors de l'envoi d'un email : {}", e.getMessage(), e);
             throw e;
-        } catch (Exception e) {
+        } catch (MessagingException | UnsupportedEncodingException e) {
             log.error("erreur lors de la préparation d'un email : {}", e.getMessage(), e);
             throw new MailSendException("Échec de l'envoi de l'email", e);
         }

@@ -1,5 +1,6 @@
 package com.mr486.gestojob.controller;
 
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.service.ModeleEmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -54,7 +55,7 @@ public class ParametresPageController {
         try {
             modeleEmailService.mettreAJour(cle, contenu);
             redirectAttributes.addFlashAttribute("successMessage", "Modèle enregistré.");
-        } catch (RuntimeException ex) {
+        } catch (MetierException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/parametres";
@@ -76,7 +77,7 @@ public class ParametresPageController {
         try {
             modeleEmailService.reinitialiser(cle);
             redirectAttributes.addFlashAttribute("successMessage", "Modèle réinitialisé.");
-        } catch (RuntimeException ex) {
+        } catch (MetierException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/parametres";

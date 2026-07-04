@@ -1,6 +1,7 @@
 package com.mr486.gestojob.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -14,8 +15,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.mail.MailSendException;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 @ExtendWith(MockitoExtension.class)
 class FileAttenteControllerTest {
@@ -50,8 +54,27 @@ class FileAttenteControllerTest {
     }
 
     @Test
-    void postDirectMail_envoieUneAnnonce_etRedirige() {
-        assertThat(controller.postDirectMail(9L)).isEqualTo("redirect:/file");
+    void postDirectMail_envoieUneAnnonce_afficheLeSucces_etRedirige() {
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+        String view = controller.postDirectMail(9L, redirectAttributes);
+
+        assertThat(view).isEqualTo("redirect:/file");
         verify(annonceMailService).sendDirectEmail(9L);
+        assertThat(redirectAttributes.getFlashAttributes().get("successMessage")).isEqualTo("E-mail envoyé.");
+    }
+
+    @Test
+    void postDirectMail_exposeUnMessageGenerique_siEnvoiEchoue() {
+        doThrow(new MailSendException("SMTP down")).when(annonceMailService).sendDirectEmail(9L);
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+        String view = controller.postDirectMail(9L, redirectAttributes);
+
+        assertThat(view).isEqualTo("redirect:/file");
+        // Le détail technique n'est pas exposé : message utilisateur générique.
+        assertThat(redirectAttributes.getFlashAttributes().get("errorMessage"))
+                .isEqualTo("Échec de l'envoi de l'e-mail. Veuillez réessayer plus tard.");
+        assertThat(redirectAttributes.getFlashAttributes()).doesNotContainKey("successMessage");
     }
 }
