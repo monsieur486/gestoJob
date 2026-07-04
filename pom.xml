@@ -299,6 +299,15 @@
                 <version>3.9.0</version>
             </plugin>
 
+            <!-- CODE SOURCE croisé (JXR) : xref/ (source) et xref-test/ (tests) en HTML.
+                 Cible des liens Checkstyle/PMD ; sans lui, ces rapports émettent
+                 « Unable to locate Source XRef to link to ». -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jxr-plugin</artifactId>
+                <version>3.6.0</version>
+            </plugin>
+
             <!-- JAVADOC en français (doclint désactivé pour ne pas casser le site ;
                  limité au rapport principal, les classes de test étant package-private). -->
             <plugin>
@@ -314,6 +323,45 @@
                     <reportSet>
                         <reports>
                             <report>javadoc</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+
+            <!-- CHECKSTYLE : même ruleset/suppressions que le <build> (liens via JXR). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.6.0</version>
+                <configuration>
+                    <configLocation>config/checkstyle/checkstyle.xml</configLocation>
+                    <suppressionsLocation>config/checkstyle/suppressions.xml</suppressionsLocation>
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>checkstyle</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+
+            <!-- PMD (+ CPD) : même ruleset et includeTests que le <build> (liens via JXR). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.26.0</version>
+                <configuration>
+                    <rulesets>
+                        <ruleset>config/pmd/ruleset.xml</ruleset>
+                    </rulesets>
+                    <includeTests>true</includeTests>
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>pmd</report>
+                            <report>cpd</report>
                         </reports>
                     </reportSet>
                 </reportSets>
