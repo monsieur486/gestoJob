@@ -227,6 +227,9 @@
                     <threshold>Medium</threshold>
                     <failOnError>false</failOnError>
                     <includeTests>true</includeTests>
+                    <!-- Filtre d'exclusion des findings assumés (faux positifs
+                         Spring / code de test) : voir le fichier pour le détail. -->
+                    <excludeFilterFile>config/spotbugs/spotbugs-exclude.xml</excludeFilterFile>
                     <plugins>
                         <plugin>
                             <groupId>com.h3xstream.findsecbugs</groupId>
