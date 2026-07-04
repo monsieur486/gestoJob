@@ -7,6 +7,9 @@ import com.mr486.gestojob.dto.RechercheAnnonceForm;
 import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.StatutAnnonce;
 import com.mr486.gestojob.persistance.AnnonceRepository;
+import java.time.OffsetDateTime;
+import java.util.Comparator;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,10 +17,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.OffsetDateTime;
-import java.util.Comparator;
-import java.util.List;
 
 /**
  * Service métier de gestion des annonces (candidatures).

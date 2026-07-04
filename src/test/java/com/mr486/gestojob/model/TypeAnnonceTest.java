@@ -1,8 +1,8 @@
 package com.mr486.gestojob.model;
 
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Vérifie le mapping code numérique → libellé court (avec icône) du type

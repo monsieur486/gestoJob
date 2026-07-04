@@ -1,5 +1,11 @@
 package com.mr486.gestojob.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.mr486.gestojob.dto.RechercheAnnonceForm;
 import com.mr486.gestojob.service.AnnonceService;
 import org.junit.jupiter.api.Test;
@@ -10,12 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AnnoncesPageControllerTest {

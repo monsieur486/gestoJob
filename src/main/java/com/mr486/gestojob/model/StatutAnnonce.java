@@ -3,8 +3,8 @@ package com.mr486.gestojob.model;
 /**
  * Statut de suivi d'une annonce (candidature), associant le code numérique
  * persisté en base à son libellé lisible (icône comprise).
- * <p>
- * Remplace l'ancien {@code switch} sur entiers magiques : ajouter un statut
+ *
+ * <p>Remplace l'ancien {@code switch} sur entiers magiques : ajouter un statut
  * se fait désormais en ajoutant une constante (extension), sans modifier la
  * logique d'affichage (principe ouvert/fermé).
  */

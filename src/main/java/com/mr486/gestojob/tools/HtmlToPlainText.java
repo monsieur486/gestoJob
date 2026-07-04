@@ -5,8 +5,8 @@ import org.jsoup.nodes.Document;
 
 /**
  * Utilitaire de conversion de contenu HTML en texte brut.
- * <p>
- * Permet de transformer un fragment HTML en texte lisible tout en préservant
+ *
+ * <p>Permet de transformer un fragment HTML en texte lisible tout en préservant
  * une structure de lignes raisonnable (sauts de ligne, puces de liste,
  * tabulations) et en nettoyant les espaces et lignes superflus.
  */
@@ -14,8 +14,8 @@ public class HtmlToPlainText {
     /**
      * Convertit un contenu HTML en texte brut tout en conservant une mise en
      * forme par lignes.
-     * <p>
-     * Les balises de structure ({@code <br>}, {@code <p>}, {@code <div>}, titres,
+     *
+     * <p>Les balises de structure ({@code <br>}, {@code <p>}, {@code <div>}, titres,
      * éléments de liste, lignes et cellules de tableau) sont transformées en
      * sauts de ligne, puces ou tabulations, puis le résultat est nettoyé pour
      * réduire les espaces et les sauts de ligne excessifs.
@@ -26,7 +26,9 @@ public class HtmlToPlainText {
      * @return le texte brut correspondant, ou une chaîne vide si l'entrée est nulle ou vide
      */
     public static String toPlainTextKeepLines(String html) {
-        if (html == null || html.isBlank()) return "";
+        if (html == null || html.isBlank()) {
+            return "";
+        }
 
         Document doc = Jsoup.parse(html);
 

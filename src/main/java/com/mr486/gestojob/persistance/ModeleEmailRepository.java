@@ -1,9 +1,8 @@
 package com.mr486.gestojob.persistance;
 
 import com.mr486.gestojob.model.ModeleEmail;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * Repository des modèles d'email.

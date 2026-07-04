@@ -6,24 +6,23 @@ import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.model.TypeAnnonce;
 import com.mr486.gestojob.model.TypeContenu;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.stereotype.Component;
-
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.stereotype.Component;
 
 /**
  * Assembleur des lignes de liste d'annonces ({@link AnnonceListe}) à partir des
  * entités {@link Annonce}, en résolvant en lot les entreprises et contacts liés
  * pour éviter le problème N+1.
- * <p>
- * Extrait d'{@link AnnonceService} pour isoler la responsabilité de présentation
+ *
+ * <p>Extrait d'{@link AnnonceService} pour isoler la responsabilité de présentation
  * (principe de responsabilité unique).
  */
 @Component

@@ -1,15 +1,14 @@
 package com.mr486.gestojob.persistance;
 
 import com.mr486.gestojob.model.Contact;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 /**
  * Référentiel Spring Data JPA pour la gestion des entités {@link Contact}.
- * <p>
- * Fournit les opérations de persistance relatives aux contacts rattachés
+ *
+ * <p>Fournit les opérations de persistance relatives aux contacts rattachés
  * aux entreprises.
  */
 @Repository
