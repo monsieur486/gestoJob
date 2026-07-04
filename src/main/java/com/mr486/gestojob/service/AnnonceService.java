@@ -1,6 +1,5 @@
 package com.mr486.gestojob.service;
 
-import com.mr486.gestojob.configuration.ApplicationConfiguration;
 import com.mr486.gestojob.dto.AnnonceForm;
 import com.mr486.gestojob.dto.AnnonceListe;
 import com.mr486.gestojob.dto.RechercheAnnonceForm;
@@ -21,9 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service métier de gestion des annonces (candidatures).
- * Gère la création, la consultation, le changement de statut, la recherche
- * paginée et la construction du contenu texte des annonces. L'envoi des emails
- * est délégué à {@link AnnonceMailService}.
+ * Gère la création, la consultation, la suppression et la recherche paginée des
+ * annonces. Les transitions de statut sont assurées par {@link AnnonceStatutService},
+ * le contenu texte par {@link AnnonceTexteService} et l'envoi des emails par
+ * {@link AnnonceMailService}.
  */
 @Service
 @RequiredArgsConstructor
@@ -31,10 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AnnonceService {
 
     private final AnnonceRepository annonceRepository;
-    private final ContactService contactService;
-    private final ContenuService contenuService;
     private final AnnonceListeMapper annonceListeMapper;
-    private final LibelleService libelleService;
     @Value("${gestojob.max-annonces-par-page:7}")
     private int maxAnnoncesParPage;
 
@@ -57,29 +54,6 @@ public class AnnonceService {
      */
     public Annonce getAnnonce(Long annonceId) {
         return annonceRepository.findById(annonceId).orElseThrow();
-    }
-
-    /**
-     * Retourne la formule de politesse à utiliser pour une annonce.
-     * Renvoie une formule générique si l'annonce n'est associée à aucun contact.
-     *
-     * <p><b>Exemple :</b> pour une annonce sans contact, retourne « Madame, Monsieur, ».</p>
-     *
-     * @param annonceId identifiant de l'annonce
-     * @return la formule de politesse, ou "Madame, Monsieur," par défaut
-     */
-    public String getMessageDePolitesse(Long annonceId) {
-        return messageDePolitesse(getAnnonce(annonceId));
-    }
-
-    // Formule de politesse d'une annonce déjà chargée (générique si aucun contact),
-    // sans relire l'annonce en base.
-    private String messageDePolitesse(Annonce annonce) {
-        Long contactId = annonce.getContactId();
-        if (contactId == null) {
-            return ApplicationConfiguration.SALUTATION_GENERIQUE;
-        }
-        return contactService.getContact(contactId).getMessageDePolitesse();
     }
 
     /**
@@ -168,50 +142,6 @@ public class AnnonceService {
                         StatutAnnonce.BOITE_ENVOI.getCode(), pageable));
     }
 
-    // Met à jour le statut d'une annonce en base.
-    private void updateStatusAnnonce(Long annonceId, Integer statusAnnonce) {
-        annonceRepository.updateStatusAnnonce(annonceId, statusAnnonce);
-    }
-
-    /**
-     * Marque l'annonce comme dépassée / sans suite (statut 3).
-     *
-     * <p><b>Exemple :</b> setDepasse(7L) fait passer l'annonce 7 au statut 3 (dépassée).</p>
-     *
-     * @param annonceId identifiant de l'annonce
-     */
-    @Transactional
-    public void setDepasse(Long annonceId) {
-        updateStatusAnnonce(annonceId, StatutAnnonce.DEPASSE.getCode());
-        log.info("annonce marquée dépassée : {}", annonceId);
-    }
-
-    /**
-     * Marque l'annonce comme refusée (statut 4).
-     *
-     * <p><b>Exemple :</b> setRefus(7L) fait passer l'annonce 7 au statut 4 (refusée).</p>
-     *
-     * @param annonceId identifiant de l'annonce
-     */
-    @Transactional
-    public void setRefus(Long annonceId) {
-        updateStatusAnnonce(annonceId, StatutAnnonce.NEGATIF.getCode());
-        log.info("annonce marquée refusée : {}", annonceId);
-    }
-
-    /**
-     * Marque l'annonce comme acceptée (statut 5).
-     *
-     * <p><b>Exemple :</b> setAccepte(7L) fait passer l'annonce 7 au statut 5 (acceptée / positif).</p>
-     *
-     * @param annonceId identifiant de l'annonce
-     */
-    @Transactional
-    public void setAccepte(Long annonceId) {
-        updateStatusAnnonce(annonceId, StatutAnnonce.POSITIF.getCode());
-        log.info("annonce marquée acceptée (positif) : {}", annonceId);
-    }
-
     /**
      * Recherche paginée d'annonces. Sans texte de recherche : retourne soit toutes
      * les annonces (avec archives), soit toutes sauf les archivées (statut 6). Avec
@@ -268,25 +198,5 @@ public class AnnonceService {
         return annonceListeMapper.toAnnonceListePage(
                 annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(
                         StatutAnnonce.POSITIF.getCode(), pageable));
-    }
-
-    /**
-     * Construit la version texte du contenu d'une annonce (libellé suivi du corps),
-     * destinée par exemple au copier-coller.
-     *
-     * <p><b>Exemple :</b> getAnnonceTxtContenuById(7L) retourne le libellé de l'annonce suivi de deux sauts de ligne puis du corps texte (non échappé) intégrant la formule de politesse.</p>
-     *
-     * @param id identifiant de l'annonce
-     * @return le contenu texte de l'annonce
-     * @throws java.util.NoSuchElementException si l'annonce est introuvable
-     */
-    public String getAnnonceTxtContenuById(Long id) {
-        Annonce annonce = getAnnonce(id);
-        String result = libelleService.construitLibelle(annonce) + "\n\n";
-        String messageDePolitesse = messageDePolitesse(annonce);
-
-        result += contenuService.getTextContenu(annonce.getPoste(), annonce.getTypeContenu(), messageDePolitesse);
-
-        return result;
     }
 }

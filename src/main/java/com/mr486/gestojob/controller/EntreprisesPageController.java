@@ -6,6 +6,7 @@ import com.mr486.gestojob.dto.EntrepriseForm;
 import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.service.AnnonceService;
 import com.mr486.gestojob.service.ContactService;
+import com.mr486.gestojob.service.EntrepriseRechercheService;
 import com.mr486.gestojob.service.EntrepriseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class EntreprisesPageController {
 
     private final EntrepriseService entrepriseService;
+    private final EntrepriseRechercheService entrepriseRechercheService;
     private final ContactService contactService;
     private final AnnonceService annonceService;
 
@@ -60,7 +62,7 @@ public class EntreprisesPageController {
         int pageIndex = Math.max(0, page - 1);
 
         if (active) {
-            var pageResult = entrepriseService.rechercheEntrepriseActivePage(pageIndex);
+            var pageResult = entrepriseRechercheService.rechercheEntrepriseActivePage(pageIndex);
             model.addAttribute("entreprises", pageResult.getContent());
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", pageResult.getTotalPages());
@@ -68,14 +70,14 @@ public class EntreprisesPageController {
         }
 
         if (StringUtils.hasText(q)) {
-            var pageResult = entrepriseService.rechercheEntrepriseParNomPage(q, pageIndex);
+            var pageResult = entrepriseRechercheService.rechercheEntrepriseParNomPage(q, pageIndex);
             model.addAttribute("entreprises", pageResult.getContent());
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", pageResult.getTotalPages());
             return "entreprises";
         }
 
-        var pageResult = entrepriseService.getAllListePage(pageIndex);
+        var pageResult = entrepriseRechercheService.getAllListePage(pageIndex);
 
         model.addAttribute("entreprisesPage", pageResult);
         model.addAttribute("entreprises", pageResult.getContent());

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.mr486.gestojob.dto.RechercheAnnonceForm;
 import com.mr486.gestojob.service.AnnonceService;
+import com.mr486.gestojob.service.AnnonceStatutService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,6 +23,8 @@ class AnnoncesPageControllerTest {
 
     @Mock
     private AnnonceService annonceService;
+    @Mock
+    private AnnonceStatutService annonceStatutService;
 
     @InjectMocks
     private AnnoncesPageController controller;
@@ -45,13 +48,13 @@ class AnnoncesPageControllerTest {
     @Test
     void postNegatif_appelleSetRefus_etRedirige() {
         assertThat(controller.postReponse(7L)).isEqualTo("redirect:/annonces");
-        verify(annonceService).setRefus(7L);
+        verify(annonceStatutService).setRefus(7L);
     }
 
     @Test
     void postPositif_appelleSetAccepte_etRedirige() {
         assertThat(controller.postReponseAccepte(7L)).isEqualTo("redirect:/annonces");
-        verify(annonceService).setAccepte(7L);
+        verify(annonceStatutService).setAccepte(7L);
     }
 
     @Test
