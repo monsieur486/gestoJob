@@ -5,8 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * Point d'entrée de l'application Spring Boot GestoJob.
- * <p>
- * Cette classe démarre le contexte Spring et lance l'application de gestion
+ *
+ * <p>Cette classe démarre le contexte Spring et lance l'application de gestion
  * des candidatures.
  */
 @SpringBootApplication

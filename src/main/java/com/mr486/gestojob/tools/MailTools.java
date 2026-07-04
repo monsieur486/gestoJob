@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Service utilitaire d'envoi de courriels.
- * <p>
- * S'appuie sur {@link JavaMailSender} pour composer et expédier des messages
+ *
+ * <p>S'appuie sur {@link JavaMailSender} pour composer et expédier des messages
  * au format HTML, en utilisant l'adresse d'expéditeur configurée pour
  * l'application.
  */

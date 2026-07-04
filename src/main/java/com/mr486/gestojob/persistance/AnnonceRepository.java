@@ -1,6 +1,8 @@
 package com.mr486.gestojob.persistance;
 
 import com.mr486.gestojob.model.Annonce;
+import java.time.OffsetDateTime;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,13 +11,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.OffsetDateTime;
-import java.util.List;
-
 /**
  * Référentiel Spring Data JPA pour la gestion des entités {@link Annonce}.
- * <p>
- * Fournit les opérations de persistance (recherche, mise à jour de statut,
+ *
+ * <p>Fournit les opérations de persistance (recherche, mise à jour de statut,
  * pagination et recherche plein texte) relatives aux annonces de candidature.
  */
 @Repository
@@ -130,8 +129,8 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
 
     /**
      * Recherche les annonces correspondant à un terme de recherche.
-     * <p>
-     * La recherche est insensible à la casse et porte sur le poste, la référence
+     *
+     * <p>La recherche est insensible à la casse et porte sur le poste, la référence
      * de l'annonce, le nom de l'entreprise, l'email et le nom du contact. Les
      * annonces archivées (statut 6) ne sont incluses que si {@code includeArchives}
      * vaut {@code true} ; sinon tous les autres statuts sont retournés. Les

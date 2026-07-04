@@ -1,8 +1,8 @@
 package com.mr486.gestojob.tools;
 
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
 
 class HtmlSanitizerTest {
 

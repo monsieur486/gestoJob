@@ -3,8 +3,8 @@ package com.mr486.gestojob.model;
 /**
  * Type de contenu (modèle de lettre) d'une annonce, associant le code numérique
  * persisté en base au libellé court affiché dans les listes.
- * <p>
- * Remplace les entiers magiques (1 = microservices, 2 = IA agentique, sinon
+ *
+ * <p>Remplace les entiers magiques (1 = microservices, 2 = IA agentique, sinon
  * généraliste) : ajouter un modèle de lettre se fait en ajoutant une constante,
  * sans modifier la logique de sélection (principe ouvert/fermé).
  */

@@ -6,24 +6,23 @@ import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.StatutAnnonce;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import com.mr486.gestojob.tools.MailTools;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service d'envoi des emails de candidature. Responsable de la construction du
  * corps HTML, de l'expédition via {@link MailTools} et du passage de l'annonce
  * au statut « envoyé » une fois l'email parti.
- * <p>
- * Extrait d'{@link AnnonceService} pour isoler la responsabilité d'envoi
+ *
+ * <p>Extrait d'{@link AnnonceService} pour isoler la responsabilité d'envoi
  * (principe de responsabilité unique).
  */
 @Service

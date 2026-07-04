@@ -14,8 +14,8 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Configuration de la sécurité applicative.
- * <p>
- * La page d'accueil et les ressources statiques restent publiques ; toutes les
+ *
+ * <p>La page d'accueil et les ressources statiques restent publiques ; toutes les
  * autres pages exigent une authentification par formulaire. Un unique compte
  * administrateur est défini en mémoire, ses identifiants étant lus depuis la
  * configuration (variables {@code GESTOJOB_ADMIN_USERNAME} /

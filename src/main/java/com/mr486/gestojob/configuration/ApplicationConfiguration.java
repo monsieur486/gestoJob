@@ -4,8 +4,8 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Configuration générale de l'application.
- * <p>
- * Point unique de centralisation des <b>constantes métier</b> (options et
+ *
+ * <p>Point unique de centralisation des <b>constantes métier</b> (options et
  * libellés relevant d'un choix fonctionnel) : nom du candidat, libellés de
  * courriel, formules de politesse. À distinguer de la configuration de
  * production (secrets, hôtes, ports, tailles de page) qui provient du

@@ -3,8 +3,8 @@ package com.mr486.gestojob.model;
 /**
  * Type d'une annonce, associant le code numérique persisté en base à son
  * libellé court (icône comprise) affiché dans les listes.
- * <p>
- * Remplace l'ancien {@code if/else} sur entiers magiques : par convention
+ *
+ * <p>Remplace l'ancien {@code if/else} sur entiers magiques : par convention
  * historique, seul le code 0 désigne une candidature spontanée, toute autre
  * valeur (y compris nulle) désigne une candidature à une référence.
  */

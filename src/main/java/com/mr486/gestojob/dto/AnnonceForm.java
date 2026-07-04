@@ -1,12 +1,11 @@
 package com.mr486.gestojob.dto;
 
 import jakarta.validation.constraints.Size;
+import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.OffsetDateTime;
 
 /**
  * DTO de formulaire utilisé pour la création ou la modification d'une annonce.

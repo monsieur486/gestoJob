@@ -1,17 +1,16 @@
 package com.mr486.gestojob.persistance;
 
 import com.mr486.gestojob.model.Entreprise;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-
 /**
  * Référentiel Spring Data JPA pour la gestion des entités {@link Entreprise}.
- * <p>
- * Fournit les opérations de persistance relatives aux entreprises : recherche
+ *
+ * <p>Fournit les opérations de persistance relatives aux entreprises : recherche
  * paginée, recherche par nom, vérification d'existence et filtrage des
  * entreprises actives.
  */
