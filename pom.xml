@@ -243,9 +243,9 @@
                 </executions>
             </plugin>
 
-            <!-- PMD (+CPD) : complexité, longueurs, copier-coller. Rulesets intégrés
-                 (bestpractices/design/errorprone) — une config maison
-                 (config/pmd/ruleset.xml) pourra les remplacer plus tard si besoin.
+            <!-- PMD (+CPD) : complexité, longueurs, copier-coller. Ruleset maison
+                 (config/pmd/ruleset.xml) : catégories bestpractices/design/errorprone
+                 moins les règles bruyantes ou en conflit avec le style maison.
                  Non bloquant : rapport indicatif, ne casse pas le build. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -257,9 +257,7 @@
                     <includeTests>true</includeTests>
                     <minimumTokens>100</minimumTokens>
                     <rulesets>
-                        <ruleset>category/java/bestpractices.xml</ruleset>
-                        <ruleset>category/java/design.xml</ruleset>
-                        <ruleset>category/java/errorprone.xml</ruleset>
+                        <ruleset>config/pmd/ruleset.xml</ruleset>
                     </rulesets>
                 </configuration>
                 <executions>
