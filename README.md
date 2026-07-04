@@ -30,9 +30,14 @@ Connexion par défaut (modifiable dans `.env`) : **utilisateur** / **Mdp12345\**
 ## Build & tests
 
 ```bash
-./mvnw clean verify        # build + tests + Checkstyle (bloquant) + couverture JaCoCo (≥ 90 %)
+./mvnw clean verify        # build + tests + analyses qualité (Checkstyle, PMD, SpotBugs) + couverture JaCoCo
 ./mvnw clean verify site   # idem + site Maven (infos, Javadoc FR, JaCoCo, Surefire) dans target/site/
 ```
+
+> Les analyses de qualité (Checkstyle, PMD, SpotBugs + FindSecBugs) et le contrôle
+> de couverture JaCoCo (objectif ≥ 80 % des lignes) sont **indicatifs, non
+> bloquants** : ils signalent les écarts sans casser le build. L'objectif reste
+> néanmoins 0 violation.
 
 > `./mvnw verify` exécute la suite complète, dont un test qui démarre le contexte
 > Spring : il faut donc que la base soit lancée (`./dev-start.sh`).
@@ -55,3 +60,35 @@ Toute la configuration provient de variables d'environnement (aucune valeur en d
 `application.yml` importe `optional:file:.env`. Le modèle versionné est **`dist.env`** ;
 le `.env` réel est **gitignoré**. Toute évolution du schéma passe par un changelog
 **Liquibase** (`src/main/resources/db/changelog/`), jamais par Hibernate.
+
+## Architecture
+
+Application en couches classiques (`controller → service → persistance`), avec des
+**DTO aux frontières** (jamais l'entité JPA exposée) et des contrôleurs minces. La
+logique métier est portée par des services à responsabilité unique, découpés par
+domaine :
+
+**Annonces**
+
+- `AnnonceService` — création, consultation, suppression et recherche paginée des annonces.
+- `AnnonceStatutService` — transitions de statut du cycle de vie (dépassée, refusée, acceptée).
+- `AnnonceTexteService` — formule de politesse et contenu **texte** de l'annonce (copier-coller).
+- `AnnonceMailService` — envoi des courriels (contenu **HTML**), individuel ou depuis la file d'attente.
+- `AnnonceListeMapper` — projection des annonces en DTO d'affichage, avec chargement groupé (anti-N+1).
+
+**Entreprises & contacts**
+
+- `EntrepriseService` — gestion des entreprises (création, mise à jour, activation/désactivation).
+- `EntrepriseRechercheService` — listes et recherches paginées d'entreprises.
+- `ContactService` — gestion des contacts rattachés aux entreprises.
+
+**Contenu & courriels**
+
+- `ContenuService` — modèles de lettre de motivation (variantes HTML et texte selon le type de poste).
+- `ModeleEmailService` — modèles d'email éditables et leur cache.
+- `LibelleService` — construction de l'objet (libellé) du courriel de candidature.
+- `HtmlConverterService` — conversion HTML → texte brut.
+
+Les erreurs fonctionnelles destinées à l'utilisateur remontent via une exception
+métier typée `MetierException` (message affichable), distincte des erreurs
+techniques qui, elles, ne sont pas exposées.
