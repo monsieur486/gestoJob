@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.mr486.gestojob.dto.ContactForm;
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import com.mr486.gestojob.persistance.ContactRepository;
@@ -49,7 +50,7 @@ class ContactServiceTest {
         when(annonceRepository.existsByContactId(9L)).thenReturn(true);
 
         assertThatThrownBy(() -> contactService.deleteContact(9L))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(MetierException.class)
                 .hasMessageContaining("annonce");
 
         verify(contactRepository, never()).deleteById(any());
@@ -61,7 +62,7 @@ class ContactServiceTest {
         ContactForm form = ContactForm.builder().email("a@b.fr").formuleDePolitesse(0).build();
 
         assertThatThrownBy(() -> contactService.saveContact(form, 7))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(MetierException.class)
                 .hasMessageContaining("introuvable");
 
         verify(contactRepository, never()).save(any());
@@ -73,7 +74,7 @@ class ContactServiceTest {
         ContactForm form = ContactForm.builder().email("").formuleDePolitesse(1).build();
 
         assertThatThrownBy(() -> contactService.saveContact(form, 7))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(MetierException.class)
                 .hasMessageContaining("email");
 
         verify(contactRepository, never()).save(any());
@@ -85,7 +86,7 @@ class ContactServiceTest {
         ContactForm form = ContactForm.builder().email(null).formuleDePolitesse(1).build();
 
         assertThatThrownBy(() -> contactService.saveContact(form, 7))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(MetierException.class)
                 .hasMessageContaining("email");
 
         verify(contactRepository, never()).save(any());
@@ -108,7 +109,7 @@ class ContactServiceTest {
         ContactForm form = ContactForm.builder().email("doublon@acme.fr").formuleDePolitesse(0).nom("Durand").build();
 
         assertThatThrownBy(() -> contactService.saveContact(form, 7))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(MetierException.class)
                 .hasMessageContaining("existe déjà");
 
         verify(contactRepository, never()).save(any());

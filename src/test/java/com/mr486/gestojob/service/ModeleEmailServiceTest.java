@@ -6,9 +6,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.ModeleEmail;
 import com.mr486.gestojob.persistance.ModeleEmailRepository;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,9 +40,9 @@ class ModeleEmailServiceTest {
     }
 
     @Test
-    void getContenu_cleInconnue_leveNoSuchElement() {
+    void getContenu_cleInconnue_leveMetierException() {
         assertThatThrownBy(() -> modeleEmailService.getContenu("INCONNU"))
-                .isInstanceOf(NoSuchElementException.class);
+                .isInstanceOf(MetierException.class);
     }
 
     @Test

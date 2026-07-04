@@ -169,11 +169,14 @@
                                 <rule>
                                     <element>BUNDLE</element>
                                     <limits>
-                                        <!-- Objectif de couverture des lignes : 90 %. -->
+                                        <!-- Objectif de couverture des lignes : 80 %.
+                                             Seuil volontairement en deçà de 90 % pour ne pas
+                                             inciter à écrire du test pour du test au détriment
+                                             de tests pertinents. -->
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.90</minimum>
+                                            <minimum>0.80</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

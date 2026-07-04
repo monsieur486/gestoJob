@@ -1,6 +1,7 @@
 package com.mr486.gestojob.service;
 
 import com.mr486.gestojob.dto.ModeleEmailVue;
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.CleModele;
 import com.mr486.gestojob.model.ModeleEmail;
 import com.mr486.gestojob.persistance.ModeleEmailRepository;
@@ -11,7 +12,6 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import lombok.RequiredArgsConstructor;
@@ -55,11 +55,11 @@ public class ModeleEmailService {
      * Retourne le contenu courant d'un modèle.
      *
      * <p><b>Exemple :</b> {@code getContenu("CONTENU_IA")} retourne le HTML du modèle
-     * IA ; une clé inconnue lève NoSuchElementException.</p>
+     * IA ; une clé inconnue lève MetierException.</p>
      *
      * @param cle clé du modèle
      * @return le contenu courant
-     * @throws java.util.NoSuchElementException si la clé est inconnue
+     * @throws MetierException si la clé est inconnue
      */
     public String getContenu(String cle) {
         String contenu = cache.get(cle);
@@ -104,7 +104,7 @@ public class ModeleEmailService {
      *
      * @param cle         clé du modèle
      * @param contenuBrut contenu soumis par l'utilisateur
-     * @throws java.util.NoSuchElementException si la clé est inconnue
+     * @throws MetierException si la clé est inconnue
      */
     @Transactional
     public void mettreAJour(String cle, String contenuBrut) {
@@ -123,7 +123,7 @@ public class ModeleEmailService {
      * libellé d'origine de candidature spontanée.</p>
      *
      * @param cle clé du modèle
-     * @throws java.util.NoSuchElementException si la clé est inconnue
+     * @throws MetierException si la clé est inconnue
      */
     @Transactional
     public void reinitialiser(String cle) {
@@ -150,12 +150,12 @@ public class ModeleEmailService {
         cache.put(cle, contenu);
     }
 
-    // Valide la clé contre l'enum (NoSuchElementException si inconnue).
+    // Valide la clé contre l'enum (MetierException si inconnue).
     private CleModele cleValide(String cle) {
         try {
             return CleModele.valueOf(cle);
         } catch (IllegalArgumentException ex) {
-            throw new NoSuchElementException("Modèle inconnu : " + cle, ex);
+            throw new MetierException("Modèle inconnu : " + cle, ex);
         }
     }
 

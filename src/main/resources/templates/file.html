@@ -9,6 +9,10 @@
 <body>
 <div th:replace="~{fragments/menu :: menu}"></div>
 <div class="container-fluid">
+    <div class="alert alert-success" id="success" th:if="${successMessage != null}">
+        <div th:text="${successMessage}">Succès</div>
+    </div>
+
     <div class="alert alert-danger" id="error" th:if="${errorMessage != null}">
         <div th:text="${errorMessage}">Erreur</div>
     </div>

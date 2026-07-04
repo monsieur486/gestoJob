@@ -2,6 +2,7 @@ package com.mr486.gestojob.service;
 
 import com.mr486.gestojob.dto.EntrepriseForm;
 import com.mr486.gestojob.dto.EntrepriseListe;
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.persistance.EntrepriseRepository;
 import java.util.Collection;
@@ -62,7 +63,7 @@ public class EntrepriseService {
     public int save(EntrepriseForm form) {
         if (entrepriseRepository.existsByNomIgnoreCase(form.getNom())) {
             log.warn("création d'entreprise refusée : « {} » existe déjà", form.getNom());
-            throw new IllegalStateException("L'entreprise existe déjà");
+            throw new MetierException("L'entreprise existe déjà");
         }
         Entreprise entreprise = entrepriseRepository.save(EntrepriseForm.entity(form));
         log.info("entreprise créée : « {} » (id {})", entreprise.getNom(), entreprise.getId());

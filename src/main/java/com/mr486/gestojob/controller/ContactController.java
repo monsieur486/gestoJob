@@ -2,6 +2,7 @@ package com.mr486.gestojob.controller;
 
 
 import com.mr486.gestojob.dto.ContactForm;
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.service.ContactService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -71,7 +72,7 @@ public class ContactController {
 
         try {
             contactService.saveContact(form, id);
-        } catch (RuntimeException ex) {
+        } catch (MetierException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/entreprises/" + id;
@@ -97,7 +98,7 @@ public class ContactController {
     ) {
         try {
             contactService.deleteContact(contactId);
-        } catch (RuntimeException ex) {
+        } catch (MetierException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/entreprises/" + entrepriseId;

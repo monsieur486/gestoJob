@@ -43,6 +43,9 @@ public class AnnonceMailService {
      *
      * <p><b>Exemple :</b> sur 3 annonces au statut 1, si l'envoi de la deuxième échoue, les annonces 1 et 3 passent au statut 2 tandis que la 2 reste au statut 1.</p>
      */
+    // Résilience de lot : on capture volontairement toute RuntimeException (envoi,
+    // contact manquant, persistance) pour isoler l'échec à une annonce et poursuivre.
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     @Transactional
     public void sendEmailForPendingAnnonces() {
         List<Annonce> annoncesEnAttente =

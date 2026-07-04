@@ -3,6 +3,7 @@ package com.mr486.gestojob.controller;
 import com.mr486.gestojob.dto.AnnonceForm;
 import com.mr486.gestojob.dto.ContactForm;
 import com.mr486.gestojob.dto.EntrepriseForm;
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.service.AnnonceService;
 import com.mr486.gestojob.service.ContactService;
 import com.mr486.gestojob.service.EntrepriseService;
@@ -164,7 +165,7 @@ public class EntreprisesPageController {
         try {
             int id = entrepriseService.save(form);
             return "redirect:/entreprises/" + id;
-        } catch (RuntimeException ex) {
+        } catch (MetierException ex) {
             model.addAttribute("errorMessage", ex.getMessage());
             return "add-entreprise";
         }
@@ -228,7 +229,7 @@ public class EntreprisesPageController {
         try {
             annonceService.saveForm(form);
             return "redirect:/entreprises/" + id;
-        } catch (RuntimeException ex) {
+        } catch (MetierException ex) {
             model.addAttribute("errorMessage", ex.getMessage());
             model.addAttribute("entreprise", entrepriseService.getEntreprise(id));
             model.addAttribute("contacts", contactService.getAllContact(id));
@@ -257,7 +258,7 @@ public class EntreprisesPageController {
     ) {
         try {
             annonceService.deleteAnnonce(annonceId);
-        } catch (RuntimeException ex) {
+        } catch (MetierException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/entreprises/" + entrepriseId;
