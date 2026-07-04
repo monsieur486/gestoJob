@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,7 +51,7 @@ class ParametresPageControllerTest {
     void enregistrer_exposeLErreur_siServiceLeve() {
         doThrow(new RuntimeException("boum")).when(modeleEmailService)
                 .mettreAJour("CONTENU_GENERAL", "x");
-        RedirectAttributesModelMap redirect = new RedirectAttributesModelMap();
+        RedirectAttributes redirect = new RedirectAttributesModelMap();
 
         String vue = controller.enregistrerModele("CONTENU_GENERAL", "x", redirect);
 

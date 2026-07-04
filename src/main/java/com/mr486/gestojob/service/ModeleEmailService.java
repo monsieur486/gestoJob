@@ -155,7 +155,7 @@ public class ModeleEmailService {
         try {
             return CleModele.valueOf(cle);
         } catch (IllegalArgumentException ex) {
-            throw new NoSuchElementException("Modèle inconnu : " + cle);
+            throw new NoSuchElementException("Modèle inconnu : " + cle, ex);
         }
     }
 

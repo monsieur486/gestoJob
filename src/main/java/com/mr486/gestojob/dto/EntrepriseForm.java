@@ -18,6 +18,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+// Les initialiseurs de champs (estActive, codePostal, ville) sont les valeurs par
+// défaut du formulaire vide (page d'ajout) ; le constructeur de copie les écrase,
+// d'où le faux positif PMD.UnusedAssignment neutralisé ici.
+@SuppressWarnings("PMD.UnusedAssignment")
 public class EntrepriseForm {
 
     @NotBlank(message = "Le nom est obligatoire.")

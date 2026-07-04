@@ -10,7 +10,12 @@ import org.jsoup.nodes.Document;
  * une structure de lignes raisonnable (sauts de ligne, puces de liste,
  * tabulations) et en nettoyant les espaces et lignes superflus.
  */
-public class HtmlToPlainText {
+public final class HtmlToPlainText {
+
+    // Classe utilitaire : instanciation interdite.
+    private HtmlToPlainText() {
+    }
+
     /**
      * Convertit un contenu HTML en texte brut tout en conservant une mise en
      * forme par lignes.

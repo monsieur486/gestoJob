@@ -9,6 +9,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * <p>Cette classe démarre le contexte Spring et lance l'application de gestion
  * des candidatures.
  */
+// Faux positif PMD : classe de démarrage Spring, pas une classe utilitaire
+// (un constructeur privé casserait le proxy CGLIB de @Configuration).
+@SuppressWarnings("PMD.UseUtilityClass")
 @SpringBootApplication
 public class GestoJobApplication {
 

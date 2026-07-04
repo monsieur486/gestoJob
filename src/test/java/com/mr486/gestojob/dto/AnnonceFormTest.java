@@ -40,7 +40,7 @@ class AnnonceFormTest {
 
         Set<ConstraintViolation<AnnonceForm>> violations = validator.validate(form);
 
-        assertThat(violations).noneMatch(v -> v.getPropertyPath().toString().equals("entrepriseId"));
+        assertThat(violations).noneMatch(v -> "entrepriseId".equals(v.getPropertyPath().toString()));
     }
 
     @Test
@@ -49,7 +49,7 @@ class AnnonceFormTest {
 
         Set<ConstraintViolation<AnnonceForm>> violations = validator.validate(form);
 
-        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("poste"));
+        assertThat(violations).anyMatch(v -> "poste".equals(v.getPropertyPath().toString()));
     }
 
     @Test
