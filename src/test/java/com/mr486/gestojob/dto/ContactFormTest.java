@@ -46,6 +46,6 @@ class ContactFormTest {
 
         Set<ConstraintViolation<ContactForm>> violations = validator.validate(form);
 
-        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("email"));
+        assertThat(violations).anyMatch(v -> "email".equals(v.getPropertyPath().toString()));
     }
 }

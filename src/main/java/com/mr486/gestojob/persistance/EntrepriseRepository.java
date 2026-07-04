@@ -48,6 +48,7 @@ public interface EntrepriseRepository extends JpaRepository<Entreprise, Integer>
      * @param id l'identifiant de l'entreprise recherchée
      * @return un {@link Optional} contenant l'entreprise si elle existe, vide sinon
      */
+    @Override
     Optional<Entreprise> findById(Integer id);
 
     /**

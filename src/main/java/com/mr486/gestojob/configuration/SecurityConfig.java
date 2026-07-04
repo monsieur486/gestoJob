@@ -68,6 +68,8 @@ public class SecurityConfig {
      * @return la chaîne de filtres de sécurité
      * @throws Exception si la configuration échoue
      */
+    // « throws Exception » est imposé par l'API Spring Security (HttpSecurity#build).
+    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http

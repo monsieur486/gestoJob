@@ -27,6 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 @ExtendWith(MockitoExtension.class)
@@ -182,7 +183,7 @@ class EntreprisesPageControllerTest {
         doThrow(new RuntimeException("suppression impossible"))
                 .when(annonceService).deleteAnnonce(7L);
 
-        RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
         String view = controller.supprimerAnnonce(8, 7L, redirectAttributes);
 
         assertThat(view).isEqualTo("redirect:/entreprises/8");

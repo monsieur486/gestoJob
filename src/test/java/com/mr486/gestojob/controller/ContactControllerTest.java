@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,7 +56,7 @@ class ContactControllerTest {
         doThrow(new RuntimeException("Veuillez renseigner un email"))
                 .when(contactService).saveContact(form, 5);
 
-        RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
         String view = controller.ajoutContactSubmit(form, 5, bindingResult, redirectAttributes);
 
         assertThat(view).isEqualTo("redirect:/entreprises/5");
@@ -76,7 +77,7 @@ class ContactControllerTest {
         doThrow(new RuntimeException("Ce contact est rattaché à des annonces ; supprimez-les d'abord."))
                 .when(contactService).deleteContact(9L);
 
-        RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
         String view = controller.supprimerContact(5, 9L, redirectAttributes);
 
         assertThat(view).isEqualTo("redirect:/entreprises/5");
