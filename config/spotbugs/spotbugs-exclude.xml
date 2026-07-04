@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Filtre d'exclusion SpotBugs (+ FindSecBugs).
+
+  On ne tait ici que des findings ASSUMÉS (faux positifs en contexte Spring ou
+  code de test), afin que le rapport ne conserve que les alertes réellement
+  actionnables. Chaque exclusion est justifiée et ciblée au plus juste ;
+  ajouter une exclusion large sans raison est à proscrire.
+-->
+<FindBugsFilter>
+
+    <!-- EI_EXPOSE_REP2 : les constructeurs des beans Spring stockent des
+         collaborateurs injectés par le conteneur (repositories, services).
+         La notion d'« exposition de représentation interne » n'a pas de sens
+         pour des singletons injectés, dont on ne recopie jamais les
+         dépendances. On ne l'exclut QUE dans les couches de composants
+         (controller/service/tools/configuration) : model et dto restent
+         analysés, où une vraie exposition d'objet mutable doit être visible. -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+        <Package name="~com\.mr486\.gestojob\.(controller|service|tools|configuration).*"/>
+    </Match>
+
+    <!-- CRLF_INJECTION_LOGS (FindSecBugs) : remonte sur des logs SLF4J
+         paramétrés de données internes (identifiants, noms d'entreprise, clés
+         de modèle) dans une application mono-utilisateur interne et rendue
+         côté serveur. Le risque pratique d'injection CRLF dans les journaux
+         est négligeable dans ce contexte. -->
+    <Match>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+
+    <!-- HARD_CODE_PASSWORD : mots de passe/fixtures en dur dans le code de
+         test (jeux de données de SecurityConfigTest). Sans objet côté
+         production ; l'analyse des tests reste activée pour le reste. -->
+    <Match>
+        <Bug pattern="HARD_CODE_PASSWORD"/>
+        <Class name="~.*Test"/>
+    </Match>
+
+</FindBugsFilter>
