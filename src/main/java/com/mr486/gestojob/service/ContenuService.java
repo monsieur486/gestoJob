@@ -60,7 +60,7 @@ public class ContenuService {
         String politesse = (messageDePolitesse == null)
                 ? ApplicationConfiguration.SALUTATION_GENERIQUE
                 : messageDePolitesse;
-        String posteDefaut = posteParDefaut(cle);
+        String posteDefaut = cle.getPosteParDefaut();
 
         if (isHtml) {
             String safePoste = (poste == null || poste.isEmpty()) ? posteDefaut : poste;
@@ -74,14 +74,5 @@ public class ContenuService {
         return texte
                 .replace("{{POLITESSE}}", politesse)
                 .replace("{{POSTE}}", posteTexte);
-    }
-
-    // Intitulé de poste par défaut selon le modèle.
-    private String posteParDefaut(CleModele cle) {
-        return switch (cle) {
-            case CONTENU_MICROSERVICES -> ApplicationConfiguration.POSTE_DEFAUT_MICROSERVICES;
-            case CONTENU_IA -> ApplicationConfiguration.POSTE_DEFAUT_IA;
-            default -> ApplicationConfiguration.POSTE_DEFAUT_GENERAL;
-        };
     }
 }
