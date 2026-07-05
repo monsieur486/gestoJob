@@ -90,13 +90,13 @@ class EntreprisesPageControllerTest {
     @Test
     void activate_appelleLeService_etRedirige() {
         assertThat(controller.activateEntreprise(4, 2)).isEqualTo("redirect:/entreprises?page=2");
-        verify(entrepriseService).activeEntreprise(4);
+        verify(entrepriseService).setActive(4, true);
     }
 
     @Test
     void desactivate_appelleLeService_etRedirige() {
         assertThat(controller.desactivateEntreprise(4, 1)).isEqualTo("redirect:/entreprises?page=1");
-        verify(entrepriseService).desactiveEntreprise(4);
+        verify(entrepriseService).setActive(4, false);
     }
 
     @Test

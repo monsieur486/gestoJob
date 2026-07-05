@@ -1,7 +1,6 @@
 package com.mr486.gestojob.dto;
 
 import com.mr486.gestojob.model.Entreprise;
-import com.mr486.gestojob.service.EntrepriseService;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -57,8 +56,7 @@ public class EntrepriseForm {
 
     /**
      * Convertit un formulaire d'entreprise en une nouvelle entité
-     * {@link Entreprise}, en déléguant la copie des champs au service
-     * {@link EntrepriseService}.
+     * {@link Entreprise}, en recopiant ses champs.
      *
      * <p><b>Exemple :</b> pour un formulaire avec nom = « ACME » et ville = « Paris », retourne une nouvelle entité Entreprise dont nom = « ACME » et ville = « Paris ».</p>
      *
@@ -67,7 +65,23 @@ public class EntrepriseForm {
      */
     public static Entreprise entity(EntrepriseForm form) {
         Entreprise e = new Entreprise();
-        EntrepriseService.convert(form, e);
+        form.appliquerA(e);
         return e;
+    }
+
+    /**
+     * Recopie les champs de ce formulaire sur une entité entreprise existante.
+     *
+     * <p><b>Exemple :</b> un formulaire de nom « Acme » et ville « Paris » écrase les champs nom et ville de l'entité cible avec ces valeurs.</p>
+     *
+     * @param e entité entreprise à mettre à jour
+     */
+    public void appliquerA(Entreprise e) {
+        e.setNom(nom);
+        e.setEstActive(estActive);
+        e.setAdresse1(adresse1);
+        e.setAdresse2(adresse2);
+        e.setCodePostal(codePostal);
+        e.setVille(ville);
     }
 }

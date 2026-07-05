@@ -28,23 +28,6 @@ public class EntrepriseService {
     private final EntrepriseRepository entrepriseRepository;
 
     /**
-     * Recopie les champs d'un formulaire vers une entité entreprise existante.
-     *
-     * <p><b>Exemple :</b> un formulaire de nom « Acme » et ville « Paris » écrase les champs nom et ville de l'entité cible avec ces valeurs.</p>
-     *
-     * @param form formulaire source
-     * @param e    entité entreprise à mettre à jour
-     */
-    public static void convert(EntrepriseForm form, Entreprise e) {
-        e.setNom(form.getNom());
-        e.setEstActive(form.getEstActive());
-        e.setAdresse1(form.getAdresse1());
-        e.setAdresse2(form.getAdresse2());
-        e.setCodePostal(form.getCodePostal());
-        e.setVille(form.getVille());
-    }
-
-    /**
      * Crée et enregistre une nouvelle entreprise à partir du formulaire.
      *
      * <p><b>Exemple :</b> save(form avec nom « Acme ») retourne l'id généré ; si une entreprise « acme » existe déjà (casse ignorée), lève IllegalStateException(« L'entreprise existe déjà »).</p>
@@ -78,7 +61,7 @@ public class EntrepriseService {
         // erreur (échec de persistance, etc.) doit remonter sans être masquée.
         Entreprise e = entrepriseRepository.findById(entrepriseId)
                 .orElseThrow(() -> new NoSuchElementException("Entreprise introuvable avec id: " + entrepriseId));
-        convert(form, e);
+        form.appliquerA(e);
         entrepriseRepository.save(e);
         log.info("entreprise modifiée : « {} » (id {})", e.getNom(), entrepriseId);
     }
@@ -128,35 +111,20 @@ public class EntrepriseService {
     }
 
     /**
-     * Désactive une entreprise (la marque comme inactive).
+     * Active ou désactive une entreprise selon le drapeau fourni.
      *
-     * <p><b>Exemple :</b> desactiveEntreprise(3) met estActive à false pour l'entreprise 3.</p>
+     * <p><b>Exemple :</b> setActive(3, true) met estActive à true pour l'entreprise 3 ; setActive(3, false) la désactive.</p>
      *
      * @param entrepriseId identifiant de l'entreprise
+     * @param actif        {@code true} pour activer, {@code false} pour désactiver
      * @throws java.util.NoSuchElementException si l'entreprise est introuvable
      */
     @Transactional
-    public void desactiveEntreprise(Integer entrepriseId) {
+    public void setActive(Integer entrepriseId, boolean actif) {
         Entreprise e = entrepriseRepository.findById(entrepriseId).orElseThrow();
-        e.setEstActive(false);
+        e.setEstActive(actif);
         entrepriseRepository.save(e);
-        log.info("entreprise désactivée : « {} » (id {})", e.getNom(), entrepriseId);
-    }
-
-    /**
-     * Active une entreprise (la marque comme active).
-     *
-     * <p><b>Exemple :</b> activeEntreprise(3) met estActive à true pour l'entreprise 3.</p>
-     *
-     * @param entrepriseId identifiant de l'entreprise
-     * @throws java.util.NoSuchElementException si l'entreprise est introuvable
-     */
-    @Transactional
-    public void activeEntreprise(Integer entrepriseId) {
-        Entreprise e = entrepriseRepository.findById(entrepriseId).orElseThrow();
-        e.setEstActive(true);
-        entrepriseRepository.save(e);
-        log.info("entreprise activée : « {} » (id {})", e.getNom(), entrepriseId);
+        log.info("entreprise {} : « {} » (id {})", actif ? "activée" : "désactivée", e.getNom(), entrepriseId);
     }
 
     /**

@@ -90,7 +90,7 @@ public class EntreprisesPageController {
     /**
      * Active une entreprise puis redirige vers la liste paginée.
      *
-     * <p><b>Exemple :</b> POST /entreprises/3/activate?page=2 active l'entreprise 3 via activeEntreprise(3) puis redirige vers /entreprises?page=2.</p>
+     * <p><b>Exemple :</b> POST /entreprises/3/activate?page=2 active l'entreprise 3 via setActive(3, true) puis redirige vers /entreprises?page=2.</p>
      *
      * @param id   l'identifiant de l'entreprise à activer
      * @param page le numéro de page vers lequel rediriger
@@ -101,14 +101,14 @@ public class EntreprisesPageController {
             @PathVariable Integer id,
             @RequestParam(name = "page", defaultValue = "1") int page
     ) {
-        entrepriseService.activeEntreprise(id);
+        entrepriseService.setActive(id, true);
         return "redirect:/entreprises?page=" + page;
     }
 
     /**
      * Désactive une entreprise puis redirige vers la liste paginée.
      *
-     * <p><b>Exemple :</b> POST /entreprises/3/desactivate?page=2 désactive l'entreprise 3 via desactiveEntreprise(3) puis redirige vers /entreprises?page=2.</p>
+     * <p><b>Exemple :</b> POST /entreprises/3/desactivate?page=2 désactive l'entreprise 3 via setActive(3, false) puis redirige vers /entreprises?page=2.</p>
      *
      * @param id   l'identifiant de l'entreprise à désactiver
      * @param page le numéro de page vers lequel rediriger
@@ -119,7 +119,7 @@ public class EntreprisesPageController {
             @PathVariable Integer id,
             @RequestParam(name = "page", defaultValue = "1") int page
     ) {
-        entrepriseService.desactiveEntreprise(id);
+        entrepriseService.setActive(id, false);
         return "redirect:/entreprises?page=" + page;
     }
 
