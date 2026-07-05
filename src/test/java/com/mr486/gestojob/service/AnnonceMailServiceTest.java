@@ -14,7 +14,7 @@ import static org.mockito.Mockito.when;
 import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.persistance.AnnonceRepository;
-import com.mr486.gestojob.tools.MailTools;
+import com.mr486.gestojob.tools.Mailer;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +39,7 @@ class AnnonceMailServiceTest {
     @Mock
     private ContenuService contenuService;
     @Mock
-    private MailTools mailTools;
+    private Mailer mailer;
     @Mock
     private LibelleService libelleService;
 
@@ -62,7 +62,7 @@ class AnnonceMailServiceTest {
         when(annonceRepository.findById(1L)).thenReturn(Optional.of(a));
         when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
         when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
-        doNothing().when(mailTools).sendHtmlMail(any(), any(), any());
+        doNothing().when(mailer).sendHtmlMail(any(), any(), any());
 
         annonceMailService.sendDirectEmail(1L);
 
@@ -75,7 +75,7 @@ class AnnonceMailServiceTest {
         when(annonceRepository.findById(1L)).thenReturn(Optional.of(a));
         when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
         when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
-        doThrow(new MailSendException("smtp down")).when(mailTools).sendHtmlMail(any(), any(), any());
+        doThrow(new MailSendException("smtp down")).when(mailer).sendHtmlMail(any(), any(), any());
 
         assertThatThrownBy(() -> annonceMailService.sendDirectEmail(1L))
                 .isInstanceOf(MailSendException.class);
@@ -103,7 +103,7 @@ class AnnonceMailServiceTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("contact");
 
-        verify(mailTools, never()).sendHtmlMail(any(), any(), any());
+        verify(mailer, never()).sendHtmlMail(any(), any(), any());
         verify(annonceRepository, never()).updateStatusAnnonceEtDateEnvoi(any(), any(), any());
     }
 
@@ -119,9 +119,9 @@ class AnnonceMailServiceTest {
                 6L, Contact.builder().id(6L).entrepriseId(10).email("ko@exemple.fr").formuleDePolitesse(0).build()));
         when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
         when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
-        doNothing().when(mailTools).sendHtmlMail(eq("ok@exemple.fr"), any(), any());
+        doNothing().when(mailer).sendHtmlMail(eq("ok@exemple.fr"), any(), any());
         doThrow(new MailSendException("smtp down"))
-                .when(mailTools).sendHtmlMail(eq("ko@exemple.fr"), any(), any());
+                .when(mailer).sendHtmlMail(eq("ko@exemple.fr"), any(), any());
 
         annonceMailService.sendEmailForPendingAnnonces();
 
@@ -142,14 +142,14 @@ class AnnonceMailServiceTest {
                 6L, Contact.builder().id(6L).entrepriseId(10).email("b@x.fr").formuleDePolitesse(0).build()));
         when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
         when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
-        doNothing().when(mailTools).sendHtmlMail(any(), any(), any());
+        doNothing().when(mailer).sendHtmlMail(any(), any(), any());
 
         annonceMailService.sendEmailForPendingAnnonces();
 
         verify(contactService).getContactsByIds(any());
         verify(contactService, never()).getContact(any());
-        verify(mailTools).sendHtmlMail(eq("a@x.fr"), any(), any());
-        verify(mailTools).sendHtmlMail(eq("b@x.fr"), any(), any());
+        verify(mailer).sendHtmlMail(eq("a@x.fr"), any(), any());
+        verify(mailer).sendHtmlMail(eq("b@x.fr"), any(), any());
     }
 
     @Test
