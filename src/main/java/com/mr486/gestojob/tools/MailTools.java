@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class MailTools {
+public class MailTools implements Mailer {
 
     private final JavaMailSender mailSender;
 
@@ -41,6 +41,7 @@ public class MailTools {
      * @param message           corps de l'email au format HTML
      * @throws MailException si l'envoi échoue
      */
+    @Override
     public void sendHtmlMail(String emailDestinataire, String libelle, String message) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();

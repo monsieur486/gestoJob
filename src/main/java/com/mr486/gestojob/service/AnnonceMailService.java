@@ -5,7 +5,7 @@ import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.StatutAnnonce;
 import com.mr486.gestojob.persistance.AnnonceRepository;
-import com.mr486.gestojob.tools.MailTools;
+import com.mr486.gestojob.tools.Mailer;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service d'envoi des emails de candidature. Responsable de la construction du
- * corps HTML, de l'expédition via {@link MailTools} et du passage de l'annonce
+ * corps HTML, de l'expédition via un {@link Mailer} et du passage de l'annonce
  * au statut « envoyé » une fois l'email parti.
  *
  * <p>Extrait d'{@link AnnonceService} pour isoler la responsabilité d'envoi
@@ -33,7 +33,7 @@ public class AnnonceMailService {
     private final AnnonceRepository annonceRepository;
     private final ContactService contactService;
     private final ContenuService contenuService;
-    private final MailTools mailTools;
+    private final Mailer mailer;
     private final LibelleService libelleService;
 
     /**
@@ -128,7 +128,7 @@ public class AnnonceMailService {
         String recipient = contact.getEmail();
         String subject = libelleService.construitLibelle(annonce);
         String content = buildHtmlContent(annonce, contact);
-        mailTools.sendHtmlMail(recipient, subject, content);
+        mailer.sendHtmlMail(recipient, subject, content);
     }
 
     // Construit le corps HTML à partir d'un contact déjà résolu (ou null pour

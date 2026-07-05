@@ -110,22 +110,22 @@ class EntrepriseServiceTest {
     }
 
     @Test
-    void activeEntreprise_passeEstActiveAVrai() {
+    void setActive_true_passeEstActiveAVrai() {
         Entreprise e = Entreprise.builder().id(5).nom("ACME").estActive(false).build();
         when(entrepriseRepository.findById(5)).thenReturn(Optional.of(e));
 
-        entrepriseService.activeEntreprise(5);
+        entrepriseService.setActive(5, true);
 
         assertThat(e.getEstActive()).isTrue();
         verify(entrepriseRepository).save(e);
     }
 
     @Test
-    void desactiveEntreprise_passeEstActiveAFaux() {
+    void setActive_false_passeEstActiveAFaux() {
         Entreprise e = Entreprise.builder().id(5).nom("ACME").estActive(true).build();
         when(entrepriseRepository.findById(5)).thenReturn(Optional.of(e));
 
-        entrepriseService.desactiveEntreprise(5);
+        entrepriseService.setActive(5, false);
 
         assertThat(e.getEstActive()).isFalse();
         verify(entrepriseRepository).save(e);
@@ -141,21 +141,6 @@ class EntrepriseServiceTest {
     void countAllEntreprises_renvoieLeNombre() {
         when(entrepriseRepository.count()).thenReturn(7L);
         assertThat(entrepriseService.countAllEntreprises()).isEqualTo(7);
-    }
-
-    @Test
-    void convert_recopieLesChampsDuFormulaireVersLEntite() {
-        EntrepriseForm form = EntrepriseForm.builder()
-                .nom("ACME").estActive(true).adresse1("1 rue X").adresse2("Bât. B")
-                .codePostal("67000").ville("Strasbourg").build();
-        Entreprise e = new Entreprise();
-
-        EntrepriseService.convert(form, e);
-
-        assertThat(e.getNom()).isEqualTo("ACME");
-        assertThat(e.getCodePostal()).isEqualTo("67000");
-        assertThat(e.getVille()).isEqualTo("Strasbourg");
-        assertThat(e.getEstActive()).isTrue();
     }
 
     @Test

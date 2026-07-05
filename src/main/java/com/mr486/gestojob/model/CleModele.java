@@ -1,5 +1,7 @@
 package com.mr486.gestojob.model;
 
+import com.mr486.gestojob.configuration.ApplicationConfiguration;
+
 /**
  * Catalogue des modèles d'email éditables : associe chaque clé stable à sa
  * catégorie, son format, son libellé d'affichage, sa ressource par défaut et les
@@ -10,15 +12,20 @@ package com.mr486.gestojob.model;
 public enum CleModele {
 
     CONTENU_GENERAL(Categorie.CONTENU, true, "Lettre — général",
-            "modeles/defaut/CONTENU_GENERAL.html", "{{POLITESSE}}, {{POSTE}}"),
+            "modeles/defaut/CONTENU_GENERAL.html", "{{POLITESSE}}, {{POSTE}}",
+            ApplicationConfiguration.POSTE_DEFAUT_GENERAL),
     CONTENU_MICROSERVICES(Categorie.CONTENU, true, "Lettre — microservices",
-            "modeles/defaut/CONTENU_MICROSERVICES.html", "{{POLITESSE}}, {{POSTE}}"),
+            "modeles/defaut/CONTENU_MICROSERVICES.html", "{{POLITESSE}}, {{POSTE}}",
+            ApplicationConfiguration.POSTE_DEFAUT_MICROSERVICES),
     CONTENU_IA(Categorie.CONTENU, true, "Lettre — IA agentique",
-            "modeles/defaut/CONTENU_IA.html", "{{POLITESSE}}, {{POSTE}}"),
+            "modeles/defaut/CONTENU_IA.html", "{{POLITESSE}}, {{POSTE}}",
+            ApplicationConfiguration.POSTE_DEFAUT_IA),
     LIBELLE_REFERENCE(Categorie.LIBELLE, false, "Objet — candidature à une référence",
-            "modeles/defaut/LIBELLE_REFERENCE.txt", "{{REFERENCE}}, {{NOM}}, {{POSTE}}"),
+            "modeles/defaut/LIBELLE_REFERENCE.txt", "{{REFERENCE}}, {{NOM}}, {{POSTE}}",
+            ApplicationConfiguration.POSTE_DEFAUT_GENERAL),
     LIBELLE_SPONTANEE(Categorie.LIBELLE, false, "Objet — candidature spontanée",
-            "modeles/defaut/LIBELLE_SPONTANEE.txt", "{{NOM}}, {{POSTE}}");
+            "modeles/defaut/LIBELLE_SPONTANEE.txt", "{{NOM}}, {{POSTE}}",
+            ApplicationConfiguration.POSTE_DEFAUT_GENERAL);
 
     /** Nature du modèle : corps de lettre ou objet d'email. */
     public enum Categorie { CONTENU, LIBELLE }
@@ -28,14 +35,16 @@ public enum CleModele {
     private final String libelleUi;
     private final String cheminRessource;
     private final String variables;
+    private final String posteParDefaut;
 
     CleModele(Categorie categorie, boolean html, String libelleUi,
-              String cheminRessource, String variables) {
+              String cheminRessource, String variables, String posteParDefaut) {
         this.categorie = categorie;
         this.html = html;
         this.libelleUi = libelleUi;
         this.cheminRessource = cheminRessource;
         this.variables = variables;
+        this.posteParDefaut = posteParDefaut;
     }
 
     /**
@@ -94,6 +103,20 @@ public enum CleModele {
      */
     public String getVariables() {
         return variables;
+    }
+
+    /**
+     * Retourne l'intitulé de poste par défaut associé à ce modèle, employé quand
+     * l'annonce ne précise pas de poste. Non signifiant pour les modèles de la
+     * catégorie {@link Categorie#LIBELLE} (valeur généraliste par défaut).
+     *
+     * <p><b>Exemple :</b> {@code CONTENU_MICROSERVICES.getPosteParDefaut()} retourne
+     * « de développeur Java orienté microservices ».</p>
+     *
+     * @return l'intitulé de poste par défaut
+     */
+    public String getPosteParDefaut() {
+        return posteParDefaut;
     }
 
     /**

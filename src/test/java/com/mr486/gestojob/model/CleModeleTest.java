@@ -2,9 +2,20 @@ package com.mr486.gestojob.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.mr486.gestojob.configuration.ApplicationConfiguration;
 import org.junit.jupiter.api.Test;
 
 class CleModeleTest {
+
+    @Test
+    void getPosteParDefaut_retourneLIntituleParModele() {
+        assertThat(CleModele.CONTENU_MICROSERVICES.getPosteParDefaut())
+                .isEqualTo(ApplicationConfiguration.POSTE_DEFAUT_MICROSERVICES);
+        assertThat(CleModele.CONTENU_IA.getPosteParDefaut())
+                .isEqualTo(ApplicationConfiguration.POSTE_DEFAUT_IA);
+        assertThat(CleModele.CONTENU_GENERAL.getPosteParDefaut())
+                .isEqualTo(ApplicationConfiguration.POSTE_DEFAUT_GENERAL);
+    }
 
     @Test
     void pourTypeContenu_mappeLesCodes() {
