@@ -36,15 +36,22 @@
   </rule>
 
   <!-- TooManyMethods et ExcessiveImports sont des règles de conception de
-       production : une classe de test porte légitimement de nombreuses méthodes
-       (une par cas) et de nombreux imports (mocks, DTO, fixtures). On les
-       conserve pour le code de production, mais on les neutralise sur les classes
-       de test (nom terminé par « Test ») plutôt que de morceler des tests
-       cohérents ou de brider leurs dépendances. -->
+       production. TooManyMethods porte la limite dure « 10 » de la doctrine SOLID
+       (S) sur le code de production (la limite douce à 6 reste un déclencheur de
+       revue humain) ; une classe de test *Test/*Tests/*IT est tolérée jusqu'à
+       15 méthodes, au-delà de quoi la violation revient et invite à factoriser
+       aussi la classe de test (tests par thème, @Nested, fixtures partagées).
+       ExcessiveImports reste pleinement neutralisée sur les tests (nom terminé par
+       « Test ») : mocks, DTO et fixtures en gonflent légitimement le nombre. -->
   <rule ref="category/java/design.xml/TooManyMethods">
     <properties>
+      <property name="maxmethods" value="10"/>
       <property name="violationSuppressXPath"
-                value="//*[matches(@SimpleName, '.*Test$')]"/>
+                value="ancestor-or-self::ClassDeclaration[
+                         (ends-with(@SimpleName, 'Test')
+                          or ends-with(@SimpleName, 'Tests')
+                          or ends-with(@SimpleName, 'IT'))
+                         and count(ClassBody/MethodDeclaration) &lt;= 15]"/>
     </properties>
   </rule>
 
