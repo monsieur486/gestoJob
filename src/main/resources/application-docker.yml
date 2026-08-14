@@ -51,3 +51,16 @@ gestojob:
   admin:
     username: ${GESTOJOB_ADMIN_USERNAME}
     password: ${GESTOJOB_ADMIN_PASSWORD}
+
+# --- Journal central ---------------------------------------------------------
+#
+# Facultatif : vides, le client d'émission est inerte et l'application démarre
+# exactement comme avant.
+#
+# Le jeton est celui de la MACHINE (vm106-perso), partagé avec les autres
+# applications de cette VM : côté journal, c'est le jeton qui fixe la provenance,
+# et le champ « composant » qui distingue les applications entre elles.
+configuration:
+  journal:
+    url: ${JOURNAL_URL:}
+    jeton: ${JOURNAL_JETON:}
