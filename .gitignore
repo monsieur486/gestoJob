@@ -35,3 +35,6 @@ build/
 
 ### Secrets ###
 .env
+
+# Journal local des échecs de connexion (production : volume monté)
+logs/
