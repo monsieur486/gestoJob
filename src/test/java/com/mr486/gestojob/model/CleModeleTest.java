@@ -2,20 +2,12 @@ package com.mr486.gestojob.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.mr486.gestojob.configuration.ApplicationConfiguration;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 
 class CleModeleTest {
-
-    @Test
-    void getPosteParDefaut_retourneLIntituleParModele() {
-        assertThat(CleModele.CONTENU_MICROSERVICES.getPosteParDefaut())
-                .isEqualTo(ApplicationConfiguration.POSTE_DEFAUT_MICROSERVICES);
-        assertThat(CleModele.CONTENU_IA.getPosteParDefaut())
-                .isEqualTo(ApplicationConfiguration.POSTE_DEFAUT_IA);
-        assertThat(CleModele.CONTENU_GENERAL.getPosteParDefaut())
-                .isEqualTo(ApplicationConfiguration.POSTE_DEFAUT_GENERAL);
-    }
 
     @Test
     void pourTypeContenu_mappeLesCodes() {
@@ -39,6 +31,36 @@ class CleModeleTest {
         assertThat(CleModele.CONTENU_GENERAL.getCategorie()).isEqualTo(CleModele.Categorie.CONTENU);
         assertThat(CleModele.LIBELLE_REFERENCE.isHtml()).isFalse();
         assertThat(CleModele.LIBELLE_REFERENCE.getCategorie()).isEqualTo(CleModele.Categorie.LIBELLE);
-        assertThat(CleModele.CONTENU_IA.getCheminRessource()).isEqualTo("modeles/defaut/CONTENU_IA.html");
+    }
+
+    @Test
+    void getCheminRessource_dependDuTitulaire() {
+        assertThat(CleModele.CONTENU_IA.getCheminRessource(Titulaire.RENEE))
+                .isEqualTo("modeles/defaut/RENEE/CONTENU_IA.html");
+        assertThat(CleModele.LIBELLE_SPONTANEE.getCheminRessource(Titulaire.LAURENT))
+                .isEqualTo("modeles/defaut/LAURENT/LIBELLE_SPONTANEE.txt");
+    }
+
+    @Test
+    void ressourcesParDefaut_existentPourChaqueTitulaireEtChaqueCle() {
+        for (Titulaire titulaire : Titulaire.values()) {
+            for (CleModele cle : CleModele.values()) {
+                String chemin = cle.getCheminRessource(titulaire);
+                assertThat(Thread.currentThread().getContextClassLoader().getResource(chemin))
+                        .as(chemin).isNotNull();
+            }
+        }
+    }
+
+    @Test
+    void ressourcesRenee_neContiennentAucunTexteDeLaurent() throws IOException {
+        for (CleModele cle : CleModele.values()) {
+            try (InputStream is = Thread.currentThread().getContextClassLoader()
+                    .getResourceAsStream(cle.getCheminRessource(Titulaire.RENEE))) {
+                String texte = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                assertThat(texte).as(cle.name())
+                        .doesNotContain("Laurent").doesNotContain("Java").doesNotContain("OpenClassrooms");
+            }
+        }
     }
 }

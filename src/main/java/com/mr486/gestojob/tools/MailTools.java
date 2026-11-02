@@ -1,54 +1,74 @@
 package com.mr486.gestojob.tools;
 
-import com.mr486.gestojob.configuration.ApplicationConfiguration;
+import com.mr486.gestojob.exception.MetierException;
+import com.mr486.gestojob.model.Titulaire;
+import com.mr486.gestojob.service.ProfilService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.io.UnsupportedEncodingException;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSendException;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 /**
  * Service utilitaire d'envoi de courriels.
  *
- * <p>S'appuie sur {@link JavaMailSender} pour composer et expédier des messages
- * au format HTML, en utilisant l'adresse d'expéditeur configurée pour
- * l'application.
+ * <p>Choisit l'expéditeur du titulaire parmi les {@link JavaMailSenderImpl}
+ * configurés (un par boîte Gmail) pour composer et expédier des messages au format
+ * HTML ; le nom affiché vient du profil du titulaire.
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class MailTools implements Mailer {
 
-    private final JavaMailSender mailSender;
+    private final Map<Titulaire, JavaMailSenderImpl> expediteursMail;
+    private final ProfilService profilService;
 
-    @Value("${spring.mail.username}")
-    private String mailNotificationSender;
+    /**
+     * Indique si une boîte d'envoi est configurée pour ce titulaire.
+     *
+     * <p><b>Exemple :</b> estConfigure(Titulaire.RENEE) retourne false si Renée n'a pas d'identifiant Gmail.</p>
+     *
+     * @param titulaire titulaire concerné
+     * @return {@code true} si un expéditeur existe pour ce titulaire
+     */
+    @Override
+    public boolean estConfigure(Titulaire titulaire) {
+        return expediteursMail.containsKey(titulaire);
+    }
 
     /**
      * Envoie un email HTML. En cas d'échec, lève une {@link MailException}
      * afin que l'appelant ne marque pas l'annonce comme envoyée à tort.
      *
-     * <p><b>Exemple :</b> en cas d'échec SMTP, lève une MailException (l'appelant ne marque pas l'annonce envoyée).</p>
+     * <p><b>Exemple :</b> en cas d'échec SMTP, lève une MailException (l'appelant ne marque pas l'annonce envoyée) ;
+     * si Renée n'a pas d'adresse configurée, lève une MetierException.</p>
      *
+     * @param titulaire         titulaire dont l'adresse sert d'expéditeur
      * @param emailDestinataire adresse email du destinataire
      * @param libelle           objet (sujet) de l'email
      * @param message           corps de l'email au format HTML
-     * @throws MailException si l'envoi échoue
+     * @throws MailException   si l'envoi échoue
+     * @throws MetierException si l'adresse d'envoi du titulaire n'est pas configurée
      */
     @Override
-    public void sendHtmlMail(String emailDestinataire, String libelle, String message) {
+    public void sendHtmlMail(Titulaire titulaire, String emailDestinataire, String libelle, String message) {
+        JavaMailSenderImpl mailSender = expediteursMail.get(titulaire);
+        if (mailSender == null) {
+            throw new MetierException("Adresse d'envoi non configurée pour " + titulaire.getAffichage());
+        }
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
             // expéditeur
-            helper.setFrom(mailNotificationSender, ApplicationConfiguration.DEFAULT_EMAIL_FROM);
+            helper.setFrom(mailSender.getUsername(), profilService.getProfil(titulaire).getCandidatNom());
 
             helper.setTo(emailDestinataire);
             helper.setSubject(libelle);

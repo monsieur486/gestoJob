@@ -1,7 +1,8 @@
 <!DOCTYPE HTML>
 <html lang="fr"
       xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <title>GestoJob</title>
     <div th:replace="~{fragments/header :: header-css}"></div>
@@ -40,7 +41,7 @@
             <div class="col-12 col-md-1" th:text="${a.status}">Statut</div>
             <div class="col-12 col-md-2">
                 <div class="d-flex gap-2 justify-content-md-end">
-                    <form method="post" th:action="@{/file/postMail/{id}(id=${a.id})}">
+                    <form method="post" sec:authorize="hasRole('TITULAIRE')" th:action="@{/file/postMail/{id}(id=${a.id})}">
                         <button class="btn btn-primary" type="submit">
                             ⌯⌲ Manuel
                         </button>
@@ -49,7 +50,7 @@
             </div>
         </div>
 
-        <div class="mt-3">
+        <div class="mt-3" sec:authorize="hasRole('TITULAIRE')">
             <form method="post" th:action="@{/file/postMail}">
                 <button class="btn btn-primary" type="submit">
                     ⌯⌲ Traiter la file d'attente

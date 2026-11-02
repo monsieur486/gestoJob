@@ -1,6 +1,9 @@
 package com.mr486.gestojob.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,4 +39,7 @@ public class Entreprise {
     private String adresse2;
     private String codePostal;
     private String ville;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private Titulaire titulaire;
 }

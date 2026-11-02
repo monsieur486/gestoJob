@@ -13,14 +13,20 @@ import com.mr486.gestojob.dto.AnnonceListe;
 import com.mr486.gestojob.dto.RechercheAnnonceForm;
 import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Annonce;
+import com.mr486.gestojob.model.CleModele;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.Entreprise;
+import com.mr486.gestojob.model.Profil;
+import com.mr486.gestojob.model.Titulaire;
 import com.mr486.gestojob.persistance.AnnonceRepository;
+import com.mr486.gestojob.securite.UtilisateurCourant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +40,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
+// Une méthode de test par comportement du service : scinder la classe en plusieurs fichiers
+// éparpillerait les mêmes mocks et le même contexte sans rien clarifier.
+@SuppressWarnings("PMD.TooManyMethods")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class AnnonceServiceTest {
@@ -46,6 +55,10 @@ class AnnonceServiceTest {
     private ContactService contactService;
     @Mock
     private LibelleService libelleService;
+    @Mock
+    private ProfilService profilService;
+    @Mock
+    private UtilisateurCourant utilisateurCourant;
 
     private AnnonceService annonceService;
 
@@ -55,10 +68,13 @@ class AnnonceServiceTest {
         // que les tests de construction d'AnnonceListe restent significatifs ;
         // ses dépendances restent mockées.
         AnnonceListeMapper annonceListeMapper =
-                new AnnonceListeMapper(entrepriseService, contactService, libelleService);
-        annonceService = new AnnonceService(annonceRepository, annonceListeMapper);
+                new AnnonceListeMapper(entrepriseService, contactService, libelleService, profilService);
+        annonceService = new AnnonceService(annonceRepository, annonceListeMapper,
+                utilisateurCourant, entrepriseService, contactService);
         ReflectionTestUtils.setField(annonceService, "maxAnnoncesParPage", 10);
         ReflectionTestUtils.setField(annonceService, "maxPositifsParPage", 10);
+        when(utilisateurCourant.titulaire()).thenReturn(Titulaire.RENEE);
+        when(entrepriseService.existe(any())).thenReturn(true);
         when(entrepriseService.getEntreprisesByIds(any())).thenReturn(Collections.emptyMap());
         when(contactService.getContactsByIds(any())).thenReturn(Collections.emptyMap());
     }
@@ -76,7 +92,7 @@ class AnnonceServiceTest {
                 .dateEnvoi(null).build();
 
         // volontairement non triées en entrée
-        when(annonceRepository.findAllByEntrepriseIdOrderByStatusAnnonceAsc(10))
+        when(annonceRepository.findAllByTitulaireAndEntrepriseIdOrderByStatusAnnonceAsc(Titulaire.RENEE, 10))
                 .thenReturn(new java.util.ArrayList<>(List.of(janvier, sansDate, juin)));
 
         List<AnnonceListe> result = annonceService.annoncesListeByEntrepriseId(10);
@@ -87,8 +103,78 @@ class AnnonceServiceTest {
 
     @Test
     void deleteAnnonce_supprimeViaLeRepository() {
+        Annonce a = Annonce.builder().id(7L).build();
+        when(annonceRepository.findByIdAndTitulaire(7L, Titulaire.RENEE)).thenReturn(Optional.of(a));
+
         annonceService.deleteAnnonce(7L);
-        verify(annonceRepository).deleteById(7L);
+
+        verify(annonceRepository).delete(a);
+    }
+
+    @Test
+    void deleteAnnonce_idAutreTitulaire_neSupprimeRien() {
+        when(annonceRepository.findByIdAndTitulaire(8L, Titulaire.RENEE)).thenReturn(Optional.empty());
+
+        annonceService.deleteAnnonce(8L);
+
+        verify(annonceRepository, never()).delete(any());
+        verify(annonceRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void getAnnonce_idAutreTitulaire_seComporteCommeInconnu() {
+        when(annonceRepository.findByIdAndTitulaire(8L, Titulaire.RENEE)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> annonceService.getAnnonce(8L)).isInstanceOf(NoSuchElementException.class);
+    }
+
+    @Test
+    void getAnnonce_idDuTitulaire_laRetourne() {
+        Annonce a = Annonce.builder().id(7L).build();
+        when(annonceRepository.findByIdAndTitulaire(7L, Titulaire.RENEE)).thenReturn(Optional.of(a));
+
+        assertThat(annonceService.getAnnonce(7L)).isSameAs(a);
+    }
+
+    @Test
+    void countAnnonces_compteLeTitulaireCourant() {
+        when(annonceRepository.countByTitulaire(Titulaire.RENEE)).thenReturn(12L);
+
+        assertThat(annonceService.countAnnonces()).isEqualTo(12L);
+    }
+
+    @Test
+    void saveForm_poseLeTitulaireCourant() {
+        AnnonceForm form = AnnonceForm.builder().entrepriseId(10).contactId(null).typeAnnonce(1)
+                .contenuId(2).poste("Dev").reference("R1").build();
+
+        annonceService.saveForm(form);
+
+        ArgumentCaptor<Annonce> captor = ArgumentCaptor.forClass(Annonce.class);
+        verify(annonceRepository).save(captor.capture());
+        assertThat(captor.getValue().getTitulaire()).isEqualTo(Titulaire.RENEE);
+    }
+
+    @Test
+    void saveForm_contactAutreTitulaire_refuse() {
+        when(contactService.getContact(3L)).thenThrow(new NoSuchElementException());
+        AnnonceForm form = AnnonceForm.builder().entrepriseId(10).contactId(3L).typeAnnonce(1)
+                .contenuId(2).poste("Dev").reference("R1").build();
+
+        assertThatThrownBy(() -> annonceService.saveForm(form)).isInstanceOf(NoSuchElementException.class);
+
+        verify(annonceRepository, never()).save(any());
+    }
+
+    @Test
+    void saveForm_entrepriseAutreTitulaire_refuse() {
+        when(entrepriseService.existe(99)).thenReturn(false);
+        AnnonceForm form = AnnonceForm.builder().entrepriseId(99).contactId(null).typeAnnonce(1)
+                .contenuId(2).poste("Dev").reference("R1").build();
+
+        assertThatThrownBy(() -> annonceService.saveForm(form)).isInstanceOf(NoSuchElementException.class);
+
+        verify(annonceRepository, never()).save(any());
     }
 
     @Test
@@ -136,50 +222,61 @@ class AnnonceServiceTest {
 
     @Test
     void searchAnnoncesPage_texteVideSansArchives_chercheToutSaufArchive() {
-        when(annonceRepository.findAllByStatusAnnonceNotOrderByDateEnvoiDesc(eq(6), any(Pageable.class)))
+        when(annonceRepository.findAllByStatusAnnonceNotOrderByDateEnvoiDesc(
+                eq(Titulaire.RENEE), eq(6), any(Pageable.class)))
                 .thenReturn(Page.empty());
 
         RechercheAnnonceForm form = RechercheAnnonceForm.builder().recherche("").avecArchives(false).build();
         annonceService.searchAnnoncesPage(form, 0);
 
-        verify(annonceRepository).findAllByStatusAnnonceNotOrderByDateEnvoiDesc(eq(6), any(Pageable.class));
+        verify(annonceRepository).findAllByStatusAnnonceNotOrderByDateEnvoiDesc(
+                eq(Titulaire.RENEE), eq(6), any(Pageable.class));
     }
 
     @Test
     void searchAnnoncesPage_texteVideAvecArchives_chercheToutesLesAnnonces() {
-        when(annonceRepository.findAllOrderByDateEnvoiDesc(any(Pageable.class))).thenReturn(Page.empty());
+        when(annonceRepository.findAllOrderByDateEnvoiDesc(
+                eq(Titulaire.RENEE), any(Pageable.class))).thenReturn(Page.empty());
 
         RechercheAnnonceForm form = RechercheAnnonceForm.builder().recherche("  ").avecArchives(true).build();
         annonceService.searchAnnoncesPage(form, 0);
 
-        verify(annonceRepository).findAllOrderByDateEnvoiDesc(any(Pageable.class));
+        verify(annonceRepository).findAllOrderByDateEnvoiDesc(eq(Titulaire.RENEE), any(Pageable.class));
     }
 
     @Test
-    void searchAnnoncesPage_avecTexte_appelleLaRechercheMultiChamps() {
-        when(annonceRepository.search(eq("java"), eq(false), any(Pageable.class))).thenReturn(Page.empty());
+    void searchAnnoncesPage_filtreParTitulaire() {
+        when(annonceRepository.search(
+                eq(Titulaire.RENEE), eq("java"), eq(false), any(Pageable.class))).thenReturn(Page.empty());
 
         RechercheAnnonceForm form = RechercheAnnonceForm.builder().recherche("java").avecArchives(false).build();
         annonceService.searchAnnoncesPage(form, 0);
 
-        verify(annonceRepository).search(eq("java"), eq(false), any(Pageable.class));
+        verify(annonceRepository).search(eq(Titulaire.RENEE), eq("java"), eq(false), any(Pageable.class));
     }
 
     @Test
-    void getAllPositifListePage_chercheLesAnnoncesPositives() {
-        when(annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(eq(5), any(Pageable.class)))
+    void getAllPositifListePage_filtreParTitulaire() {
+        when(annonceRepository.findAllByTitulaireAndStatusAnnonceOrderByDateEnvoiDesc(
+                eq(Titulaire.RENEE), eq(5), any(Pageable.class)))
                 .thenReturn(Page.empty());
 
         annonceService.getAllPositifListePage(0);
 
-        verify(annonceRepository).findAllByStatusAnnonceOrderByDateEnvoiDesc(eq(5), any(Pageable.class));
+        verify(annonceRepository).findAllByTitulaireAndStatusAnnonceOrderByDateEnvoiDesc(
+                eq(Titulaire.RENEE), eq(5), any(Pageable.class));
     }
 
     @Test
     void annoncesEnAttenteEnvoiEmailPage_construitLesInfos_avecEntrepriseEtContact() {
         Annonce a = Annonce.builder().id(1L).entrepriseId(10).contactId(5L)
-                .typeAnnonce(1).typeContenu(1).poste("Dev").reference("R").statusAnnonce(1).build();
-        when(annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(eq(1), any(Pageable.class)))
+                .typeAnnonce(1).typeContenu(1).poste("Dev").reference("R").statusAnnonce(1)
+                .titulaire(Titulaire.RENEE).build();
+        Profil profil = Profil.builder().titulaire(Titulaire.RENEE).build();
+        when(profilService.getProfil(Titulaire.RENEE)).thenReturn(profil);
+        when(profilService.libelleContenu(profil, CleModele.CONTENU_MICROSERVICES)).thenReturn("Lettre 2");
+        when(annonceRepository.findAllByTitulaireAndStatusAnnonceOrderByDateEnvoiDesc(
+                eq(Titulaire.RENEE), eq(1), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(a)));
         when(entrepriseService.getEntreprisesByIds(any()))
                 .thenReturn(Map.of(10, Entreprise.builder().id(10).nom("ACME").build()));
@@ -190,32 +287,38 @@ class AnnonceServiceTest {
 
         assertThat(result.getContent()).hasSize(1);
         AnnonceListe liste = result.getContent().get(0);
-        assertThat(liste.getInfo()).contains("ACME").contains("c@acme.fr").contains("MS");
+        assertThat(liste.getInfo()).contains("ACME").contains("c@acme.fr").contains("Lettre 2");
         assertThat(liste.getType()).contains("A");
     }
 
     @Test
     void annoncesEnAttenteEnvoiEmailPage_chercheLeStatut1Pagine() {
-        when(annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(eq(1), any(Pageable.class)))
+        when(annonceRepository.findAllByTitulaireAndStatusAnnonceOrderByDateEnvoiDesc(
+                eq(Titulaire.RENEE), eq(1), any(Pageable.class)))
                 .thenReturn(Page.empty());
 
         annonceService.annoncesEnAttenteEnvoiEmailPage(0);
 
-        verify(annonceRepository).findAllByStatusAnnonceOrderByDateEnvoiDesc(eq(1), any(Pageable.class));
+        verify(annonceRepository).findAllByTitulaireAndStatusAnnonceOrderByDateEnvoiDesc(
+                eq(Titulaire.RENEE), eq(1), any(Pageable.class));
     }
 
     @Test
     void annoncesEnAttenteEnvoiEmailPage_infosSite_siPasDeContact() {
         Annonce a = Annonce.builder().id(2L).entrepriseId(10).contactId(null)
-                .typeAnnonce(0).typeContenu(0).statusAnnonce(2).build();
-        when(annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(eq(1), any(Pageable.class)))
+                .typeAnnonce(0).typeContenu(0).statusAnnonce(2).titulaire(Titulaire.RENEE).build();
+        Profil profil = Profil.builder().titulaire(Titulaire.RENEE).build();
+        when(profilService.getProfil(Titulaire.RENEE)).thenReturn(profil);
+        when(profilService.libelleContenu(profil, CleModele.CONTENU_GENERAL)).thenReturn("Lettre 1");
+        when(annonceRepository.findAllByTitulaireAndStatusAnnonceOrderByDateEnvoiDesc(
+                eq(Titulaire.RENEE), eq(1), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(a)));
         when(entrepriseService.getEntreprisesByIds(any()))
                 .thenReturn(Map.of(10, Entreprise.builder().id(10).nom("ACME").build()));
 
         Page<AnnonceListe> result = annonceService.annoncesEnAttenteEnvoiEmailPage(0);
 
-        assertThat(result.getContent().get(0).getInfo()).contains("site").contains("G");
+        assertThat(result.getContent().get(0).getInfo()).contains("site").contains("Lettre 1");
         assertThat(result.getContent().get(0).getType()).contains("S");
     }
 }

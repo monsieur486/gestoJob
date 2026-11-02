@@ -1,11 +1,16 @@
 package com.mr486.gestojob.controller;
 
+import com.mr486.gestojob.dto.ProfilForm;
 import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.service.ModeleEmailService;
+import com.mr486.gestojob.service.ProfilService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class ParametresPageController {
 
     private final ModeleEmailService modeleEmailService;
+    private final ProfilService profilService;
 
     /**
      * Affiche la page des paramètres avec les modèles éditables.
@@ -34,7 +40,42 @@ public class ParametresPageController {
     public String parametresView(Model model) {
         model.addAttribute("page_active", "parametres");
         model.addAttribute("modeles", modeleEmailService.listerModeles());
+        model.addAttribute("profilForm", ProfilForm.depuis(profilService.getProfilCourant()));
         return "parametres";
+    }
+
+    /**
+     * Enregistre le profil (nom du candidat, libellés et postes par défaut des
+     * lettres) du titulaire consulté. En cas d'erreur de validation, réaffiche la
+     * page sans enregistrer.
+     *
+     * <p><b>Exemple :</b> POST /parametres/profil avec un nom vide réaffiche la vue
+     * {@code parametres} ; avec un formulaire valide, enregistre puis redirige.</p>
+     *
+     * @param form               le formulaire de profil validé
+     * @param bindingResult      le résultat de la validation
+     * @param model              le modèle Thymeleaf (réaffichage en cas d'erreur)
+     * @param redirectAttributes attributs flash
+     * @return la vue {@code parametres} en cas d'erreur, sinon une redirection
+     *         vers {@code /parametres}
+     */
+    @PostMapping("/parametres/profil")
+    public String enregistrerProfil(@Valid @ModelAttribute("profilForm") ProfilForm form,
+                                    BindingResult bindingResult,
+                                    Model model,
+                                    RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("page_active", "parametres");
+            model.addAttribute("modeles", modeleEmailService.listerModeles());
+            return "parametres";
+        }
+        try {
+            profilService.mettreAJour(form);
+            redirectAttributes.addFlashAttribute("successMessage", "Profil enregistré.");
+        } catch (MetierException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/parametres";
     }
 
     /**

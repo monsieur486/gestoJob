@@ -21,8 +21,9 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    # Hôte et port par défaut, propriétés SMTP partagées ; les identifiants (et
+    # l'hôte s'il diffère) de chaque titulaire sont sous gestojob.mail (relus par
+    # MailConfiguration).
 
     properties:
       mail:
@@ -50,12 +51,39 @@ journal:
     chemin: ${JOURNAL_CONNEXIONS:logs/connexions.log}
 
 gestojob:
+  # Boîtes d'envoi (mot de passe d'application). Laurent (Gmail, hôte par défaut)
+  # est obligatoire ; Renée (Yahoo) est facultative : sans identifiant, elle ne
+  # peut simplement pas envoyer d'email depuis l'application.
+  mail:
+    laurent:
+      username: ${MAIL_LAURENT_USERNAME}
+      password: ${MAIL_LAURENT_PASSWORD}
+    renee:
+      # Yahoo accepte STARTTLS sur 587, comme Gmail : seules les propriétés
+      # SMTP communes de spring.mail sont donc réutilisées telles quelles.
+      host: smtp.mail.yahoo.com
+      port: 587
+      username: ${MAIL_RENEE_USERNAME:}
+      password: ${MAIL_RENEE_PASSWORD:}
   max-entreprises-par-page: ${MAX_ENTREPRISES_PAR_PAGE}
   max-annonces-par-page: ${MAX_ANNONCESS_PAR_PAGE}
   max-positifs-par-page: ${MAX_POSITIFS_PAR_PAGE}
-  admin:
-    username: ${GESTOJOB_ADMIN_USERNAME}
-    password: ${GESTOJOB_ADMIN_PASSWORD}
+  # Quatre comptes, sans valeur par défaut : laurent et renee sont titulaires
+  # (lecture/écriture de leurs données), ft01 lit celles de Laurent, ft02 celles
+  # de Renée (consultation seule).
+  comptes:
+    laurent:
+      username: ${GESTOJOB_LAURENT_USERNAME}
+      password: ${GESTOJOB_LAURENT_PASSWORD}
+    renee:
+      username: ${GESTOJOB_RENEE_USERNAME}
+      password: ${GESTOJOB_RENEE_PASSWORD}
+    ft01:
+      username: ${GESTOJOB_FT01_USERNAME}
+      password: ${GESTOJOB_FT01_PASSWORD}
+    ft02:
+      username: ${GESTOJOB_FT02_USERNAME}
+      password: ${GESTOJOB_FT02_PASSWORD}
 
 # --- Journal central ---------------------------------------------------------
 #

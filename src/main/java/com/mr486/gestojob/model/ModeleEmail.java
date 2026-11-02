@@ -2,6 +2,8 @@ package com.mr486.gestojob.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,4 +38,7 @@ public class ModeleEmail {
     @NotNull
     @Column(columnDefinition = "TEXT")
     private String contenu;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private Titulaire titulaire;
 }

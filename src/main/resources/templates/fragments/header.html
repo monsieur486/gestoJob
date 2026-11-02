@@ -1,5 +1,6 @@
 <html lang="fr"
-      xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+      xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <div th:fragment="header-css">
     <meta charset="UTF-8"/>
     <meta content="width=device-width, initial-scale=1" name="viewport">
@@ -14,5 +15,9 @@
             integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
             rel="stylesheet">
     <link href="" rel="stylesheet" th:href="@{/css/main.css}"/>
+</div>
+<!-- Bandeau affiché aux lecteurs (France Travail) : consultation seule. -->
+<div th:fragment="bandeau">
+    <div sec:authorize="hasRole('LECTEUR')" class="alert alert-info">Consultation — lecture seule (France Travail)</div>
 </div>
 </html>

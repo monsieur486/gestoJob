@@ -8,6 +8,7 @@ import com.mr486.gestojob.service.AnnonceService;
 import com.mr486.gestojob.service.ContactService;
 import com.mr486.gestojob.service.EntrepriseRechercheService;
 import com.mr486.gestojob.service.EntrepriseService;
+import com.mr486.gestojob.service.ProfilService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -34,6 +35,7 @@ public class EntreprisesPageController {
     private final EntrepriseRechercheService entrepriseRechercheService;
     private final ContactService contactService;
     private final AnnonceService annonceService;
+    private final ProfilService profilService;
 
     /**
      * Affiche la liste des entreprises. Selon les paramètres : uniquement les
@@ -191,6 +193,7 @@ public class EntreprisesPageController {
         model.addAttribute("form", new ContactForm());
         model.addAttribute("annonces", annonceService.annoncesListeByEntrepriseId(id));
         model.addAttribute("annonceForm", new AnnonceForm());
+        model.addAttribute("profil", profilService.getProfilCourant());
         return "entreprise_detail";
     }
 
@@ -225,6 +228,7 @@ public class EntreprisesPageController {
             model.addAttribute("contacts", contactService.getAllContact(id));
             model.addAttribute("form", new ContactForm());
             model.addAttribute("annonces", annonceService.annoncesListeByEntrepriseId(id));
+            model.addAttribute("profil", profilService.getProfilCourant());
             return "entreprise_detail";
         }
 
@@ -237,6 +241,7 @@ public class EntreprisesPageController {
             model.addAttribute("contacts", contactService.getAllContact(id));
             model.addAttribute("form", new ContactForm());
             model.addAttribute("annonces", annonceService.annoncesListeByEntrepriseId(id));
+            model.addAttribute("profil", profilService.getProfilCourant());
             return "entreprise_detail";
         }
     }

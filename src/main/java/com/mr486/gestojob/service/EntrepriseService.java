@@ -4,6 +4,7 @@ import com.mr486.gestojob.dto.EntrepriseForm;
 import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.persistance.EntrepriseRepository;
+import com.mr486.gestojob.securite.UtilisateurCourant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class EntrepriseService {
 
     private final EntrepriseRepository entrepriseRepository;
+    private final UtilisateurCourant utilisateurCourant;
 
     /**
      * Crée et enregistre une nouvelle entreprise à partir du formulaire.
@@ -37,11 +39,13 @@ public class EntrepriseService {
      * @throws IllegalStateException si une entreprise du même nom existe déjà
      */
     public int save(EntrepriseForm form) {
-        if (entrepriseRepository.existsByNomIgnoreCase(form.getNom())) {
+        if (entrepriseRepository.existsByTitulaireAndNomIgnoreCase(utilisateurCourant.titulaire(), form.getNom())) {
             log.warn("création d'entreprise refusée : « {} » existe déjà", form.getNom());
             throw new MetierException("L'entreprise existe déjà");
         }
-        Entreprise entreprise = entrepriseRepository.save(EntrepriseForm.entity(form));
+        Entreprise nouvelle = EntrepriseForm.entity(form);
+        nouvelle.setTitulaire(utilisateurCourant.titulaire());
+        Entreprise entreprise = entrepriseRepository.save(nouvelle);
         log.info("entreprise créée : « {} » (id {})", entreprise.getNom(), entreprise.getId());
         return entreprise.getId();
     }
@@ -59,7 +63,7 @@ public class EntrepriseService {
     public void update(Integer entrepriseId, EntrepriseForm form) {
         // On ne traduit en « introuvable » que l'absence d'entreprise : toute autre
         // erreur (échec de persistance, etc.) doit remonter sans être masquée.
-        Entreprise e = entrepriseRepository.findById(entrepriseId)
+        Entreprise e = entrepriseRepository.findByIdAndTitulaire(entrepriseId, utilisateurCourant.titulaire())
                 .orElseThrow(() -> new NoSuchElementException("Entreprise introuvable avec id: " + entrepriseId));
         form.appliquerA(e);
         entrepriseRepository.save(e);
@@ -76,7 +80,8 @@ public class EntrepriseService {
      * @throws java.util.NoSuchElementException si l'entreprise est introuvable
      */
     public EntrepriseForm getForm(Integer entrepriseId) {
-        return new EntrepriseForm(entrepriseRepository.findById(entrepriseId).orElseThrow());
+        return new EntrepriseForm(entrepriseRepository
+                .findByIdAndTitulaire(entrepriseId, utilisateurCourant.titulaire()).orElseThrow());
     }
 
     /**
@@ -89,7 +94,7 @@ public class EntrepriseService {
      * @throws java.util.NoSuchElementException si l'entreprise est introuvable
      */
     public Entreprise getEntreprise(Integer entrepriseId) {
-        return entrepriseRepository.findById(entrepriseId)
+        return entrepriseRepository.findByIdAndTitulaire(entrepriseId, utilisateurCourant.titulaire())
                 .orElseThrow(() -> new NoSuchElementException("Entreprise introuvable avec id: " + entrepriseId));
     }
 
@@ -106,7 +111,7 @@ public class EntrepriseService {
         if (ids == null || ids.isEmpty()) {
             return Collections.emptyMap();
         }
-        return entrepriseRepository.findAllById(ids).stream()
+        return entrepriseRepository.findAllByIdInAndTitulaire(ids, utilisateurCourant.titulaire()).stream()
                 .collect(Collectors.toMap(Entreprise::getId, Function.identity()));
     }
 
@@ -121,7 +126,8 @@ public class EntrepriseService {
      */
     @Transactional
     public void setActive(Integer entrepriseId, boolean actif) {
-        Entreprise e = entrepriseRepository.findById(entrepriseId).orElseThrow();
+        Entreprise e = entrepriseRepository
+                .findByIdAndTitulaire(entrepriseId, utilisateurCourant.titulaire()).orElseThrow();
         e.setEstActive(actif);
         entrepriseRepository.save(e);
         log.info("entreprise {} : « {} » (id {})", actif ? "activée" : "désactivée", e.getNom(), entrepriseId);
@@ -136,7 +142,7 @@ public class EntrepriseService {
      * @return {@code true} si l'entreprise existe, {@code false} sinon
      */
     public Boolean existe(Integer entrepriseId) {
-        return entrepriseRepository.existsById(entrepriseId);
+        return entrepriseRepository.existsByIdAndTitulaire(entrepriseId, utilisateurCourant.titulaire());
     }
 
     /**
@@ -147,6 +153,6 @@ public class EntrepriseService {
      * @return le nombre d'entreprises
      */
     public Integer countAllEntreprises() {
-        return (int) entrepriseRepository.count();
+        return (int) entrepriseRepository.countByTitulaire(utilisateurCourant.titulaire());
     }
 }

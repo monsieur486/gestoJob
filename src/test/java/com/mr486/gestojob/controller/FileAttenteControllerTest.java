@@ -5,6 +5,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.service.AnnonceMailService;
 import com.mr486.gestojob.service.AnnonceService;
 import java.util.List;
@@ -49,7 +50,7 @@ class FileAttenteControllerTest {
 
     @Test
     void postMail_envoieToutesLesAnnoncesEnAttente_etRedirige() {
-        assertThat(controller.postMail()).isEqualTo("redirect:/file");
+        assertThat(controller.postMail(new RedirectAttributesModelMap())).isEqualTo("redirect:/file");
         verify(annonceMailService).sendEmailForPendingAnnonces();
     }
 
@@ -76,5 +77,29 @@ class FileAttenteControllerTest {
         assertThat(redirectAttributes.getFlashAttributes().get("errorMessage"))
                 .isEqualTo("Échec de l'envoi de l'e-mail. Veuillez réessayer plus tard.");
         assertThat(redirectAttributes.getFlashAttributes()).doesNotContainKey("successMessage");
+    }
+
+    @Test
+    void postMailDirect_metierException_afficheLeMessage() {
+        doThrow(new MetierException("Adresse d'envoi non configurée pour Renée"))
+                .when(annonceMailService).sendDirectEmail(9L);
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+        String view = controller.postDirectMail(9L, redirectAttributes);
+
+        assertThat(view).isEqualTo("redirect:/file");
+        assertThat(redirectAttributes.getFlashAttributes().get("errorMessage"))
+                .isEqualTo("Adresse d'envoi non configurée pour Renée");
+    }
+
+    @Test
+    void postMail_metierException_afficheLeMessage() {
+        doThrow(new MetierException("Adresse d'envoi non configurée pour Renée"))
+                .when(annonceMailService).sendEmailForPendingAnnonces();
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+        assertThat(controller.postMail(redirectAttributes)).isEqualTo("redirect:/file");
+        assertThat(redirectAttributes.getFlashAttributes().get("errorMessage"))
+                .isEqualTo("Adresse d'envoi non configurée pour Renée");
     }
 }

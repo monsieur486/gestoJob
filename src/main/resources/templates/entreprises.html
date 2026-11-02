@@ -1,7 +1,8 @@
 <!DOCTYPE HTML>
 <html lang="fr"
       xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <title>GestoJob</title>
     <div th:replace="~{fragments/header :: header-css}"></div>
@@ -14,7 +15,7 @@
         <div th:text="${errorMessage}">Erreur</div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center" sec:authorize="hasRole('TITULAIRE')">
         <a class="btn btn-sm btn-primary" style="margin-bottom: 0.6rem" th:href="@{/entreprises/ajout}">
             ✏️ Ajouter
         </a>
@@ -62,6 +63,7 @@
                 <!-- Actif => bouton vert qui désactive -->
                 <form class="m-0"
                       method="post"
+                      sec:authorize="hasRole('TITULAIRE')"
                       th:action="@{/entreprises/{id}/desactivate(id=${e.id})}"
                       th:if="${e.estActive}">
                     <input name="page" th:value="${currentPage}" type="hidden"/>
@@ -70,6 +72,7 @@
 
                 <form class="m-0"
                       method="post"
+                      sec:authorize="hasRole('TITULAIRE')"
                       th:action="@{/entreprises/{id}/activate(id=${e.id})}"
                       th:if="${!e.estActive}">
                     <input name="page" th:value="${currentPage}" type="hidden"/>

@@ -1,10 +1,13 @@
 package com.mr486.gestojob.service;
 
 import com.mr486.gestojob.configuration.ApplicationConfiguration;
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.StatutAnnonce;
+import com.mr486.gestojob.model.Titulaire;
 import com.mr486.gestojob.persistance.AnnonceRepository;
+import com.mr486.gestojob.securite.UtilisateurCourant;
 import com.mr486.gestojob.tools.Mailer;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -35,6 +38,7 @@ public class AnnonceMailService {
     private final ContenuService contenuService;
     private final Mailer mailer;
     private final LibelleService libelleService;
+    private final UtilisateurCourant utilisateurCourant;
 
     /**
      * Tente d'envoyer chaque annonce en attente. Un échec sur une annonce est
@@ -42,14 +46,24 @@ public class AnnonceMailService {
      * envoyées passent au statut « envoyé ».
      *
      * <p><b>Exemple :</b> sur 3 annonces au statut 1, si l'envoi de la deuxième échoue, les annonces 1 et 3 passent au statut 2 tandis que la 2 reste au statut 1.</p>
+     *
+     * @throws com.mr486.gestojob.exception.MetierException si l'adresse d'envoi du titulaire n'est pas configurée
+     *                                                       (aucune annonce n'est alors tentée)
      */
     // Résilience de lot : on capture volontairement toute RuntimeException (envoi,
     // contact manquant, persistance) pour isoler l'échec à une annonce et poursuivre.
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
     @Transactional
     public void sendEmailForPendingAnnonces() {
+        Titulaire titulaire = utilisateurCourant.titulaire();
+        if (!mailer.estConfigure(titulaire)) {
+            // Inutile de tenter chaque annonce : un seul refus, sans trace de pile.
+            log.warn("envoi de la file d'attente refusé : adresse d'envoi non configurée pour {}", titulaire);
+            throw new MetierException("Adresse d'envoi non configurée pour " + titulaire.getAffichage());
+        }
         List<Annonce> annoncesEnAttente =
-                annonceRepository.findAllByStatusAnnonce(StatutAnnonce.BOITE_ENVOI.getCode());
+                annonceRepository.findAllByTitulaireAndStatusAnnonce(
+                        utilisateurCourant.titulaire(), StatutAnnonce.BOITE_ENVOI.getCode());
         // Chargement groupé des contacts (une seule requête) pour éviter le N+1
         // d'un getContact par annonce dans la boucle d'envoi.
         Set<Long> contactIds = annoncesEnAttente.stream()
@@ -59,7 +73,7 @@ public class AnnonceMailService {
         for (Annonce a : annoncesEnAttente) {
             try {
                 sendMail(a, contacts.get(a.getContactId()));
-                marquerEnvoye(a.getId());
+                marquerEnvoye(a);
                 envoyees++;
                 log.info("email envoyé pour l'annonce id={}", a.getId());
             } catch (RuntimeException ex) {
@@ -79,10 +93,11 @@ public class AnnonceMailService {
      *
      * @param annonceId identifiant de l'annonce
      * @throws IllegalArgumentException si l'annonce est introuvable
+     * @throws com.mr486.gestojob.exception.MetierException si l'adresse d'envoi du titulaire n'est pas configurée
      */
     @Transactional
     public void sendDirectEmail(Long annonceId) {
-        Annonce annonce = annonceRepository.findById(annonceId)
+        Annonce annonce = annonceRepository.findByIdAndTitulaire(annonceId, utilisateurCourant.titulaire())
                 .orElseThrow(() -> new IllegalArgumentException("Annonce introuvable avec id: " + annonceId));
         log.info("envoi direct de l'email pour l'annonce id={}", annonce.getId());
         // Si l'envoi échoue, l'exception remonte et le statut n'est PAS modifié.
@@ -90,7 +105,7 @@ public class AnnonceMailService {
                 ? null
                 : contactService.getContact(annonce.getContactId());
         sendMail(annonce, contact);
-        marquerEnvoye(annonce.getId());
+        marquerEnvoye(annonce);
     }
 
     /**
@@ -110,9 +125,9 @@ public class AnnonceMailService {
     }
 
     // Marque l'annonce comme envoyée (statut 2) et fixe sa date d'envoi à maintenant.
-    private void marquerEnvoye(Long annonceId) {
+    private void marquerEnvoye(Annonce annonce) {
         annonceRepository.updateStatusAnnonceEtDateEnvoi(
-                annonceId, StatutAnnonce.EN_COURS.getCode(), OffsetDateTime.now());
+                annonce.getTitulaire(), annonce.getId(), StatutAnnonce.EN_COURS.getCode(), OffsetDateTime.now());
     }
 
     // Construit et envoie l'email à partir du contact déjà résolu. Lève une
@@ -128,7 +143,7 @@ public class AnnonceMailService {
         String recipient = contact.getEmail();
         String subject = libelleService.construitLibelle(annonce);
         String content = buildHtmlContent(annonce, contact);
-        mailer.sendHtmlMail(recipient, subject, content);
+        mailer.sendHtmlMail(annonce.getTitulaire(), recipient, subject, content);
     }
 
     // Construit le corps HTML à partir d'un contact déjà résolu (ou null pour
@@ -139,6 +154,7 @@ public class AnnonceMailService {
                 : contact.getMessageDePolitesse();
 
         return contenuService.getHtmlContenu(
+                annonce.getTitulaire(),
                 annonce.getPoste(),
                 annonce.getTypeContenu(),
                 messageDePolitesse
