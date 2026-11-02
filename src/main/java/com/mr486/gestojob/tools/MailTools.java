@@ -31,6 +31,19 @@ public class MailTools implements Mailer {
     private final ProfilService profilService;
 
     /**
+     * Indique si une boîte d'envoi est configurée pour ce titulaire.
+     *
+     * <p><b>Exemple :</b> estConfigure(Titulaire.RENEE) retourne false si Renée n'a pas d'identifiant Gmail.</p>
+     *
+     * @param titulaire titulaire concerné
+     * @return {@code true} si un expéditeur existe pour ce titulaire
+     */
+    @Override
+    public boolean estConfigure(Titulaire titulaire) {
+        return expediteursMail.containsKey(titulaire);
+    }
+
+    /**
      * Envoie un email HTML. En cas d'échec, lève une {@link MailException}
      * afin que l'appelant ne marque pas l'annonce comme envoyée à tort.
      *

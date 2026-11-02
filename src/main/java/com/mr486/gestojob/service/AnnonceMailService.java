@@ -1,9 +1,11 @@
 package com.mr486.gestojob.service;
 
 import com.mr486.gestojob.configuration.ApplicationConfiguration;
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.StatutAnnonce;
+import com.mr486.gestojob.model.Titulaire;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import com.mr486.gestojob.securite.UtilisateurCourant;
 import com.mr486.gestojob.tools.Mailer;
@@ -44,12 +46,21 @@ public class AnnonceMailService {
      * envoyées passent au statut « envoyé ».
      *
      * <p><b>Exemple :</b> sur 3 annonces au statut 1, si l'envoi de la deuxième échoue, les annonces 1 et 3 passent au statut 2 tandis que la 2 reste au statut 1.</p>
+     *
+     * @throws com.mr486.gestojob.exception.MetierException si l'adresse d'envoi du titulaire n'est pas configurée
+     *                                                       (aucune annonce n'est alors tentée)
      */
     // Résilience de lot : on capture volontairement toute RuntimeException (envoi,
     // contact manquant, persistance) pour isoler l'échec à une annonce et poursuivre.
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
     @Transactional
     public void sendEmailForPendingAnnonces() {
+        Titulaire titulaire = utilisateurCourant.titulaire();
+        if (!mailer.estConfigure(titulaire)) {
+            // Inutile de tenter chaque annonce : un seul refus, sans trace de pile.
+            log.warn("envoi de la file d'attente refusé : adresse d'envoi non configurée pour {}", titulaire);
+            throw new MetierException("Adresse d'envoi non configurée pour " + titulaire.getAffichage());
+        }
         List<Annonce> annoncesEnAttente =
                 annonceRepository.findAllByTitulaireAndStatusAnnonce(
                         utilisateurCourant.titulaire(), StatutAnnonce.BOITE_ENVOI.getCode());

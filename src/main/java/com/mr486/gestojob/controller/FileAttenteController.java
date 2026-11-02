@@ -53,13 +53,19 @@ public class FileAttenteController {
     /**
      * Déclenche l'envoi des e-mails pour toutes les annonces en attente.
      *
-     * <p><b>Exemple :</b> POST /file/postMail envoie les e-mails de toutes les annonces en attente via sendEmailForPendingAnnonces() puis redirige vers /file.</p>
+     * <p><b>Exemple :</b> POST /file/postMail envoie les e-mails de toutes les annonces en attente via sendEmailForPendingAnnonces() puis redirige vers /file ; si l'adresse d'envoi n'est pas configurée, affiche un message d'erreur.</p>
      *
+     * @param redirectAttributes support des messages flash affichés après la redirection
      * @return une redirection vers la page {@code /file}
      */
     @PostMapping("/file/postMail")
-    public String postMail() {
-        annonceMailService.sendEmailForPendingAnnonces();
+    public String postMail(RedirectAttributes redirectAttributes) {
+        try {
+            annonceMailService.sendEmailForPendingAnnonces();
+        } catch (MetierException ex) {
+            // Adresse d'envoi non configurée : message clair, statuts inchangés.
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
         return "redirect:/file";
     }
 

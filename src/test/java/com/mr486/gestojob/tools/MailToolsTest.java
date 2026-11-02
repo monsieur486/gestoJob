@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.mr486.gestojob.exception.MetierException;
@@ -26,12 +27,12 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 class MailToolsTest {
 
     private final JavaMailSenderImpl senderRenee = mock(JavaMailSenderImpl.class);
+    private final ProfilService profilService = mock(ProfilService.class);
     private MailTools mailTools;
 
     @BeforeEach
     void setUp() {
         when(senderRenee.getUsername()).thenReturn("renee@exemple.fr");
-        ProfilService profilService = mock(ProfilService.class);
         Profil profil = new Profil();
         profil.setCandidatNom("Renée");
         when(profilService.getProfil(Titulaire.RENEE)).thenReturn(profil);
@@ -49,6 +50,26 @@ class MailToolsTest {
         InternetAddress from = (InternetAddress) mime.getFrom()[0];
         assertThat(from.getAddress()).isEqualTo("renee@exemple.fr");
         assertThat(from.getPersonal()).isEqualTo("Renée");
+    }
+
+    @Test
+    void estConfigure_refleteLaMap() {
+        assertThat(mailTools.estConfigure(Titulaire.RENEE)).isTrue();
+        assertThat(mailTools.estConfigure(Titulaire.LAURENT)).isFalse();
+    }
+
+    @Test
+    void sendHtmlMail_envoiRenee_neTouchePasLExpediteurDeLaurent() {
+        JavaMailSenderImpl senderLaurent = mock(JavaMailSenderImpl.class);
+        MailTools deux = new MailTools(
+                Map.of(Titulaire.RENEE, senderRenee, Titulaire.LAURENT, senderLaurent), profilService);
+        MimeMessage mime = new MimeMessage((Session) null);
+        when(senderRenee.createMimeMessage()).thenReturn(mime);
+
+        deux.sendHtmlMail(Titulaire.RENEE, "dest@exemple.fr", "Sujet", "<p>corps</p>");
+
+        verify(senderRenee).send(mime);
+        verifyNoInteractions(senderLaurent);
     }
 
     @Test

@@ -56,6 +56,7 @@ class AnnonceMailServiceTest {
     @BeforeEach
     void setUp() {
         when(utilisateurCourant.titulaire()).thenReturn(Titulaire.RENEE);
+        when(mailer.estConfigure(Titulaire.RENEE)).thenReturn(true);
     }
 
     private Annonce annonce(long id, long contactId, String email) {
@@ -95,6 +96,18 @@ class AnnonceMailServiceTest {
         assertThatThrownBy(() -> annonceMailService.sendDirectEmail(1L))
                 .isInstanceOf(MetierException.class);
 
+        verify(annonceRepository, never()).updateStatusAnnonceEtDateEnvoi(any(), any(), any(), any());
+    }
+
+    @Test
+    void sendEmailForPendingAnnonces_titulaireNonConfigure_nEnvoieRienEtLeveMetierException() {
+        when(mailer.estConfigure(Titulaire.RENEE)).thenReturn(false);
+
+        assertThatThrownBy(() -> annonceMailService.sendEmailForPendingAnnonces())
+                .isInstanceOf(MetierException.class)
+                .hasMessage("Adresse d'envoi non configurée pour Renée");
+
+        verify(mailer, never()).sendHtmlMail(any(), any(), any(), any());
         verify(annonceRepository, never()).updateStatusAnnonceEtDateEnvoi(any(), any(), any(), any());
     }
 

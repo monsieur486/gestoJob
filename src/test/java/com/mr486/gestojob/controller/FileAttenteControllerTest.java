@@ -50,7 +50,7 @@ class FileAttenteControllerTest {
 
     @Test
     void postMail_envoieToutesLesAnnoncesEnAttente_etRedirige() {
-        assertThat(controller.postMail()).isEqualTo("redirect:/file");
+        assertThat(controller.postMail(new RedirectAttributesModelMap())).isEqualTo("redirect:/file");
         verify(annonceMailService).sendEmailForPendingAnnonces();
     }
 
@@ -88,6 +88,17 @@ class FileAttenteControllerTest {
         String view = controller.postDirectMail(9L, redirectAttributes);
 
         assertThat(view).isEqualTo("redirect:/file");
+        assertThat(redirectAttributes.getFlashAttributes().get("errorMessage"))
+                .isEqualTo("Adresse d'envoi non configurée pour Renée");
+    }
+
+    @Test
+    void postMail_metierException_afficheLeMessage() {
+        doThrow(new MetierException("Adresse d'envoi non configurée pour Renée"))
+                .when(annonceMailService).sendEmailForPendingAnnonces();
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+        assertThat(controller.postMail(redirectAttributes)).isEqualTo("redirect:/file");
         assertThat(redirectAttributes.getFlashAttributes().get("errorMessage"))
                 .isEqualTo("Adresse d'envoi non configurée pour Renée");
     }
