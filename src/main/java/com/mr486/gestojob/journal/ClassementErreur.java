@@ -3,6 +3,7 @@ package com.mr486.gestojob.journal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Locale;
+import java.util.NoSuchElementException;
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -62,6 +63,12 @@ public final class ClassementErreur {
                 return new Classement(TYPE_LIEN_CASSE, NIVEAU_AVERTISSEMENT,
                         "Lien cassé : " + chemin + " demandé depuis " + origine, false);
             }
+            return new Classement(TYPE_INTROUVABLE, NIVEAU_INFO,
+                    "Ressource introuvable : " + chemin, false);
+        }
+        if (exception instanceof NoSuchElementException) {
+            // Id inconnu ou appartenant à l'autre titulaire : l'application répond 404. Ce n'est
+            // pas un lien cassé, quel que soit le Referer, et la trace n'apprendrait rien.
             return new Classement(TYPE_INTROUVABLE, NIVEAU_INFO,
                     "Ressource introuvable : " + chemin, false);
         }
