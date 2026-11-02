@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-GestoJob is a personal job-application tracker: a server-rendered Spring Boot + Thymeleaf web app (no SPA, no REST API for clients) used by one person (Laurent Touret) to manage companies (`entreprises`), contacts, and job applications (`annonces`), and to send cover-letter emails. The domain language is **French** — keep new code, field names, and UI text in French to match.
+GestoJob is a personal job-application tracker: a server-rendered Spring Boot + Thymeleaf web app (no SPA, no REST API for clients) used by two job seekers (Laurent Touret and Renée, each with fully separate data) to manage companies (`entreprises`), contacts, and job applications (`annonces`), and to send cover-letter emails. The domain language is **French** — keep new code, field names, and UI text in French to match.
 
 Stack: Spring Boot 4.0.2, Java 17, Maven, PostgreSQL, Liquibase, Thymeleaf, Lombok, jsoup, Jakarta Mail (Gmail SMTP).
 
@@ -28,7 +28,7 @@ Stack: Spring Boot 4.0.2, Java 17, Maven, PostgreSQL, Liquibase, Thymeleaf, Lomb
 ./maj.sh                       # down + git pull + rebuild/up (deploy update)
 ```
 
-The suite has ~128 tests across `model/`, `dto/`, `service/`, `controller/`, `tools/`, and `configuration/` — mostly fast JUnit 5 + Mockito unit tests (controllers tested directly, no MockMvc; services with mocked repositories). The lone exception is `GestoJobApplicationTests#contextLoads`, which boots the full Spring context and therefore requires a reachable database and the env vars below — so `./mvnw verify` needs Postgres running (`./dev-start.sh`). A new public method must come with matching tests (the `jacoco:check` rule flags coverage under 80 % line coverage — indicative, non-blocking: `haltOnFailure=false`).
+The suite has ~245 tests across `model/`, `dto/`, `service/`, `controller/`, `tools/`, and `configuration/` — mostly fast JUnit 5 + Mockito unit tests (controllers tested directly, no MockMvc; services with mocked repositories). The lone exception is `GestoJobApplicationTests#contextLoads`, which boots the full Spring context and therefore requires a reachable database and the env vars below — so `./mvnw verify` needs Postgres running (`./dev-start.sh`). A new public method must come with matching tests (the `jacoco:check` rule flags coverage under 80 % line coverage — indicative, non-blocking: `haltOnFailure=false`).
 
 ## Configuration
 
@@ -46,11 +46,21 @@ Standard layered MVC under `com.mr486.gestojob`:
 - `model/` — JPA entities (`Entreprise`, `Contact`, `Annonce`) and domain enums (`StatutAnnonce`, `TypeAnnonce`, `TypeContenu`).
 - `dto/` — form-backing objects (`*Form`) and view rows (`*Liste`).
 - `tools/` — `MailTools` (MimeMessage HTML mail) and `HtmlToPlainText` (jsoup-based HTML→text).
-- `configuration/ApplicationConfiguration` — centralized **business constants** (candidate name, civilities, generic salutation, default subject). Put new business constants here, not as scattered literals (deployment/secret config stays in `.env`).
+- `configuration/ApplicationConfiguration` — centralized **business constants** (civilities, generic salutation; the candidate name, letter labels and default job titles are per-titulaire data in the `profil` table). Put new business constants here, not as scattered literals (deployment/secret config stays in `.env`).
+
+### Multi-user (titulaires and lecteurs)
+
+Four fixed in-memory accounts (`SecurityConfig`, credentials from `GESTOJOB_{LAURENT,RENEE,FT01,FT02}_{USERNAME,PASSWORD}` in `.env`): `laurent` and `renee` are **titulaires** (`ROLE_TITULAIRE`, read/write their own data); `ft01` / `ft02` are France Travail **lecteurs** (`ROLE_LECTEUR`, read-only mirror of laurent / renee). Each account also carries `DONNEES_<TITULAIRE>`, which fixes whose data it sees (the mapping ft01→LAURENT, ft02→RENEE is structural, not configurable).
+
+- `model.Titulaire` (`LAURENT`, `RENEE`) is the stable code stored in the `titulaire` column of `entreprises`, `contacts`, `annonces`, `modele_email` and as primary key of `profil` (not the login).
+- `securite.UtilisateurCourant.titulaire()` resolves the titulaire from the authentication. **Rule: every repository query on business data is filtered by titulaire** (derived `…AndTitulaire` methods or explicit `@Query` with `:titulaire`); never use inherited `findById/findAll/count/deleteById` on `Entreprise`/`Contact`/`Annonce`/`ModeleEmail` (only `save`, or the `ProfilRepository` keyed by titulaire). An id belonging to the other titulaire must behave exactly like an unknown id. Controllers never take the titulaire from a request parameter.
+- Read-only is enforced server-side in `SecurityConfig` (home `/` requires login; non-GET requests and creation forms require `TITULAIRE`; 403 otherwise), and the UI hides action buttons with `sec:authorize`. `TitulaireConseil` (`@ControllerAdvice`) exposes the current titulaire/profil to views.
+- `ProfilService` / `profil` table: candidate name plus label and default job title for each of the three letter types, editable in Paramètres. Default email templates are per titulaire under `src/main/resources/modeles/defaut/{LAURENT,RENEE}/`.
+- `MailConfiguration` builds one SMTP sender per titulaire: `MAIL_LAURENT_*` required, `MAIL_RENEE_*` optional (without them renée's annonces stay queued and sending reports "adresse d'envoi non configurée").
 
 ### Database / migrations
 
-Schema is owned by **Liquibase**, not Hibernate (`spring.jpa.hibernate.ddl-auto: validate`). Any schema change requires a new SQL changelog in `src/main/resources/db/changelog/` registered in `master.xml` — do not rely on entity changes to alter the DB. (One existing file is named `003-creation_annonces.sql.sql` — the double extension is intentional/existing.)
+Schema is owned by **Liquibase**, not Hibernate (`spring.jpa.hibernate.ddl-auto: validate`). Any schema change requires a new SQL changelog in `src/main/resources/db/changelog/` registered in `master.xml` — do not rely on entity changes to alter the DB. Migration `008-multi-utilisateurs.sql` adds the `titulaire` columns (existing data goes to LAURENT) and the `profil` table. (One existing file is named `003-creation_annonces.sql.sql` — the double extension is intentional/existing.)
 
 ### Magic-number conventions (important)
 

@@ -13,8 +13,8 @@ Stack : **Java 17**, **Spring Boot 4**, **Maven**, **PostgreSQL** (schéma gér�
 - **Maven** via le wrapper `./mvnw` (rien à installer)
 - **Docker** + **Docker Compose** (pour la base PostgreSQL)
 - Un fichier **`.env`** à la racine, copié depuis le modèle : `cp dist.env .env`
-  puis renseigner les vraies valeurs (identifiants base, identifiants SMTP Gmail,
-  compte administrateur, tailles de pagination, `DOCKER_UI_PORT`).
+  puis renseigner les vraies valeurs (identifiants base, identifiants SMTP Gmail de
+  chaque titulaire, comptes de connexion, tailles de pagination, `DOCKER_UI_PORT`).
 
 ## Démarrage (développement)
 
@@ -25,7 +25,30 @@ cp dist.env .env        # crée la config locale, puis éditer .env
 ./dev-stop.sh           # arrête la base
 ```
 
-Connexion par défaut (modifiable dans `.env`) : **utilisateur** / **Mdp12345\***.
+Les comptes de connexion et leurs mots de passe sont définis dans `.env`
+(`GESTOJOB_*_USERNAME` / `GESTOJOB_*_PASSWORD`, obligatoires, sans valeur par défaut) ;
+`dist.env` propose des valeurs d'exemple à changer.
+
+## Comptes et multi-utilisateurs
+
+L'application sert deux candidats, dont les données sont **totalement cloisonnées**
+(entreprises, contacts, annonces, modèles d'email, profil) :
+
+| Compte | Rôle | Données vues | Modification / envoi |
+|--------|------|--------------|----------------------|
+| `laurent` | titulaire | celles de Laurent | oui |
+| `renee` | titulaire | celles de Renée | oui |
+| `ft01` | lecteur (France Travail) | celles de Laurent | non, lecture seule |
+| `ft02` | lecteur (France Travail) | celles de Renée | non, lecture seule |
+
+- La page d'accueil exige une connexion ; seuls `/login` et les ressources statiques sont publics.
+- Les comptes lecteurs servent à montrer les démarches à un conseiller France Travail : toute requête
+  de modification est refusée côté serveur (403), pas seulement masquée.
+- Chaque titulaire règle dans **Paramètres** son nom de candidat, le libellé et l'intitulé de poste par
+  défaut de ses trois types de lettre, ainsi que ses modèles d'email.
+- Chaque titulaire envoie ses courriels depuis **sa propre adresse Gmail** (`MAIL_LAURENT_*`
+  obligatoire, `MAIL_RENEE_*` facultatif : sans eux, les annonces de Renée restent dans la file
+  d'attente et l'envoi affiche une erreur explicite).
 
 ## Build & tests
 
@@ -53,6 +76,12 @@ Connexion par défaut (modifiable dans `.env`) : **utilisateur** / **Mdp12345\**
 En conteneur, le profil `docker` est actif (`SPRING_PROFILES_ACTIVE=docker`) et la
 base est jointe en interne (`gestojob-db`). L'application est exposée sur le port
 `DOCKER_UI_PORT` (par défaut `8082`), destiné à être servi derrière un reverse proxy.
+
+**Avant `./maj.sh`** (première mise à jour vers la version multi-utilisateurs), compléter le
+`.env` du serveur : remplacer `MAIL_USERNAME/PASSWORD` par `MAIL_LAURENT_USERNAME/PASSWORD`
+(et éventuellement `MAIL_RENEE_*`), supprimer `GESTOJOB_ADMIN_*` et ajouter les huit variables
+`GESTOJOB_{LAURENT,RENEE,FT01,FT02}_{USERNAME,PASSWORD}` (voir `dist.env`). La migration Liquibase
+`008` rattache toutes les données existantes à Laurent.
 
 ## Configuration
 
@@ -88,6 +117,11 @@ domaine :
 - `ModeleEmailService` — modèles d'email éditables et leur cache.
 - `LibelleService` — construction de l'objet (libellé) du courriel de candidature.
 - `HtmlConverterService` — conversion HTML → texte brut.
+
+**Cloisonnement** — `UtilisateurCourant` (package `securite`) déduit le titulaire
+(`Titulaire.LAURENT` ou `RENEE`) de l'authentification ; tous les repositories métier
+filtrent par titulaire, et un identifiant de l'autre titulaire se comporte comme un
+identifiant inexistant. `ProfilService` gère le profil de chaque titulaire.
 
 Les erreurs fonctionnelles destinées à l'utilisateur remontent via une exception
 métier typée `MetierException` (message affichable), distincte des erreurs

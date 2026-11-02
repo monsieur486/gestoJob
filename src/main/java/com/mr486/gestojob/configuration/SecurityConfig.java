@@ -63,7 +63,7 @@ public class SecurityConfig {
 
     /**
      * Encodeur de mot de passe utilisé pour stocker et vérifier le mot de passe
-     * du compte administrateur.
+     * des quatre comptes (laurent, renee, ft01, ft02).
      *
      * @return un encodeur BCrypt
      */
