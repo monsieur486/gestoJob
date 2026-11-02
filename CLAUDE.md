@@ -32,7 +32,7 @@ The suite has ~128 tests across `model/`, `dto/`, `service/`, `controller/`, `to
 
 ## Configuration
 
-Config is **not** in `application.yml` defaults — `application.yml` imports `optional:file:.env` and reads everything from environment variables. `.env` (gitignored in practice; `dist.env` is the template) must define: `POSTGRES_DB/USER/PASSWORD`, `MAIL_USERNAME/PASSWORD`, `DOCKER_UI_PORT` (also the app's `server.port`), and `MAX_*_PAR_PAGE` pagination sizes.
+Config is **not** in `application.yml` defaults — `application.yml` imports `optional:file:.env` and reads everything from environment variables. `.env` (gitignored in practice; `dist.env` is the template) must define: `POSTGRES_DB/USER/PASSWORD`, `MAIL_LAURENT_USERNAME/PASSWORD` (`MAIL_RENEE_*` facultatives), `DOCKER_UI_PORT` (also the app's `server.port`), and `MAX_*_PAR_PAGE` pagination sizes.
 
 `application-docker.yml` (activated by `SPRING_PROFILES_ACTIVE=docker` in the container) is identical except the datasource host is `gestojob-db` instead of `localhost`.
 

@@ -1,6 +1,7 @@
 package com.mr486.gestojob.controller;
 
 import com.mr486.gestojob.dto.AnnonceListe;
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.service.AnnonceMailService;
 import com.mr486.gestojob.service.AnnonceService;
 import lombok.RequiredArgsConstructor;
@@ -84,6 +85,10 @@ public class FileAttenteController {
         try {
             annonceMailService.sendDirectEmail(annonceId);
             redirectAttributes.addFlashAttribute("successMessage", "E-mail envoyé.");
+        } catch (MetierException ex) {
+            // Message rédigé pour l'utilisateur (ex. adresse d'envoi non configurée).
+            log.warn("envoi direct refusé pour l'annonce id={} : {}", annonceId, ex.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         } catch (RuntimeException ex) {
             log.warn("échec de l'envoi direct de l'annonce id={} : {}", annonceId, ex.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage",

@@ -21,8 +21,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    # Hôte, port et propriétés SMTP partagés ; les identifiants propres à chaque
+    # titulaire sont sous gestojob.mail (relus par MailConfiguration).
 
     properties:
       mail:
@@ -45,6 +45,15 @@ server:
         same-site: lax
 
 gestojob:
+  # Boîtes Gmail d'envoi. Laurent est obligatoire ; Renée est facultative : sans
+  # identifiant, elle ne peut simplement pas envoyer d'email depuis l'application.
+  mail:
+    laurent:
+      username: ${MAIL_LAURENT_USERNAME}
+      password: ${MAIL_LAURENT_PASSWORD}
+    renee:
+      username: ${MAIL_RENEE_USERNAME:}
+      password: ${MAIL_RENEE_PASSWORD:}
   max-entreprises-par-page: ${MAX_ENTREPRISES_PAR_PAGE}
   max-annonces-par-page: ${MAX_ANNONCESS_PAR_PAGE}
   max-positifs-par-page: ${MAX_POSITIFS_PAR_PAGE}

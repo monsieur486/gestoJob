@@ -82,6 +82,7 @@ public class AnnonceMailService {
      *
      * @param annonceId identifiant de l'annonce
      * @throws IllegalArgumentException si l'annonce est introuvable
+     * @throws com.mr486.gestojob.exception.MetierException si l'adresse d'envoi du titulaire n'est pas configurée
      */
     @Transactional
     public void sendDirectEmail(Long annonceId) {
@@ -131,7 +132,7 @@ public class AnnonceMailService {
         String recipient = contact.getEmail();
         String subject = libelleService.construitLibelle(annonce);
         String content = buildHtmlContent(annonce, contact);
-        mailer.sendHtmlMail(recipient, subject, content);
+        mailer.sendHtmlMail(annonce.getTitulaire(), recipient, subject, content);
     }
 
     // Construit le corps HTML à partir d'un contact déjà résolu (ou null pour

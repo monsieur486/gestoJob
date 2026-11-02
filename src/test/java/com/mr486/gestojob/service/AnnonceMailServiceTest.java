@@ -11,6 +11,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.Titulaire;
@@ -64,7 +65,8 @@ class AnnonceMailServiceTest {
         return Annonce.builder()
                 .id(id).entrepriseId(10).contactId(contactId)
                 .typeAnnonce(0).typeContenu(0).poste("Dev").reference("R")
-                .statusAnnonce(1).build();
+                .statusAnnonce(1)
+                .titulaire(Titulaire.RENEE).build();
     }
 
     @Test
@@ -73,11 +75,45 @@ class AnnonceMailServiceTest {
         when(annonceRepository.findByIdAndTitulaire(1L, Titulaire.RENEE)).thenReturn(Optional.of(a));
         when(contenuService.getHtmlContenu(any(), any(), anyInt(), any())).thenReturn("<p>html</p>");
         when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
-        doNothing().when(mailer).sendHtmlMail(any(), any(), any());
+        doNothing().when(mailer).sendHtmlMail(any(), any(), any(), any());
 
         annonceMailService.sendDirectEmail(1L);
 
-        verify(annonceRepository).updateStatusAnnonceEtDateEnvoi(any(), eq(1L), eq(2), any(OffsetDateTime.class));
+        verify(annonceRepository).updateStatusAnnonceEtDateEnvoi(
+                eq(Titulaire.RENEE), eq(1L), eq(2), any(OffsetDateTime.class));
+    }
+
+    @Test
+    void sendDirectEmail_titulaireNonConfigure_statutInchange() {
+        Annonce a = annonce(1L, 5L, "ok@exemple.fr");
+        when(annonceRepository.findByIdAndTitulaire(1L, Titulaire.RENEE)).thenReturn(Optional.of(a));
+        when(contenuService.getHtmlContenu(any(), any(), anyInt(), any())).thenReturn("<p>html</p>");
+        when(libelleService.construitLibelle(any())).thenReturn("objet de test");
+        doThrow(new MetierException("Adresse d'envoi non configurée pour Renée"))
+                .when(mailer).sendHtmlMail(eq(Titulaire.RENEE), any(), any(), any());
+
+        assertThatThrownBy(() -> annonceMailService.sendDirectEmail(1L))
+                .isInstanceOf(MetierException.class);
+
+        verify(annonceRepository, never()).updateStatusAnnonceEtDateEnvoi(any(), any(), any(), any());
+    }
+
+    @Test
+    void sendEmailForPendingAnnonces_nEnvoieQueLesAnnoncesDuTitulaireCourant() {
+        Annonce a = Annonce.builder().id(1L).entrepriseId(10).contactId(5L)
+                .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1)
+                .titulaire(Titulaire.RENEE).build();
+        when(annonceRepository.findAllByTitulaireAndStatusAnnonce(Titulaire.RENEE, 1)).thenReturn(List.of(a));
+        when(contactService.getContactsByIds(any())).thenReturn(Map.of(
+                5L, Contact.builder().id(5L).entrepriseId(10).email("a@x.fr").formuleDePolitesse(0).build()));
+        when(contenuService.getHtmlContenu(any(), any(), anyInt(), any())).thenReturn("<p>html</p>");
+        when(libelleService.construitLibelle(any())).thenReturn("objet");
+
+        annonceMailService.sendEmailForPendingAnnonces();
+
+        verify(annonceRepository).findAllByTitulaireAndStatusAnnonce(Titulaire.RENEE, 1);
+        verify(annonceRepository, never()).findAllByTitulaireAndStatusAnnonce(Titulaire.LAURENT, 1);
+        verify(mailer).sendHtmlMail(eq(Titulaire.RENEE), eq("a@x.fr"), any(), any());
     }
 
     @Test
@@ -86,7 +122,7 @@ class AnnonceMailServiceTest {
         when(annonceRepository.findByIdAndTitulaire(1L, Titulaire.RENEE)).thenReturn(Optional.of(a));
         when(contenuService.getHtmlContenu(any(), any(), anyInt(), any())).thenReturn("<p>html</p>");
         when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
-        doThrow(new MailSendException("smtp down")).when(mailer).sendHtmlMail(any(), any(), any());
+        doThrow(new MailSendException("smtp down")).when(mailer).sendHtmlMail(any(), any(), any(), any());
 
         assertThatThrownBy(() -> annonceMailService.sendDirectEmail(1L))
                 .isInstanceOf(MailSendException.class);
@@ -107,36 +143,40 @@ class AnnonceMailServiceTest {
     void sendDirectEmail_leveUneException_siAnnonceSansContact() {
         Annonce sansContact = Annonce.builder()
                 .id(1L).entrepriseId(10).contactId(null)
-                .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1).build();
+                .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1)
+                .titulaire(Titulaire.RENEE).build();
         when(annonceRepository.findByIdAndTitulaire(1L, Titulaire.RENEE)).thenReturn(Optional.of(sansContact));
 
         assertThatThrownBy(() -> annonceMailService.sendDirectEmail(1L))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("contact");
 
-        verify(mailer, never()).sendHtmlMail(any(), any(), any());
+        verify(mailer, never()).sendHtmlMail(any(), any(), any(), any());
         verify(annonceRepository, never()).updateStatusAnnonceEtDateEnvoi(any(), any(), any(), any());
     }
 
     @Test
     void sendEmailForPendingAnnonces_continueApresEchec_etNeMarqueQueLesSucces() {
         Annonce ok = Annonce.builder().id(1L).entrepriseId(10).contactId(5L)
-                .typeAnnonce(0).typeContenu(0).poste("Dev").reference("R").statusAnnonce(1).build();
+                .typeAnnonce(0).typeContenu(0).poste("Dev").reference("R").statusAnnonce(1)
+                .titulaire(Titulaire.RENEE).build();
         Annonce ko = Annonce.builder().id(2L).entrepriseId(10).contactId(6L)
-                .typeAnnonce(0).typeContenu(0).poste("Dev").reference("R").statusAnnonce(1).build();
+                .typeAnnonce(0).typeContenu(0).poste("Dev").reference("R").statusAnnonce(1)
+                .titulaire(Titulaire.RENEE).build();
         when(annonceRepository.findAllByTitulaireAndStatusAnnonce(Titulaire.RENEE, 1)).thenReturn(List.of(ok, ko));
         when(contactService.getContactsByIds(any())).thenReturn(Map.of(
                 5L, Contact.builder().id(5L).entrepriseId(10).email("ok@exemple.fr").formuleDePolitesse(0).build(),
                 6L, Contact.builder().id(6L).entrepriseId(10).email("ko@exemple.fr").formuleDePolitesse(0).build()));
         when(contenuService.getHtmlContenu(any(), any(), anyInt(), any())).thenReturn("<p>html</p>");
         when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
-        doNothing().when(mailer).sendHtmlMail(eq("ok@exemple.fr"), any(), any());
+        doNothing().when(mailer).sendHtmlMail(any(), eq("ok@exemple.fr"), any(), any());
         doThrow(new MailSendException("smtp down"))
-                .when(mailer).sendHtmlMail(eq("ko@exemple.fr"), any(), any());
+                .when(mailer).sendHtmlMail(any(), eq("ko@exemple.fr"), any(), any());
 
         annonceMailService.sendEmailForPendingAnnonces();
 
-        verify(annonceRepository).updateStatusAnnonceEtDateEnvoi(any(), eq(1L), eq(2), any(OffsetDateTime.class));
+        verify(annonceRepository).updateStatusAnnonceEtDateEnvoi(
+                eq(Titulaire.RENEE), eq(1L), eq(2), any(OffsetDateTime.class));
         verify(annonceRepository, never())
                 .updateStatusAnnonceEtDateEnvoi(any(), eq(2L), any(), any());
     }
@@ -144,23 +184,25 @@ class AnnonceMailServiceTest {
     @Test
     void sendEmailForPendingAnnonces_chargeLesContactsEnLot_sansN1() {
         Annonce a1 = Annonce.builder().id(1L).entrepriseId(10).contactId(5L)
-                .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1).build();
+                .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1)
+                .titulaire(Titulaire.RENEE).build();
         Annonce a2 = Annonce.builder().id(2L).entrepriseId(10).contactId(6L)
-                .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1).build();
+                .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1)
+                .titulaire(Titulaire.RENEE).build();
         when(annonceRepository.findAllByTitulaireAndStatusAnnonce(Titulaire.RENEE, 1)).thenReturn(List.of(a1, a2));
         when(contactService.getContactsByIds(any())).thenReturn(Map.of(
                 5L, Contact.builder().id(5L).entrepriseId(10).email("a@x.fr").formuleDePolitesse(0).build(),
                 6L, Contact.builder().id(6L).entrepriseId(10).email("b@x.fr").formuleDePolitesse(0).build()));
         when(contenuService.getHtmlContenu(any(), any(), anyInt(), any())).thenReturn("<p>html</p>");
         when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
-        doNothing().when(mailer).sendHtmlMail(any(), any(), any());
+        doNothing().when(mailer).sendHtmlMail(any(), any(), any(), any());
 
         annonceMailService.sendEmailForPendingAnnonces();
 
         verify(contactService).getContactsByIds(any());
         verify(contactService, never()).getContact(any());
-        verify(mailer).sendHtmlMail(eq("a@x.fr"), any(), any());
-        verify(mailer).sendHtmlMail(eq("b@x.fr"), any(), any());
+        verify(mailer).sendHtmlMail(eq(Titulaire.RENEE), eq("a@x.fr"), any(), any());
+        verify(mailer).sendHtmlMail(eq(Titulaire.RENEE), eq("b@x.fr"), any(), any());
     }
 
     @Test
