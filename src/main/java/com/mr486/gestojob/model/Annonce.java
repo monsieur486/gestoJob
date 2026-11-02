@@ -1,6 +1,9 @@
 package com.mr486.gestojob.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -43,6 +46,9 @@ public class Annonce {
     // statut de suivi : 1=Boîte d'envoi, 2=En cours, 3=Dépassé, 4=Négatif, 5=Positif, 6=Archivé
     private Integer statusAnnonce;
     private OffsetDateTime dateEnvoi;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private Titulaire titulaire;
 
     /**
      * Retourne le libellé lisible (avec icône) correspondant au statut numérique

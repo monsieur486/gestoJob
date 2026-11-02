@@ -4,6 +4,7 @@ import com.mr486.gestojob.dto.ModeleEmailVue;
 import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.CleModele;
 import com.mr486.gestojob.model.ModeleEmail;
+import com.mr486.gestojob.model.Titulaire;
 import com.mr486.gestojob.persistance.ModeleEmailRepository;
 import com.mr486.gestojob.tools.HtmlSanitizer;
 import java.io.IOException;
@@ -136,6 +137,7 @@ public class ModeleEmailService {
     private ModeleEmail creerDepuisDefaut(CleModele cle) {
         ModeleEmail modele = ModeleEmail.builder()
                 .cle(cle.name())
+                .titulaire(Titulaire.LAURENT) // transitoire : remplacé par le titulaire courant (tâche 5)
                 .contenu(lireRessource(cle.getCheminRessource()))
                 .build();
         return modeleEmailRepository.save(modele);
