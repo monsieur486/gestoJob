@@ -46,9 +46,11 @@ L'application sert deux candidats, dont les données sont **totalement cloisonn�
   de modification est refusée côté serveur (403), pas seulement masquée.
 - Chaque titulaire règle dans **Paramètres** son nom de candidat, le libellé et l'intitulé de poste par
   défaut de ses trois types de lettre, ainsi que ses modèles d'email.
-- Chaque titulaire envoie ses courriels depuis **sa propre adresse Gmail** (`MAIL_LAURENT_*`
-  obligatoire, `MAIL_RENEE_*` facultatif : sans eux, les annonces de Renée restent dans la file
-  d'attente et l'envoi affiche une erreur explicite).
+- Chaque titulaire envoie ses courriels depuis **sa propre adresse** : Gmail pour Laurent
+  (`MAIL_LAURENT_*`, obligatoire), Yahoo pour Renée (`MAIL_RENEE_*`, facultatif : sans eux, les
+  annonces de Renée restent dans la file d'attente et l'envoi affiche une erreur explicite). Les
+  deux comptes exigent un **mot de passe d'application** ; l'hôte SMTP de chaque titulaire est
+  réglé dans `application.yml` (`gestojob.mail.<titulaire>.host|port`).
 
 ## Build & tests
 

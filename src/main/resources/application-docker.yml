@@ -21,8 +21,9 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    # Hôte, port et propriétés SMTP partagés ; les identifiants propres à chaque
-    # titulaire sont sous gestojob.mail (relus par MailConfiguration).
+    # Hôte et port par défaut, propriétés SMTP partagées ; les identifiants (et
+    # l'hôte s'il diffère) de chaque titulaire sont sous gestojob.mail (relus par
+    # MailConfiguration).
 
     properties:
       mail:
@@ -45,13 +46,18 @@ server:
         same-site: lax
 
 gestojob:
-  # Boîtes Gmail d'envoi. Laurent est obligatoire ; Renée est facultative : sans
-  # identifiant, elle ne peut simplement pas envoyer d'email depuis l'application.
+  # Boîtes d'envoi (mot de passe d'application). Laurent (Gmail, hôte par défaut)
+  # est obligatoire ; Renée (Yahoo) est facultative : sans identifiant, elle ne
+  # peut simplement pas envoyer d'email depuis l'application.
   mail:
     laurent:
       username: ${MAIL_LAURENT_USERNAME}
       password: ${MAIL_LAURENT_PASSWORD}
     renee:
+      # Yahoo accepte STARTTLS sur 587, comme Gmail : seules les propriétés
+      # SMTP communes de spring.mail sont donc réutilisées telles quelles.
+      host: smtp.mail.yahoo.com
+      port: 587
       username: ${MAIL_RENEE_USERNAME:}
       password: ${MAIL_RENEE_PASSWORD:}
   max-entreprises-par-page: ${MAX_ENTREPRISES_PAR_PAGE}

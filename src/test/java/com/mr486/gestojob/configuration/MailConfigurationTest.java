@@ -55,6 +55,32 @@ class MailConfigurationTest {
     }
 
     @Test
+    void expediteursMail_utiliseLHoteEtLePortPropresAuTitulaire() {
+        MockEnvironment e = env("l@exemple.fr", "a", "r@yahoo.fr", "b")
+                .withProperty("gestojob.mail.renee.host", "smtp.mail.yahoo.com")
+                .withProperty("gestojob.mail.renee.port", "465");
+
+        Map<Titulaire, JavaMailSenderImpl> map = configuration.expediteursMail(proprietes(), e);
+
+        JavaMailSenderImpl renee = map.get(Titulaire.RENEE);
+        assertThat(renee.getHost()).isEqualTo("smtp.mail.yahoo.com");
+        assertThat(renee.getPort()).isEqualTo(465);
+        assertThat(renee.getJavaMailProperties()).containsEntry("mail.smtp.auth", "true");
+        // Laurent, sans hôte propre, garde l'hôte commun.
+        assertThat(map.get(Titulaire.LAURENT).getHost()).isEqualTo("smtp.exemple.fr");
+    }
+
+    @Test
+    void expediteursMail_ignoreUnHoteVide() {
+        MockEnvironment e = env("l@exemple.fr", "a", null, null)
+                .withProperty("gestojob.mail.laurent.host", " ");
+
+        Map<Titulaire, JavaMailSenderImpl> map = configuration.expediteursMail(proprietes(), e);
+
+        assertThat(map.get(Titulaire.LAURENT).getHost()).isEqualTo("smtp.exemple.fr");
+    }
+
+    @Test
     void expediteursMail_ignoreUsernameNul() {
         MailProperties p = new MailProperties();
         p.setHost("h");
