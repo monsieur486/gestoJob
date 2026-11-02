@@ -18,6 +18,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -100,7 +101,10 @@ class SecurityConfigTest {
     @Test
     void lecteur_consultationAutorisee() throws Exception {
         mvc.perform(get("/login")).andExpect(status().isOk());
-        int statut = mvc.perform(get("/annonces").with(user("ft01").roles("LECTEUR")))
+        int statut = mvc.perform(get("/annonces")
+                        .with(user("ft01").roles("LECTEUR").authorities(
+                                new SimpleGrantedAuthority("ROLE_LECTEUR"),
+                                new SimpleGrantedAuthority("DONNEES_LAURENT"))))
                 .andReturn().getResponse().getStatus();
         assertNotEquals(403, statut);
     }

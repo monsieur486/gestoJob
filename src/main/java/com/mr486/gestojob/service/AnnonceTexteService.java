@@ -3,6 +3,7 @@ package com.mr486.gestojob.service;
 import com.mr486.gestojob.configuration.ApplicationConfiguration;
 import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.persistance.AnnonceRepository;
+import com.mr486.gestojob.securite.UtilisateurCourant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ public class AnnonceTexteService {
     private final ContactService contactService;
     private final ContenuService contenuService;
     private final LibelleService libelleService;
+    private final UtilisateurCourant utilisateurCourant;
 
     /**
      * Retourne la formule de politesse à utiliser pour une annonce.
@@ -56,7 +58,7 @@ public class AnnonceTexteService {
 
     // Charge une annonce par son identifiant (NoSuchElementException si absente).
     private Annonce chargerAnnonce(Long annonceId) {
-        return annonceRepository.findById(annonceId).orElseThrow();
+        return annonceRepository.findByIdAndTitulaire(annonceId, utilisateurCourant.titulaire()).orElseThrow();
     }
 
     // Formule de politesse d'une annonce déjà chargée (générique si aucun contact),

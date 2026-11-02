@@ -54,7 +54,7 @@ class ContactServiceTest {
     void deleteContact_supprime_siNonRattacheADesAnnonces() {
         Contact contact = Contact.builder().id(9L).entrepriseId(7).email("a@b.fr").build();
         when(contactRepository.findByIdAndTitulaire(9L, Titulaire.RENEE)).thenReturn(Optional.of(contact));
-        when(annonceRepository.existsByContactId(9L)).thenReturn(false);
+        when(annonceRepository.existsByContactIdAndTitulaire(9L, Titulaire.RENEE)).thenReturn(false);
 
         contactService.deleteContact(9L);
 
@@ -65,7 +65,7 @@ class ContactServiceTest {
     void deleteContact_leveUneException_siRattacheADesAnnonces() {
         Contact contact = Contact.builder().id(9L).entrepriseId(7).email("a@b.fr").build();
         when(contactRepository.findByIdAndTitulaire(9L, Titulaire.RENEE)).thenReturn(Optional.of(contact));
-        when(annonceRepository.existsByContactId(9L)).thenReturn(true);
+        when(annonceRepository.existsByContactIdAndTitulaire(9L, Titulaire.RENEE)).thenReturn(true);
 
         assertThatThrownBy(() -> contactService.deleteContact(9L))
                 .isInstanceOf(MetierException.class)

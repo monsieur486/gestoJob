@@ -42,7 +42,7 @@ public class ContactService {
     @Transactional
     public void deleteContact(Long contactId) {
         Contact contact = getContact(contactId);
-        if (annonceRepository.existsByContactId(contactId)) {
+        if (annonceRepository.existsByContactIdAndTitulaire(contactId, utilisateurCourant.titulaire())) {
             log.warn("suppression refusée : le contact {} est rattaché à des annonces", contactId);
             throw new MetierException("Ce contact est rattaché à des annonces ; supprimez-les d'abord.");
         }

@@ -7,9 +7,11 @@ import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.StatutAnnonce;
 import com.mr486.gestojob.persistance.AnnonceRepository;
+import com.mr486.gestojob.securite.UtilisateurCourant;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +34,9 @@ public class AnnonceService {
 
     private final AnnonceRepository annonceRepository;
     private final AnnonceListeMapper annonceListeMapper;
+    private final UtilisateurCourant utilisateurCourant;
+    private final EntrepriseService entrepriseService;
+    private final ContactService contactService;
     @Value("${gestojob.max-annonces-par-page:7}")
     private int maxAnnoncesParPage;
 
@@ -40,7 +45,8 @@ public class AnnonceService {
 
     // Récupère toutes les annonces d'une entreprise, triées par statut croissant.
     private List<Annonce> findAllByEntrepriseId(Integer entrepriseId) {
-        return annonceRepository.findAllByEntrepriseIdOrderByStatusAnnonceAsc(entrepriseId);
+        return annonceRepository.findAllByTitulaireAndEntrepriseIdOrderByStatusAnnonceAsc(
+                utilisateurCourant.titulaire(), entrepriseId);
     }
 
     /**
@@ -53,7 +59,7 @@ public class AnnonceService {
      * @throws java.util.NoSuchElementException si aucune annonce ne correspond à l'identifiant
      */
     public Annonce getAnnonce(Long annonceId) {
-        return annonceRepository.findById(annonceId).orElseThrow();
+        return annonceRepository.findByIdAndTitulaire(annonceId, utilisateurCourant.titulaire()).orElseThrow();
     }
 
     /**
@@ -83,12 +89,14 @@ public class AnnonceService {
     /**
      * Supprime définitivement une annonce.
      *
-     * <p><b>Exemple :</b> deleteAnnonce(7L) supprime l'annonce d'id 7 ; un identifiant inexistant est sans effet (aucune exception levée).</p>
+     * <p><b>Exemple :</b> deleteAnnonce(7L) supprime l'annonce d'id 7 si elle appartient au titulaire courant ; un identifiant inexistant ou appartenant à l'autre titulaire est sans effet (aucune exception levée).</p>
      *
      * @param annonceId identifiant de l'annonce à supprimer
      */
+    @Transactional
     public void deleteAnnonce(Long annonceId) {
-        annonceRepository.deleteById(annonceId);
+        annonceRepository.findByIdAndTitulaire(annonceId, utilisateurCourant.titulaire())
+                .ifPresent(annonceRepository::delete);
         log.info("annonce supprimée : {}", annonceId);
     }
 
@@ -101,6 +109,7 @@ public class AnnonceService {
      *
      * @param form formulaire de l'annonce
      * @throws IllegalArgumentException si aucune entreprise n'est renseignée
+     * @throws java.util.NoSuchElementException si l'entreprise ou le contact n'appartient pas au titulaire courant
      */
     @Transactional
     public void saveForm(AnnonceForm form) {
@@ -111,7 +120,17 @@ public class AnnonceService {
         Long contactId = form.getContactId();
         boolean site = (contactId == null || contactId == 0L);
 
+        // Cloisonnement : l'entreprise et le contact doivent appartenir au titulaire
+        // courant, sinon on réagit comme pour un id inconnu.
+        if (!Boolean.TRUE.equals(entrepriseService.existe(form.getEntrepriseId()))) {
+            throw new NoSuchElementException("Entreprise introuvable : " + form.getEntrepriseId());
+        }
+        if (!site) {
+            contactService.getContact(contactId);
+        }
+
         Annonce a = Annonce.builder()
+                .titulaire(utilisateurCourant.titulaire())
                 .entrepriseId(form.getEntrepriseId())
                 .contactId(site ? null : contactId)
                 .typeAnnonce(form.getTypeAnnonce())
@@ -138,8 +157,8 @@ public class AnnonceService {
         int safePageIndex = Math.max(0, pageIndex);
         var pageable = PageRequest.of(safePageIndex, maxAnnoncesParPage);
         return annonceListeMapper.toAnnonceListePage(
-                annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(
-                        StatutAnnonce.BOITE_ENVOI.getCode(), pageable));
+                annonceRepository.findAllByTitulaireAndStatusAnnonceOrderByDateEnvoiDesc(
+                        utilisateurCourant.titulaire(), StatutAnnonce.BOITE_ENVOI.getCode(), pageable));
     }
 
     /**
@@ -164,13 +183,14 @@ public class AnnonceService {
             // Pas de texte : avec archives => toutes les annonces ; sinon toutes
             // sauf les archivées (statut 6).
             return annonceListeMapper.toAnnonceListePage(includeArchives
-                    ? annonceRepository.findAllOrderByDateEnvoiDesc(pageable)
+                    ? annonceRepository.findAllOrderByDateEnvoiDesc(utilisateurCourant.titulaire(), pageable)
                     : annonceRepository.findAllByStatusAnnonceNotOrderByDateEnvoiDesc(
-                            StatutAnnonce.ARCHIVE.getCode(), pageable));
+                            utilisateurCourant.titulaire(), StatutAnnonce.ARCHIVE.getCode(), pageable));
         }
 
         // Texte présent : recherche multi-champs ; archives=true => tous les statuts
-        return annonceListeMapper.toAnnonceListePage(annonceRepository.search(q, includeArchives, pageable));
+        return annonceListeMapper.toAnnonceListePage(annonceRepository.search(
+                utilisateurCourant.titulaire(), q, includeArchives, pageable));
     }
 
     /**
@@ -181,7 +201,7 @@ public class AnnonceService {
      * @return le nombre d'annonces
      */
     public long countAnnonces() {
-        return annonceRepository.count();
+        return annonceRepository.countByTitulaire(utilisateurCourant.titulaire());
     }
 
     /**
@@ -196,7 +216,7 @@ public class AnnonceService {
     public Page<AnnonceListe> getAllPositifListePage(int pageIndex) {
         var pageable = PageRequest.of(pageIndex, maxPositifsParPage);
         return annonceListeMapper.toAnnonceListePage(
-                annonceRepository.findAllByStatusAnnonceOrderByDateEnvoiDesc(
-                        StatutAnnonce.POSITIF.getCode(), pageable));
+                annonceRepository.findAllByTitulaireAndStatusAnnonceOrderByDateEnvoiDesc(
+                        utilisateurCourant.titulaire(), StatutAnnonce.POSITIF.getCode(), pageable));
     }
 }

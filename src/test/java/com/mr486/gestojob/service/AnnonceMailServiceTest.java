@@ -15,11 +15,13 @@ import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.Titulaire;
 import com.mr486.gestojob.persistance.AnnonceRepository;
+import com.mr486.gestojob.securite.UtilisateurCourant;
 import com.mr486.gestojob.tools.Mailer;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -44,8 +46,16 @@ class AnnonceMailServiceTest {
     @Mock
     private LibelleService libelleService;
 
+    @Mock
+    private UtilisateurCourant utilisateurCourant;
+
     @InjectMocks
     private AnnonceMailService annonceMailService;
+
+    @BeforeEach
+    void setUp() {
+        when(utilisateurCourant.titulaire()).thenReturn(Titulaire.RENEE);
+    }
 
     private Annonce annonce(long id, long contactId, String email) {
         Contact contact = Contact.builder()
@@ -60,20 +70,20 @@ class AnnonceMailServiceTest {
     @Test
     void sendDirectEmail_marqueEnvoye_siSucces() {
         Annonce a = annonce(1L, 5L, "ok@exemple.fr");
-        when(annonceRepository.findById(1L)).thenReturn(Optional.of(a));
+        when(annonceRepository.findByIdAndTitulaire(1L, Titulaire.RENEE)).thenReturn(Optional.of(a));
         when(contenuService.getHtmlContenu(any(), any(), anyInt(), any())).thenReturn("<p>html</p>");
         when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
         doNothing().when(mailer).sendHtmlMail(any(), any(), any());
 
         annonceMailService.sendDirectEmail(1L);
 
-        verify(annonceRepository).updateStatusAnnonceEtDateEnvoi(eq(1L), eq(2), any(OffsetDateTime.class));
+        verify(annonceRepository).updateStatusAnnonceEtDateEnvoi(any(), eq(1L), eq(2), any(OffsetDateTime.class));
     }
 
     @Test
     void sendDirectEmail_neMarquePasEnvoye_siEchecMail() {
         Annonce a = annonce(1L, 5L, "ko@exemple.fr");
-        when(annonceRepository.findById(1L)).thenReturn(Optional.of(a));
+        when(annonceRepository.findByIdAndTitulaire(1L, Titulaire.RENEE)).thenReturn(Optional.of(a));
         when(contenuService.getHtmlContenu(any(), any(), anyInt(), any())).thenReturn("<p>html</p>");
         when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
         doThrow(new MailSendException("smtp down")).when(mailer).sendHtmlMail(any(), any(), any());
@@ -81,12 +91,12 @@ class AnnonceMailServiceTest {
         assertThatThrownBy(() -> annonceMailService.sendDirectEmail(1L))
                 .isInstanceOf(MailSendException.class);
 
-        verify(annonceRepository, never()).updateStatusAnnonceEtDateEnvoi(any(), any(), any());
+        verify(annonceRepository, never()).updateStatusAnnonceEtDateEnvoi(any(), any(), any(), any());
     }
 
     @Test
     void sendDirectEmail_leveUneException_siAnnonceIntrouvable() {
-        when(annonceRepository.findById(404L)).thenReturn(Optional.empty());
+        when(annonceRepository.findByIdAndTitulaire(404L, Titulaire.RENEE)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> annonceMailService.sendDirectEmail(404L))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -98,14 +108,14 @@ class AnnonceMailServiceTest {
         Annonce sansContact = Annonce.builder()
                 .id(1L).entrepriseId(10).contactId(null)
                 .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1).build();
-        when(annonceRepository.findById(1L)).thenReturn(Optional.of(sansContact));
+        when(annonceRepository.findByIdAndTitulaire(1L, Titulaire.RENEE)).thenReturn(Optional.of(sansContact));
 
         assertThatThrownBy(() -> annonceMailService.sendDirectEmail(1L))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("contact");
 
         verify(mailer, never()).sendHtmlMail(any(), any(), any());
-        verify(annonceRepository, never()).updateStatusAnnonceEtDateEnvoi(any(), any(), any());
+        verify(annonceRepository, never()).updateStatusAnnonceEtDateEnvoi(any(), any(), any(), any());
     }
 
     @Test
@@ -114,7 +124,7 @@ class AnnonceMailServiceTest {
                 .typeAnnonce(0).typeContenu(0).poste("Dev").reference("R").statusAnnonce(1).build();
         Annonce ko = Annonce.builder().id(2L).entrepriseId(10).contactId(6L)
                 .typeAnnonce(0).typeContenu(0).poste("Dev").reference("R").statusAnnonce(1).build();
-        when(annonceRepository.findAllByStatusAnnonce(1)).thenReturn(List.of(ok, ko));
+        when(annonceRepository.findAllByTitulaireAndStatusAnnonce(Titulaire.RENEE, 1)).thenReturn(List.of(ok, ko));
         when(contactService.getContactsByIds(any())).thenReturn(Map.of(
                 5L, Contact.builder().id(5L).entrepriseId(10).email("ok@exemple.fr").formuleDePolitesse(0).build(),
                 6L, Contact.builder().id(6L).entrepriseId(10).email("ko@exemple.fr").formuleDePolitesse(0).build()));
@@ -126,9 +136,9 @@ class AnnonceMailServiceTest {
 
         annonceMailService.sendEmailForPendingAnnonces();
 
-        verify(annonceRepository).updateStatusAnnonceEtDateEnvoi(eq(1L), eq(2), any(OffsetDateTime.class));
+        verify(annonceRepository).updateStatusAnnonceEtDateEnvoi(any(), eq(1L), eq(2), any(OffsetDateTime.class));
         verify(annonceRepository, never())
-                .updateStatusAnnonceEtDateEnvoi(eq(2L), any(), any());
+                .updateStatusAnnonceEtDateEnvoi(any(), eq(2L), any(), any());
     }
 
     @Test
@@ -137,7 +147,7 @@ class AnnonceMailServiceTest {
                 .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1).build();
         Annonce a2 = Annonce.builder().id(2L).entrepriseId(10).contactId(6L)
                 .typeAnnonce(0).typeContenu(0).poste("Dev").statusAnnonce(1).build();
-        when(annonceRepository.findAllByStatusAnnonce(1)).thenReturn(List.of(a1, a2));
+        when(annonceRepository.findAllByTitulaireAndStatusAnnonce(Titulaire.RENEE, 1)).thenReturn(List.of(a1, a2));
         when(contactService.getContactsByIds(any())).thenReturn(Map.of(
                 5L, Contact.builder().id(5L).entrepriseId(10).email("a@x.fr").formuleDePolitesse(0).build(),
                 6L, Contact.builder().id(6L).entrepriseId(10).email("b@x.fr").formuleDePolitesse(0).build()));
