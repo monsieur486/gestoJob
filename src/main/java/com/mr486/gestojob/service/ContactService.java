@@ -5,6 +5,7 @@ import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import com.mr486.gestojob.persistance.ContactRepository;
+import com.mr486.gestojob.securite.UtilisateurCourant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +29,7 @@ public class ContactService {
     private final ContactRepository contactRepository;
     private final EntrepriseService entrepriseService;
     private final AnnonceRepository annonceRepository;
+    private final UtilisateurCourant utilisateurCourant;
 
     /**
      * Supprime un contact, sauf s'il est encore rattaché à des annonces.
@@ -39,11 +41,12 @@ public class ContactService {
      */
     @Transactional
     public void deleteContact(Long contactId) {
+        Contact contact = getContact(contactId);
         if (annonceRepository.existsByContactId(contactId)) {
             log.warn("suppression refusée : le contact {} est rattaché à des annonces", contactId);
             throw new MetierException("Ce contact est rattaché à des annonces ; supprimez-les d'abord.");
         }
-        contactRepository.deleteById(contactId);
+        contactRepository.delete(contact);
         log.info("contact supprimé : {}", contactId);
     }
 
@@ -65,6 +68,7 @@ public class ContactService {
         validerUniciteEmail(contactForm, entrepriseId);
 
         Contact contact = new Contact();
+        contact.setTitulaire(utilisateurCourant.titulaire());
         contact.setEntrepriseId(entrepriseId);
         contact.setFormuleDePolitesse(contactForm.getFormuleDePolitesse());
         contact.setEmail(contactForm.getEmail());
@@ -97,7 +101,8 @@ public class ContactService {
     private void validerUniciteEmail(ContactForm contactForm, int entrepriseId) {
         String email = contactForm.getEmail();
         if (email != null && !email.isBlank()
-                && contactRepository.existsByEntrepriseIdAndEmailIgnoreCase(entrepriseId, email)) {
+                && contactRepository.existsByTitulaireAndEntrepriseIdAndEmailIgnoreCase(
+                        utilisateurCourant.titulaire(), entrepriseId, email)) {
             log.warn("création de contact refusée : email en doublon pour l'entreprise {}", entrepriseId);
             throw new MetierException("Un contact avec cet email existe déjà pour cette entreprise.");
         }
@@ -112,7 +117,7 @@ public class ContactService {
      * @return la liste des contacts de l'entreprise
      */
     public List<Contact> getAllContact(int entrepriseId) {
-        return contactRepository.findAllByEntrepriseId(entrepriseId);
+        return contactRepository.findAllByEntrepriseIdAndTitulaire(entrepriseId, utilisateurCourant.titulaire());
     }
 
 
@@ -126,7 +131,7 @@ public class ContactService {
      * @throws java.util.NoSuchElementException si aucun contact ne correspond à l'identifiant
      */
     public Contact getContact(Long contactId) {
-        return contactRepository.findById(contactId).orElseThrow();
+        return contactRepository.findByIdAndTitulaire(contactId, utilisateurCourant.titulaire()).orElseThrow();
     }
 
     /**
@@ -142,7 +147,7 @@ public class ContactService {
         if (ids == null || ids.isEmpty()) {
             return Collections.emptyMap();
         }
-        return contactRepository.findAllById(ids).stream()
+        return contactRepository.findAllByIdInAndTitulaire(ids, utilisateurCourant.titulaire()).stream()
                 .collect(Collectors.toMap(Contact::getId, Function.identity()));
     }
 }

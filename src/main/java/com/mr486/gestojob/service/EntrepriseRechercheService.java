@@ -3,6 +3,7 @@ package com.mr486.gestojob.service;
 import com.mr486.gestojob.dto.EntrepriseListe;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.persistance.EntrepriseRepository;
+import com.mr486.gestojob.securite.UtilisateurCourant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 public class EntrepriseRechercheService {
 
     private final EntrepriseRepository entrepriseRepository;
+    private final UtilisateurCourant utilisateurCourant;
 
     @Value("${gestojob.max-entreprises-par-page}")
     private int maxEntreprisesParPage;
@@ -37,7 +39,8 @@ public class EntrepriseRechercheService {
         int safePageIndex = Math.max(0, pageIndex);
 
         return entrepriseRepository
-                .findAllByOrderByNomAsc(PageRequest.of(safePageIndex, maxEntreprisesParPage))
+                .findAllByTitulaireOrderByNomAsc(utilisateurCourant.titulaire(),
+                        PageRequest.of(safePageIndex, maxEntreprisesParPage))
                 .map(EntrepriseRechercheService::toListe);
     }
 
@@ -55,8 +58,8 @@ public class EntrepriseRechercheService {
     public Page<EntrepriseListe> rechercheEntrepriseParNomPage(String nom, int pageIndex) {
         int safePageIndex = Math.max(0, pageIndex);
         return entrepriseRepository
-                .findAllByNomContainingIgnoreCaseOrderByNomAsc(
-                        nom, PageRequest.of(safePageIndex, maxEntreprisesParPage))
+                .findAllByTitulaireAndNomContainingIgnoreCaseOrderByNomAsc(
+                        utilisateurCourant.titulaire(), nom, PageRequest.of(safePageIndex, maxEntreprisesParPage))
                 .map(EntrepriseRechercheService::toListe);
     }
 
@@ -72,7 +75,8 @@ public class EntrepriseRechercheService {
     public Page<EntrepriseListe> rechercheEntrepriseActivePage(int pageIndex) {
         int safePageIndex = Math.max(0, pageIndex);
         return entrepriseRepository
-                .findAllByEstActiveTrueOrderByNomAsc(PageRequest.of(safePageIndex, maxEntreprisesParPage))
+                .findAllByTitulaireAndEstActiveTrueOrderByNomAsc(utilisateurCourant.titulaire(),
+                        PageRequest.of(safePageIndex, maxEntreprisesParPage))
                 .map(EntrepriseRechercheService::toListe);
     }
 

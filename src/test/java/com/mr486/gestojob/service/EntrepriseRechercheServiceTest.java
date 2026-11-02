@@ -3,11 +3,14 @@ package com.mr486.gestojob.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import com.mr486.gestojob.dto.EntrepriseListe;
 import com.mr486.gestojob.model.Entreprise;
+import com.mr486.gestojob.model.Titulaire;
 import com.mr486.gestojob.persistance.EntrepriseRepository;
+import com.mr486.gestojob.securite.UtilisateurCourant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,11 +29,15 @@ class EntrepriseRechercheServiceTest {
     @Mock
     private EntrepriseRepository entrepriseRepository;
 
+    @Mock
+    private UtilisateurCourant utilisateurCourant;
+
     @InjectMocks
     private EntrepriseRechercheService entrepriseRechercheService;
 
     @BeforeEach
     void setUp() {
+        lenient().when(utilisateurCourant.titulaire()).thenReturn(Titulaire.RENEE);
         ReflectionTestUtils.setField(entrepriseRechercheService, "maxEntreprisesParPage", 10);
     }
 
@@ -41,7 +48,8 @@ class EntrepriseRechercheServiceTest {
     @Test
     void getAllListePage_mappeLesEntreprisesEnDTO() {
         Page<Entreprise> page = new PageImpl<>(List.of(entreprise(1, "A"), entreprise(2, "B")));
-        when(entrepriseRepository.findAllByOrderByNomAsc(any(Pageable.class))).thenReturn(page);
+        when(entrepriseRepository.findAllByTitulaireOrderByNomAsc(eq(Titulaire.RENEE), any(Pageable.class)))
+                .thenReturn(page);
 
         Page<EntrepriseListe> result = entrepriseRechercheService.getAllListePage(0);
 
@@ -50,7 +58,8 @@ class EntrepriseRechercheServiceTest {
 
     @Test
     void rechercheEntrepriseParNomPage_mappeLesResultats() {
-        when(entrepriseRepository.findAllByNomContainingIgnoreCaseOrderByNomAsc(eq("ac"), any(Pageable.class)))
+        when(entrepriseRepository.findAllByTitulaireAndNomContainingIgnoreCaseOrderByNomAsc(
+                eq(Titulaire.RENEE), eq("ac"), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(entreprise(1, "ACME"))));
 
         Page<EntrepriseListe> result = entrepriseRechercheService.rechercheEntrepriseParNomPage("ac", 0);
@@ -60,7 +69,8 @@ class EntrepriseRechercheServiceTest {
 
     @Test
     void rechercheEntrepriseActivePage_mappeLesResultats() {
-        when(entrepriseRepository.findAllByEstActiveTrueOrderByNomAsc(any(Pageable.class)))
+        when(entrepriseRepository.findAllByTitulaireAndEstActiveTrueOrderByNomAsc(
+                eq(Titulaire.RENEE), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(entreprise(1, "ACME"))));
 
         Page<EntrepriseListe> result = entrepriseRechercheService.rechercheEntrepriseActivePage(0);
