@@ -166,9 +166,10 @@ class SecurityConfigTest {
 
     @Test
     void titulaire_postAutorise() throws Exception {
-        // Formulaire vide : le contrôleur le refuse par validation et redirige, preuve que
-        // la requête a franchi la sécurité (un lecteur recevrait 403).
-        mvc.perform(post("/entreprises/1/contacts/ajout")
+        // Entreprise 0 inexistante : le service refuse la création et le contrôleur redirige,
+        // preuve que la requête a franchi la sécurité (un lecteur recevrait 403) sans rien
+        // écrire dans la base de dev.
+        mvc.perform(post("/entreprises/0/contacts/ajout")
                         .with(user("laurent").authorities(
                                 new SimpleGrantedAuthority("ROLE_TITULAIRE"),
                                 new SimpleGrantedAuthority("DONNEES_LAURENT")))
