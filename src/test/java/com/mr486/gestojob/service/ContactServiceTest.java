@@ -198,4 +198,20 @@ class ContactServiceTest {
         verify(contactRepository).save(captor.capture());
         assertThat(captor.getValue().getTitulaire()).isEqualTo(Titulaire.RENEE);
     }
+
+    @Test
+    void getAllContact_filtreParTitulaireCourant() {
+        Contact contact = Contact.builder().id(1L).entrepriseId(7).email("a@b.fr").build();
+        when(contactRepository.findAllByEntrepriseIdAndTitulaire(7, Titulaire.RENEE)).thenReturn(List.of(contact));
+
+        assertThat(contactService.getAllContact(7)).containsExactly(contact);
+        verify(contactRepository).findAllByEntrepriseIdAndTitulaire(7, Titulaire.RENEE);
+    }
+
+    @Test
+    void getContact_idAutreTitulaire_seComporteCommeInconnu() {
+        when(contactRepository.findByIdAndTitulaire(3L, Titulaire.RENEE)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> contactService.getContact(3L)).isInstanceOf(NoSuchElementException.class);
+    }
 }
