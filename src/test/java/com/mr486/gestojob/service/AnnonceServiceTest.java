@@ -13,8 +13,10 @@ import com.mr486.gestojob.dto.AnnonceListe;
 import com.mr486.gestojob.dto.RechercheAnnonceForm;
 import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Annonce;
+import com.mr486.gestojob.model.CleModele;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.Entreprise;
+import com.mr486.gestojob.model.Profil;
 import com.mr486.gestojob.model.Titulaire;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import com.mr486.gestojob.securite.UtilisateurCourant;
@@ -54,6 +56,8 @@ class AnnonceServiceTest {
     @Mock
     private LibelleService libelleService;
     @Mock
+    private ProfilService profilService;
+    @Mock
     private UtilisateurCourant utilisateurCourant;
 
     private AnnonceService annonceService;
@@ -64,7 +68,7 @@ class AnnonceServiceTest {
         // que les tests de construction d'AnnonceListe restent significatifs ;
         // ses dépendances restent mockées.
         AnnonceListeMapper annonceListeMapper =
-                new AnnonceListeMapper(entrepriseService, contactService, libelleService);
+                new AnnonceListeMapper(entrepriseService, contactService, libelleService, profilService);
         annonceService = new AnnonceService(annonceRepository, annonceListeMapper,
                 utilisateurCourant, entrepriseService, contactService);
         ReflectionTestUtils.setField(annonceService, "maxAnnoncesParPage", 10);
@@ -266,7 +270,11 @@ class AnnonceServiceTest {
     @Test
     void annoncesEnAttenteEnvoiEmailPage_construitLesInfos_avecEntrepriseEtContact() {
         Annonce a = Annonce.builder().id(1L).entrepriseId(10).contactId(5L)
-                .typeAnnonce(1).typeContenu(1).poste("Dev").reference("R").statusAnnonce(1).build();
+                .typeAnnonce(1).typeContenu(1).poste("Dev").reference("R").statusAnnonce(1)
+                .titulaire(Titulaire.RENEE).build();
+        Profil profil = Profil.builder().titulaire(Titulaire.RENEE).build();
+        when(profilService.getProfil(Titulaire.RENEE)).thenReturn(profil);
+        when(profilService.libelleContenu(profil, CleModele.CONTENU_MICROSERVICES)).thenReturn("Lettre 2");
         when(annonceRepository.findAllByTitulaireAndStatusAnnonceOrderByDateEnvoiDesc(
                 eq(Titulaire.RENEE), eq(1), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(a)));
@@ -279,7 +287,7 @@ class AnnonceServiceTest {
 
         assertThat(result.getContent()).hasSize(1);
         AnnonceListe liste = result.getContent().get(0);
-        assertThat(liste.getInfo()).contains("ACME").contains("c@acme.fr").contains("MS");
+        assertThat(liste.getInfo()).contains("ACME").contains("c@acme.fr").contains("Lettre 2");
         assertThat(liste.getType()).contains("A");
     }
 
@@ -298,7 +306,10 @@ class AnnonceServiceTest {
     @Test
     void annoncesEnAttenteEnvoiEmailPage_infosSite_siPasDeContact() {
         Annonce a = Annonce.builder().id(2L).entrepriseId(10).contactId(null)
-                .typeAnnonce(0).typeContenu(0).statusAnnonce(2).build();
+                .typeAnnonce(0).typeContenu(0).statusAnnonce(2).titulaire(Titulaire.RENEE).build();
+        Profil profil = Profil.builder().titulaire(Titulaire.RENEE).build();
+        when(profilService.getProfil(Titulaire.RENEE)).thenReturn(profil);
+        when(profilService.libelleContenu(profil, CleModele.CONTENU_GENERAL)).thenReturn("Lettre 1");
         when(annonceRepository.findAllByTitulaireAndStatusAnnonceOrderByDateEnvoiDesc(
                 eq(Titulaire.RENEE), eq(1), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(a)));
@@ -307,7 +318,7 @@ class AnnonceServiceTest {
 
         Page<AnnonceListe> result = annonceService.annoncesEnAttenteEnvoiEmailPage(0);
 
-        assertThat(result.getContent().get(0).getInfo()).contains("site").contains("G");
+        assertThat(result.getContent().get(0).getInfo()).contains("site").contains("Lettre 1");
         assertThat(result.getContent().get(0).getType()).contains("S");
     }
 }

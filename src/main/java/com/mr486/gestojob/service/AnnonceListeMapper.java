@@ -2,11 +2,14 @@ package com.mr486.gestojob.service;
 
 import com.mr486.gestojob.dto.AnnonceListe;
 import com.mr486.gestojob.model.Annonce;
+import com.mr486.gestojob.model.CleModele;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.Entreprise;
+import com.mr486.gestojob.model.Profil;
+import com.mr486.gestojob.model.Titulaire;
 import com.mr486.gestojob.model.TypeAnnonce;
-import com.mr486.gestojob.model.TypeContenu;
 import java.time.format.DateTimeFormatter;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -35,6 +38,7 @@ public class AnnonceListeMapper {
     private final EntrepriseService entrepriseService;
     private final ContactService contactService;
     private final LibelleService libelleService;
+    private final ProfilService profilService;
 
     /**
      * Convertit une page d'annonces en page de DTO en chargeant les entreprises
@@ -68,15 +72,26 @@ public class AnnonceListeMapper {
         Map<Integer, Entreprise> entreprises = entrepriseService.getEntreprisesByIds(entrepriseIds);
         Map<Long, Contact> contacts = contactService.getContactsByIds(contactIds);
 
+        Map<Titulaire, Profil> profils = chargerProfils(annonces);
+
         return annonces.stream()
-                .map(a -> fromEntity(a, entreprises, contacts))
+                .map(a -> fromEntity(a, entreprises, contacts, profils))
                 .collect(Collectors.toList());
     }
 
-    // Convertit une annonce en DTO d'affichage en résolvant l'entreprise et le
-    // contact depuis les maps pré-chargées, et en formatant date, type et statut.
+    // Charge une seule fois par lot le profil de chaque titulaire présent (au plus deux),
+    // pour afficher les libellés de lettres propres au titulaire sans requête par ligne.
+    private Map<Titulaire, Profil> chargerProfils(List<Annonce> annonces) {
+        Map<Titulaire, Profil> profils = new EnumMap<>(Titulaire.class);
+        annonces.stream().map(Annonce::getTitulaire).filter(Objects::nonNull).distinct()
+                .forEach(t -> profils.put(t, profilService.getProfil(t)));
+        return profils;
+    }
+
+    // Convertit une annonce en DTO d'affichage en résolvant l'entreprise, le
+    // contact et le profil depuis les maps pré-chargées, et en formatant date, type et statut.
     private AnnonceListe fromEntity(Annonce annonce, Map<Integer, Entreprise> entreprises,
-                                    Map<Long, Contact> contacts) {
+                                    Map<Long, Contact> contacts, Map<Titulaire, Profil> profils) {
         Entreprise entreprise = entreprises.get(annonce.getEntrepriseId());
         Contact contact = annonce.getContactId() != null ? contacts.get(annonce.getContactId()) : null;
 
@@ -89,14 +104,15 @@ public class AnnonceListeMapper {
         liste.setType(TypeAnnonce.libelleCourt(annonce.getTypeAnnonce()));
         liste.setLibelle(libelleService.construitLibelle(annonce));
         liste.setStatus(annonce.getStatusAnnonceString());
-        liste.setInfo(getInfos(annonce, entreprise, contact));
+        liste.setInfo(getInfos(annonce, entreprise, contact, profils));
         liste.setEntrepriseId(annonce.getEntrepriseId());
         return liste;
     }
 
     // Construit la chaîne d'information affichée dans la liste (entreprise, canal
-    // de contact email ou site, et étiquette du type de contenu via TypeContenu).
-    private String getInfos(Annonce annonce, Entreprise entreprise, Contact contact) {
+    // de contact email ou site, et libellé de la lettre dans le profil du titulaire).
+    private String getInfos(Annonce annonce, Entreprise entreprise, Contact contact,
+                            Map<Titulaire, Profil> profils) {
         String result = "🏢";
         result += (entreprise != null ? entreprise.getNom() : "?");
         if (annonce.getContactId() != null && contact != null) {
@@ -104,7 +120,11 @@ public class AnnonceListeMapper {
         } else {
             result += " 🌐site";
         }
-        result += " " + TypeContenu.libelleCourt(annonce.getTypeContenu());
+        Profil profil = annonce.getTitulaire() == null ? null : profils.get(annonce.getTitulaire());
+        if (profil != null) {
+            result += " " + profilService.libelleContenu(profil,
+                    CleModele.pourTypeContenu(annonce.getTypeContenu()));
+        }
         return result;
     }
 }
