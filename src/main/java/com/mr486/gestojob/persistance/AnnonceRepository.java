@@ -19,6 +19,9 @@ import org.springframework.stereotype.Repository;
  * <p>Fournit les opérations de persistance (recherche, mise à jour de statut,
  * pagination et recherche plein texte) relatives aux annonces de candidature.
  */
+// Un repository Spring Data déclare naturellement beaucoup de méthodes de requête
+// (une par besoin de lecture ou de mise à jour) : les scinder n'aurait pas de sens.
+@SuppressWarnings("PMD.TooManyMethods")
 @Repository
 public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
 
@@ -68,7 +71,7 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
     /**
      * Met à jour le statut d'une annonce identifiée par son identifiant.
      *
-     * <p><b>Exemple :</b> updateStatusAnnonce(RENEE, 42L, 2) passe l'annonce 42 au statut archivé sans toucher à sa date d'envoi.</p>
+     * <p><b>Exemple :</b> updateStatusAnnonce(RENEE, 42L, 6) passe l'annonce 42 au statut archivé (6) sans toucher à sa date d'envoi.</p>
      *
      * @param titulaire     le titulaire propriétaire de l'annonce
      * @param annonceId     l'identifiant de l'annonce à modifier
@@ -86,7 +89,7 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
      * Met à jour à la fois le statut et la date d'envoi d'une annonce
      * identifiée par son identifiant.
      *
-     * <p><b>Exemple :</b> updateStatusAnnonceEtDateEnvoi(RENEE, 42L, 1, now()) marque l'annonce 42 comme envoyée et enregistre l'instant de l'envoi.</p>
+     * <p><b>Exemple :</b> updateStatusAnnonceEtDateEnvoi(RENEE, 42L, 2, now()) marque l'annonce 42 comme envoyée (statut 2, en cours) et enregistre l'instant de l'envoi.</p>
      *
      * @param titulaire     le titulaire propriétaire de l'annonce
      * @param annonceId     l'identifiant de l'annonce à modifier
@@ -106,7 +109,7 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
      * Récupère toutes les annonces d'un titulaire pour une entreprise donnée, triées par statut
      * d'annonce dans l'ordre croissant.
      *
-     * <p><b>Exemple :</b> findAllByTitulaireAndEntrepriseIdOrderByStatusAnnonceAsc(RENEE, 7) renvoie les annonces de l'entreprise 7, en plaçant d'abord celles au statut le plus bas (0, puis 1, puis 2).</p>
+     * <p><b>Exemple :</b> findAllByTitulaireAndEntrepriseIdOrderByStatusAnnonceAsc(RENEE, 7) renvoie les annonces de l'entreprise 7, en plaçant d'abord celles au statut le plus bas (1 boîte d'envoi, puis 2 en cours, puis 3 dépassé…).</p>
      *
      * @param titulaire    le titulaire concerné
      * @param entrepriseId l'identifiant de l'entreprise concernée
@@ -118,7 +121,7 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
      * Récupère, de façon paginée, les annonces possédant le statut indiqué,
      * triées par date d'envoi décroissante.
      *
-     * <p><b>Exemple :</b> findAllByTitulaireAndStatusAnnonceOrderByDateEnvoiDesc(RENEE, 1, PageRequest.of(0, 10)) renvoie les 10 annonces envoyées les plus récentes en premier.</p>
+     * <p><b>Exemple :</b> findAllByTitulaireAndStatusAnnonceOrderByDateEnvoiDesc(RENEE, 2, PageRequest.of(0, 10)) renvoie les 10 annonces en cours (envoyées) les plus récentes en premier.</p>
      *
      * @param titulaire     le titulaire concerné
      * @param statusAnnonce le statut d'annonce recherché

@@ -26,6 +26,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+// Une méthode de test par comportement du service : scinder la classe en plusieurs fichiers
+// éparpillerait les mêmes mocks et le même contexte sans rien clarifier.
+@SuppressWarnings("PMD.TooManyMethods")
 @ExtendWith(MockitoExtension.class)
 class EntrepriseServiceTest {
 

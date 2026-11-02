@@ -38,6 +38,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
+// Une méthode de test par comportement du service : scinder la classe en plusieurs fichiers
+// éparpillerait les mêmes mocks et le même contexte sans rien clarifier.
+@SuppressWarnings("PMD.TooManyMethods")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class AnnonceServiceTest {

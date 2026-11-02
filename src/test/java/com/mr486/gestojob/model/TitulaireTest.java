@@ -12,4 +12,11 @@ class TitulaireTest {
         assertEquals("Renée", Titulaire.RENEE.getAffichage(), "affichage de RENEE");
         assertEquals("Laurent", Titulaire.LAURENT.getAffichage(), "affichage de LAURENT");
     }
+
+    // Ces noms sont stockés tels quels en base (colonne texte) : les renommer casserait les données.
+    @Test
+    void name_estFigePourLaBase() {
+        assertEquals("LAURENT", Titulaire.LAURENT.name(), "valeur stockée de LAURENT");
+        assertEquals("RENEE", Titulaire.RENEE.name(), "valeur stockée de RENEE");
+    }
 }
