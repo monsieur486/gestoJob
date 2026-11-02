@@ -74,19 +74,19 @@
             <div class="col-12 col-md-1" th:text="${a.status}">Statut</div>
             <div class="col-12 col-md-1">
                 <div class="d-flex gap-2 justify-content-md-end">
-                    <form method="post" th:action="@{/annonces/{id}/negatif(id=${a.id})}"
+                    <form method="post" sec:authorize="hasRole('TITULAIRE')" th:action="@{/annonces/{id}/negatif(id=${a.id})}"
                           th:if="${a.status == '🟠 En cours'}">
                         <button class="btn btn-outline-danger btn-sm" type="submit">
                             Négatif
                         </button>
                     </form>
-                    <form method="post" th:action="@{/annonces/{id}/positif(id=${a.id})}"
+                    <form method="post" sec:authorize="hasRole('TITULAIRE')" th:action="@{/annonces/{id}/positif(id=${a.id})}"
                           th:if="${a.status == '🟠 En cours'}">
                         <button class="btn btn-outline-success btn-sm" type="submit">
                             Positif
                         </button>
                     </form>
-                    <form class="m-0" method="post" th:action="@{/annonces/{id}/supprimer(id=${a.id})}">
+                    <form class="m-0" method="post" sec:authorize="hasRole('TITULAIRE')" th:action="@{/annonces/{id}/supprimer(id=${a.id})}">
                         <button class="btn btn-outline-danger btn-sm"
                                 onclick="demanderSuppressionAnnonce(this)"
                                 title="Supprimer l'annonce"

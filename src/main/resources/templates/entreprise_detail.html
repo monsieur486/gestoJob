@@ -18,6 +18,7 @@
         </div>
         <div th:text="'🏠 ' + ${entreprise.ville}">Ville</div>
     </div>
+    <div sec:authorize="hasRole('TITULAIRE')">
     <hr/>
     <h4>👤 Ajouter un contact</h4>
 
@@ -63,6 +64,7 @@
             </div>
         </div>
     </form>
+    </div>
 
     <h4>👥 Contacts</h4>
     <div class="text-muted mb-3" th:if="${#lists.isEmpty(contacts)}">Aucun contact.</div>
@@ -77,7 +79,7 @@
             </span>
             <span class="d-flex align-items-center gap-3">
                 <span class="text-muted small" th:text="${c.messageDePolitesse}">politesse</span>
-                <form class="m-0" method="post"
+                <form class="m-0" method="post" sec:authorize="hasRole('TITULAIRE')"
                       th:action="@{/entreprises/{eid}/contacts/{cid}/supprimer(eid=${entreprise.id}, cid=${c.id})}">
                     <button class="btn btn-outline-danger btn-sm" title="Supprimer le contact" type="submit">🗑️</button>
                 </form>
@@ -103,12 +105,12 @@
         <div class="col-12 col-md-1" th:text="${a.status}">Statut</div>
         <div class="col-12 col-md-2">
             <div class="d-flex gap-2 justify-content-md-end">
-                <form method="post" th:action="@{/annonces/{id}/negatif(id=${a.id})}" th:if="${a.status == '🟠 En cours'}">
+                <form method="post" sec:authorize="hasRole('TITULAIRE')" th:action="@{/annonces/{id}/negatif(id=${a.id})}" th:if="${a.status == '🟠 En cours'}">
                     <button class="btn btn-outline-danger btn-sm" type="submit">
                         Négatif
                     </button>
                 </form>
-                <form method="post" th:action="@{/annonces/{id}/positif(id=${a.id})}" th:if="${a.status == '🟠 En cours'}">
+                <form method="post" sec:authorize="hasRole('TITULAIRE')" th:action="@{/annonces/{id}/positif(id=${a.id})}" th:if="${a.status == '🟠 En cours'}">
                     <button class="btn btn-outline-success btn-sm" type="submit">
                         Positif
                     </button>
@@ -119,7 +121,7 @@
                         onclick="copyAnnonceTxtToClipboard(this)">
                     Txt
                 </button>
-                <form class="m-0" method="post"
+                <form class="m-0" method="post" sec:authorize="hasRole('TITULAIRE')"
                       th:action="@{/entreprises/{eid}/annonces/{aid}/supprimer(eid=${entreprise.id}, aid=${a.id})}">
                     <button class="btn btn-outline-danger btn-sm"
                             onclick="demanderSuppressionAnnonce(this)"
@@ -130,6 +132,7 @@
         </div>
     </div>
 
+    <div sec:authorize="hasRole('TITULAIRE')">
     <hr/>
 
     <h4>📝 Ajouter une annonce</h4>
@@ -151,9 +154,9 @@
             <div class="col-12 col-md-1">
                 <label class="form-label" for="contenuSelect">Contenu</label>
                 <select class="form-select" id="contenuSelect" th:field="*{contenuId}">
-                    <option value="2">🤖 IA</option>
-                    <option value="0">Général</option>
-                    <option value="1">Micros.</option>
+                    <option value="2" th:text="${profil.libelleIa}">🤖 IA</option>
+                    <option value="0" th:text="${profil.libelleGeneral}">Général</option>
+                    <option value="1" th:text="${profil.libelleMicroservices}">Micros.</option>
                 </select>
             </div>
 
@@ -188,6 +191,7 @@
             </div>
         </div>
     </form>
+    </div>
 
 </div>
 

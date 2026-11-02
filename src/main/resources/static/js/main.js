@@ -120,9 +120,12 @@ async function copyAnnonceTxtToClipboard(buttonEl) {
 // Le HTML de chaque éditeur est recopié dans le champ caché ciblé à la soumission.
 if (typeof Quill !== 'undefined') {
     document.querySelectorAll('.editeur-modele').forEach(function (zone) {
+        // Lecteur (France Travail) : éditeur en lecture seule, sans barre d'outils.
+        var lectureSeule = zone.getAttribute('data-lecture-seule') === 'true';
         var editeur = new Quill(zone, {
             theme: 'snow',
-            modules: {toolbar: [['bold', 'italic', 'underline'], [{list: 'bullet'}]]}
+            readOnly: lectureSeule,
+            modules: {toolbar: lectureSeule ? false : [['bold', 'italic', 'underline'], [{list: 'bullet'}]]}
         });
         var champ = document.getElementById(zone.getAttribute('data-cible'));
         var form = zone.closest('form');

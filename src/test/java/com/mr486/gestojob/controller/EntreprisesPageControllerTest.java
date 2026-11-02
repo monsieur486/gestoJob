@@ -11,10 +11,12 @@ import com.mr486.gestojob.dto.AnnonceForm;
 import com.mr486.gestojob.dto.EntrepriseForm;
 import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Entreprise;
+import com.mr486.gestojob.model.Profil;
 import com.mr486.gestojob.service.AnnonceService;
 import com.mr486.gestojob.service.ContactService;
 import com.mr486.gestojob.service.EntrepriseRechercheService;
 import com.mr486.gestojob.service.EntrepriseService;
+import com.mr486.gestojob.service.ProfilService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,6 +46,8 @@ class EntreprisesPageControllerTest {
     private ContactService contactService;
     @Mock
     private AnnonceService annonceService;
+    @Mock
+    private ProfilService profilService;
     @Mock
     private BindingResult bindingResult;
 
@@ -193,5 +197,16 @@ class EntreprisesPageControllerTest {
         assertThat(view).isEqualTo("redirect:/entreprises/8");
         assertThat(redirectAttributes.getFlashAttributes().get("errorMessage"))
                 .asString().contains("suppression impossible");
+    }
+
+    @Test
+    void detail_ajouteLeProfilAuModele() {
+        Profil profil = new Profil();
+        when(profilService.getProfilCourant()).thenReturn(profil);
+        Model model = new ExtendedModelMap();
+
+        controller.detailEntrepriseView(8, model);
+
+        assertThat(model.getAttribute("profil")).isSameAs(profil);
     }
 }
