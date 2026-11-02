@@ -79,6 +79,8 @@
         <div class="card-header" th:text="${modele.libelleUi}">Modèle</div>
         <div class="card-body">
             <form method="post" th:action="@{'/parametres/modeles/' + ${modele.cle}}">
+                <!-- Lecteur : champs désactivés, donc non soumissibles (même par Entrée). -->
+                <fieldset th:disabled="${#authorization.expression('hasRole(''LECTEUR'')')}">
                 <!-- Contenu HTML : éditeur Quill + champ caché rempli à la soumission -->
                 <div th:if="${modele.html}">
                     <div class="editeur-modele" th:attr="data-cible='champ_' + ${modele.cle}, data-lecture-seule=${#authorization.expression('hasRole(''LECTEUR'')')}"
@@ -91,6 +93,7 @@
                     <input type="text" class="form-control" name="contenu" th:value="${modele.contenu}"
                            th:readonly="${#authorization.expression('hasRole(''LECTEUR'')')}"/>
                 </div>
+                </fieldset>
                 <small class="text-muted">Variables : <span th:text="${modele.variables}"></span></small>
                 <div class="mt-2" sec:authorize="hasRole('TITULAIRE')">
                     <button type="submit" class="btn btn-primary btn-sm">Enregistrer</button>
