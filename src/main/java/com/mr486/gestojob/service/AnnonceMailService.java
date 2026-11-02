@@ -139,6 +139,7 @@ public class AnnonceMailService {
                 : contact.getMessageDePolitesse();
 
         return contenuService.getHtmlContenu(
+                annonce.getTitulaire(),
                 annonce.getPoste(),
                 annonce.getTypeContenu(),
                 messageDePolitesse

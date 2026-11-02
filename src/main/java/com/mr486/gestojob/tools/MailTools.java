@@ -1,6 +1,5 @@
 package com.mr486.gestojob.tools;
 
-import com.mr486.gestojob.configuration.ApplicationConfiguration;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.io.UnsupportedEncodingException;
@@ -27,6 +26,9 @@ public class MailTools implements Mailer {
 
     private final JavaMailSender mailSender;
 
+    // provisoire — tâche 7 : le nom d'expéditeur viendra du profil du titulaire.
+    private static final String NOM_EXPEDITEUR_PROVISOIRE = "GestoJob";
+
     @Value("${spring.mail.username}")
     private String mailNotificationSender;
 
@@ -48,7 +50,7 @@ public class MailTools implements Mailer {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
             // expéditeur
-            helper.setFrom(mailNotificationSender, ApplicationConfiguration.DEFAULT_EMAIL_FROM);
+            helper.setFrom(mailNotificationSender, NOM_EXPEDITEUR_PROVISOIRE);
 
             helper.setTo(emailDestinataire);
             helper.setSubject(libelle);

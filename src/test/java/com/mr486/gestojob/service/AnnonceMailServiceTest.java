@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.Contact;
+import com.mr486.gestojob.model.Titulaire;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import com.mr486.gestojob.tools.Mailer;
 import java.time.OffsetDateTime;
@@ -60,7 +61,7 @@ class AnnonceMailServiceTest {
     void sendDirectEmail_marqueEnvoye_siSucces() {
         Annonce a = annonce(1L, 5L, "ok@exemple.fr");
         when(annonceRepository.findById(1L)).thenReturn(Optional.of(a));
-        when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
+        when(contenuService.getHtmlContenu(any(), any(), anyInt(), any())).thenReturn("<p>html</p>");
         when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
         doNothing().when(mailer).sendHtmlMail(any(), any(), any());
 
@@ -73,7 +74,7 @@ class AnnonceMailServiceTest {
     void sendDirectEmail_neMarquePasEnvoye_siEchecMail() {
         Annonce a = annonce(1L, 5L, "ko@exemple.fr");
         when(annonceRepository.findById(1L)).thenReturn(Optional.of(a));
-        when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
+        when(contenuService.getHtmlContenu(any(), any(), anyInt(), any())).thenReturn("<p>html</p>");
         when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
         doThrow(new MailSendException("smtp down")).when(mailer).sendHtmlMail(any(), any(), any());
 
@@ -117,7 +118,7 @@ class AnnonceMailServiceTest {
         when(contactService.getContactsByIds(any())).thenReturn(Map.of(
                 5L, Contact.builder().id(5L).entrepriseId(10).email("ok@exemple.fr").formuleDePolitesse(0).build(),
                 6L, Contact.builder().id(6L).entrepriseId(10).email("ko@exemple.fr").formuleDePolitesse(0).build()));
-        when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
+        when(contenuService.getHtmlContenu(any(), any(), anyInt(), any())).thenReturn("<p>html</p>");
         when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
         doNothing().when(mailer).sendHtmlMail(eq("ok@exemple.fr"), any(), any());
         doThrow(new MailSendException("smtp down"))
@@ -140,7 +141,7 @@ class AnnonceMailServiceTest {
         when(contactService.getContactsByIds(any())).thenReturn(Map.of(
                 5L, Contact.builder().id(5L).entrepriseId(10).email("a@x.fr").formuleDePolitesse(0).build(),
                 6L, Contact.builder().id(6L).entrepriseId(10).email("b@x.fr").formuleDePolitesse(0).build()));
-        when(contenuService.getHtmlContenu(any(), anyInt(), any())).thenReturn("<p>html</p>");
+        when(contenuService.getHtmlContenu(any(), any(), anyInt(), any())).thenReturn("<p>html</p>");
         when(libelleService.construitLibelle(org.mockito.ArgumentMatchers.any())).thenReturn("objet de test");
         doNothing().when(mailer).sendHtmlMail(any(), any(), any());
 
@@ -154,8 +155,10 @@ class AnnonceMailServiceTest {
 
     @Test
     void getHtmlContent_utiliseFormuleGenerique_siPasDeContact() {
-        Annonce a = Annonce.builder().id(1L).contactId(null).poste("Dev").typeContenu(0).build();
-        when(contenuService.getHtmlContenu("Dev", 0, "Madame, Monsieur,")).thenReturn("HTML");
+        Annonce a = Annonce.builder().id(1L).contactId(null).poste("Dev")
+                .titulaire(Titulaire.RENEE).typeContenu(0).build();
+        when(contenuService.getHtmlContenu(Titulaire.RENEE, "Dev", 0, "Madame, Monsieur,"))
+                .thenReturn("HTML");
 
         assertThat(annonceMailService.getHtmlContent(a)).isEqualTo("HTML");
     }

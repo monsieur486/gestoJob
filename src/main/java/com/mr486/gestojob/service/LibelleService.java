@@ -1,6 +1,5 @@
 package com.mr486.gestojob.service;
 
-import com.mr486.gestojob.configuration.ApplicationConfiguration;
 import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.CleModele;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Service;
 public class LibelleService {
 
     private final ModeleEmailService modeleEmailService;
+    private final ProfilService profilService;
 
     /**
      * Construit le libellé d'une annonce.
@@ -30,9 +30,9 @@ public class LibelleService {
      */
     public String construitLibelle(Annonce annonce) {
         CleModele cle = CleModele.pourTypeAnnonce(annonce.getTypeAnnonce());
-        return modeleEmailService.getContenu(cle.name())
+        return modeleEmailService.getContenu(annonce.getTitulaire(), cle.name())
                 .replace("{{REFERENCE}}", valeur(annonce.getReference()))
-                .replace("{{NOM}}", ApplicationConfiguration.CANDIDAT_NOM)
+                .replace("{{NOM}}", profilService.getProfil(annonce.getTitulaire()).getCandidatNom())
                 .replace("{{POSTE}}", valeur(annonce.getPoste()));
     }
 

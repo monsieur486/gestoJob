@@ -48,7 +48,8 @@ public class AnnonceTexteService {
         String result = libelleService.construitLibelle(annonce) + "\n\n";
         String messageDePolitesse = messageDePolitesse(annonce);
 
-        result += contenuService.getTextContenu(annonce.getPoste(), annonce.getTypeContenu(), messageDePolitesse);
+        result += contenuService.getTextContenu(
+                annonce.getTitulaire(), annonce.getPoste(), annonce.getTypeContenu(), messageDePolitesse);
 
         return result;
     }

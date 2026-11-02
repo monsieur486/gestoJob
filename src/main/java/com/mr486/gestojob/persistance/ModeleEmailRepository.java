@@ -1,6 +1,7 @@
 package com.mr486.gestojob.persistance;
 
 import com.mr486.gestojob.model.ModeleEmail;
+import com.mr486.gestojob.model.Titulaire;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -10,13 +11,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ModeleEmailRepository extends JpaRepository<ModeleEmail, Long> {
 
     /**
-     * Recherche un modèle par sa clé.
+     * Recherche le modèle d'un titulaire par sa clé.
      *
-     * <p><b>Exemple :</b> {@code findByCle("CONTENU_IA")} retourne le modèle IA s'il
-     * existe, sinon un Optional vide.</p>
+     * <p><b>Exemple :</b> {@code findByTitulaireAndCle(RENEE, "CONTENU_IA")} retourne le
+     * modèle IA de Renée s'il existe, sinon un Optional vide.</p>
      *
-     * @param cle clé stable du modèle
+     * @param titulaire propriétaire du modèle
+     * @param cle       clé stable du modèle
      * @return le modèle correspondant, s'il existe
      */
-    Optional<ModeleEmail> findByCle(String cle);
+    Optional<ModeleEmail> findByTitulaireAndCle(Titulaire titulaire, String cle);
 }
