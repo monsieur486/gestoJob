@@ -2,8 +2,11 @@
    GestoJob — thème « command deck » : violet profond, néons multi-teintes,
    typographie dev (Space Grotesk / Inter / JetBrains Mono).
    Point unique de style — chargé sur toutes les pages via le fragment header.
+   Deux modes : sombre (défaut) et jour, choisis par l'attribut data-bs-theme
+   de <html> (posé par le fragment header, basculé par js/theme.js).
    ===================================================================== */
 
+/* Palette sombre : valeurs par défaut. */
 :root {
     --gj-bg: #0E0B1E;
     --gj-bg-2: #120D26;
@@ -21,13 +24,45 @@
     --gj-coral: #FF5C72;
 
     --gj-grad: linear-gradient(90deg, #FF4D9D, #A855F7, #22D3EE);
+
+    --gj-emphasis: #FFFFFF;
+    --gj-link-hover: #67E8F9;
+    --gj-nav-bg: rgba(18, 13, 38, .72);
+    --gj-placeholder: #6F66A0;
+    --gj-disabled: #5B5390;
 }
 
-/* On reprend les variables Bootstrap (mode sombre) avec notre palette vive. */
-[data-bs-theme="dark"] {
+/* Palette jour : fonds clairs, néons assombris pour rester lisibles sur blanc.
+   Le dégradé des boutons et de la marque reste le même dans les deux modes. */
+[data-bs-theme="light"] {
+    --gj-bg: #F6F4FD;
+    --gj-bg-2: #FFFFFF;
+    --gj-surface: #FFFFFF;
+    --gj-surface-2: #EEE9FC;
+    --gj-border: #DCD4F3;
+    --gj-text: #1E1838;
+    --gj-muted: #615A8A;
+
+    --gj-magenta: #D02F7A;
+    --gj-violet: #7C3AED;
+    --gj-cyan: #0E7490;
+    --gj-green: #047857;
+    --gj-amber: #B45309;
+    --gj-coral: #D42245;
+
+    --gj-emphasis: #0B0820;
+    --gj-link-hover: #155E75;
+    --gj-nav-bg: rgba(255, 255, 255, .78);
+    --gj-placeholder: #9A93BC;
+    --gj-disabled: #A9A2C8;
+}
+
+/* On reprend les variables Bootstrap (modes sombre et jour) avec notre palette. */
+[data-bs-theme="dark"],
+[data-bs-theme="light"] {
     --bs-body-bg: var(--gj-bg);
     --bs-body-color: var(--gj-text);
-    --bs-emphasis-color: #FFFFFF;
+    --bs-emphasis-color: var(--gj-emphasis);
     --bs-secondary-color: var(--gj-muted);
     --bs-tertiary-color: var(--gj-muted);
     --bs-border-color: var(--gj-border);
@@ -35,10 +70,18 @@
     --bs-primary-rgb: 255, 77, 157;
     --bs-link-color: var(--gj-cyan);
     --bs-link-color-rgb: 34, 211, 238;
-    --bs-link-hover-color: #67E8F9;
+    --bs-link-hover-color: var(--gj-link-hover);
     --bs-success-rgb: 52, 229, 161;
     --bs-danger-rgb: 255, 92, 114;
     --bs-warning-rgb: 255, 176, 32;
+}
+
+[data-bs-theme="light"] {
+    --bs-primary-rgb: 208, 47, 122;
+    --bs-link-color-rgb: 14, 116, 144;
+    --bs-success-rgb: 4, 120, 87;
+    --bs-danger-rgb: 212, 34, 69;
+    --bs-warning-rgb: 180, 83, 9;
 }
 
 /* ----- Base & ambiance ----- */
@@ -72,7 +115,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ----- Navbar / command bar ----- */
 .navbar {
-    background: rgba(18, 13, 38, .72) !important;
+    background: var(--gj-nav-bg) !important;
     backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--gj-border);
     padding: .6rem 1rem;
@@ -257,7 +300,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: .6rem .85rem;
 }
 
-.form-control::placeholder { color: #6F66A0; }
+.form-control::placeholder { color: var(--gj-placeholder); }
 
 .form-control:focus, .form-select:focus {
     background-color: var(--gj-bg-2);
@@ -289,6 +332,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .toast.text-bg-dark {
     background-color: var(--gj-surface-2) !important;
+    color: var(--gj-text) !important;
     border: 1px solid var(--gj-border);
     border-radius: 14px;
 }
@@ -311,7 +355,13 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
     box-shadow: 0 6px 16px rgba(168, 85, 247, .4);
 }
-.page-item.disabled .page-link { background-color: var(--gj-bg-2); color: #5B5390; }
+.page-item.disabled .page-link { background-color: var(--gj-bg-2); color: var(--gj-disabled); }
+
+/* Croix de fermeture du toast : blanche sur fond sombre, sombre sur fond clair. */
+[data-bs-theme="light"] .btn-close-white { filter: none; }
+
+/* ----- Bascule jour / sombre ----- */
+#gj-theme-bascule { white-space: nowrap; }
 
 /* ----- Liens ----- */
 a { text-decoration: none; }

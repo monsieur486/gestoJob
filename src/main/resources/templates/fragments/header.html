@@ -4,8 +4,19 @@
 <div th:fragment="header-css">
     <meta charset="UTF-8"/>
     <meta content="width=device-width, initial-scale=1" name="viewport">
-    <!-- Active le mode sombre Bootstrap avant le rendu (évite tout flash clair). -->
-    <script>document.documentElement.setAttribute('data-bs-theme', 'dark');</script>
+    <!-- Applique le mode mémorisé (sombre par défaut) avant le rendu : aucun flash
+         de l'autre thème. Stockage inaccessible (navigation privée…) : sombre. -->
+    <script>
+        (function () {
+            var theme = 'dark';
+            try {
+                var memorise = localStorage.getItem('gj-theme');
+                if (memorise === 'light' || memorise === 'dark') theme = memorise;
+            } catch (e) { /* stockage indisponible : on garde le sombre */ }
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+    </script>
+    <script defer th:src="@{/js/theme.js}"></script>
     <link href="https://fonts.googleapis.com" rel="preconnect">
     <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
     <link rel="stylesheet"
