@@ -51,7 +51,8 @@ L'application sert deux candidats, dont les données sont **totalement cloisonn�
   (`MAIL_LAURENT_*`, obligatoire), Yahoo pour Renée (`MAIL_RENEE_*`, facultatif : sans eux, les
   annonces de Renée restent dans la file d'attente et l'envoi affiche une erreur explicite). Les
   deux comptes exigent un **mot de passe d'application** ; l'hôte SMTP de chaque titulaire est
-  réglé dans `application.yml` (`gestojob.mail.<titulaire>.host|port`).
+  réglé dans `application.yml` (`gestojob.mail.<titulaire>.host|port`). Obtenir ces mots de passe :
+  voir [`docs/api-mail.md`](docs/api-mail.md).
 
 ## Build & tests
 
