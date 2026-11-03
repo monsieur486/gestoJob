@@ -38,3 +38,6 @@ build/
 
 # Journal local des échecs de connexion (production : volume monté)
 logs/
+
+# Captures d'écran de travail (non versionnées)
+screens/
