@@ -113,8 +113,10 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/css/**", "/js/**", "/favicon.ico").permitAll()
-                        // Formulaires de création : GET, mais réservés aux titulaires.
-                        .requestMatchers("/entreprises/ajout", "/entreprises/*/contacts/ajout")
+                        // Formulaires de création et Paramètres (profil, modèles) : GET, mais
+                        // réservés aux titulaires ; les comptes France Travail n'y ont pas accès.
+                        .requestMatchers("/entreprises/ajout", "/entreprises/*/contacts/ajout",
+                                "/parametres", "/parametres/**")
                         .hasRole("TITULAIRE")
                         // Consultation ouverte à tout compte connecté, écriture aux titulaires.
                         .requestMatchers(HttpMethod.GET, "/**").authenticated()

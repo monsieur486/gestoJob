@@ -109,6 +109,13 @@ class SecurityConfigTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void lecteur_parametresRefuses_403() throws Exception {
+        // Les comptes France Travail n'ont rien à faire dans le profil ni les modèles.
+        mvc.perform(get("/parametres").with(user("ft01").roles("LECTEUR")))
+                .andExpect(status().isForbidden());
+    }
+
     @ParameterizedTest
     @CsvSource({
             "laurent-test,ROLE_TITULAIRE,DONNEES_LAURENT",

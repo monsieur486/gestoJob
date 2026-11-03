@@ -43,7 +43,8 @@ L'application sert deux candidats, dont les données sont **totalement cloisonn�
 
 - La page d'accueil exige une connexion ; seuls `/login` et les ressources statiques sont publics.
 - Les comptes lecteurs servent à montrer les démarches à un conseiller France Travail : toute requête
-  de modification est refusée côté serveur (403), pas seulement masquée.
+  de modification est refusée côté serveur (403), pas seulement masquée. La page **Paramètres**
+  (profil et modèles d'email) leur est fermée.
 - Chaque titulaire règle dans **Paramètres** son nom de candidat, le libellé et l'intitulé de poste par
   défaut de ses trois types de lettre, ainsi que ses modèles d'email.
 - Chaque titulaire envoie ses courriels depuis **sa propre adresse** : Gmail pour Laurent

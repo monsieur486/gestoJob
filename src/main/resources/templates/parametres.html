@@ -1,6 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="fr" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>GestoJob</title>
     <div th:replace="~{fragments/header :: header-css}"></div>
@@ -25,50 +24,48 @@
         <div class="card-header">Profil du candidat et lettres</div>
         <div class="card-body">
             <form method="post" th:action="@{/parametres/profil}" th:object="${profilForm}">
-                <fieldset th:disabled="${#authorization.expression('hasRole(''LECTEUR'')')}">
-                    <div class="mb-3">
-                        <label class="form-label" for="candidatNom">Nom du candidat</label>
-                        <input class="form-control" id="candidatNom" th:field="*{candidatNom}" type="text"/>
-                        <div class="text-danger" th:errors="*{candidatNom}"></div>
+                <div class="mb-3">
+                    <label class="form-label" for="candidatNom">Nom du candidat</label>
+                    <input class="form-control" id="candidatNom" th:field="*{candidatNom}" type="text"/>
+                    <div class="text-danger" th:errors="*{candidatNom}"></div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="libelleGeneral">Libellé — Lettre 1</label>
+                        <input class="form-control" id="libelleGeneral" th:field="*{libelleGeneral}" type="text"/>
+                        <div class="text-danger" th:errors="*{libelleGeneral}"></div>
                     </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-12 col-md-4">
-                            <label class="form-label" for="libelleGeneral">Libellé — Lettre 1</label>
-                            <input class="form-control" id="libelleGeneral" th:field="*{libelleGeneral}" type="text"/>
-                            <div class="text-danger" th:errors="*{libelleGeneral}"></div>
-                        </div>
-                        <div class="col-12 col-md-8">
-                            <label class="form-label" for="posteGeneral">Poste par défaut — Lettre 1</label>
-                            <input class="form-control" id="posteGeneral" th:field="*{posteGeneral}" type="text"/>
-                            <div class="text-danger" th:errors="*{posteGeneral}"></div>
-                        </div>
+                    <div class="col-12 col-md-8">
+                        <label class="form-label" for="posteGeneral">Poste par défaut — Lettre 1</label>
+                        <input class="form-control" id="posteGeneral" th:field="*{posteGeneral}" type="text"/>
+                        <div class="text-danger" th:errors="*{posteGeneral}"></div>
                     </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-12 col-md-4">
-                            <label class="form-label" for="libelleMicroservices">Libellé — Lettre 2</label>
-                            <input class="form-control" id="libelleMicroservices" th:field="*{libelleMicroservices}" type="text"/>
-                            <div class="text-danger" th:errors="*{libelleMicroservices}"></div>
-                        </div>
-                        <div class="col-12 col-md-8">
-                            <label class="form-label" for="posteMicroservices">Poste par défaut — Lettre 2</label>
-                            <input class="form-control" id="posteMicroservices" th:field="*{posteMicroservices}" type="text"/>
-                            <div class="text-danger" th:errors="*{posteMicroservices}"></div>
-                        </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="libelleMicroservices">Libellé — Lettre 2</label>
+                        <input class="form-control" id="libelleMicroservices" th:field="*{libelleMicroservices}" type="text"/>
+                        <div class="text-danger" th:errors="*{libelleMicroservices}"></div>
                     </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-12 col-md-4">
-                            <label class="form-label" for="libelleIa">Libellé — Lettre 3</label>
-                            <input class="form-control" id="libelleIa" th:field="*{libelleIa}" type="text"/>
-                            <div class="text-danger" th:errors="*{libelleIa}"></div>
-                        </div>
-                        <div class="col-12 col-md-8">
-                            <label class="form-label" for="posteIa">Poste par défaut — Lettre 3</label>
-                            <input class="form-control" id="posteIa" th:field="*{posteIa}" type="text"/>
-                            <div class="text-danger" th:errors="*{posteIa}"></div>
-                        </div>
+                    <div class="col-12 col-md-8">
+                        <label class="form-label" for="posteMicroservices">Poste par défaut — Lettre 2</label>
+                        <input class="form-control" id="posteMicroservices" th:field="*{posteMicroservices}" type="text"/>
+                        <div class="text-danger" th:errors="*{posteMicroservices}"></div>
                     </div>
-                </fieldset>
-                <button type="submit" class="btn btn-primary btn-sm" sec:authorize="hasRole('TITULAIRE')">Enregistrer le profil</button>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="libelleIa">Libellé — Lettre 3</label>
+                        <input class="form-control" id="libelleIa" th:field="*{libelleIa}" type="text"/>
+                        <div class="text-danger" th:errors="*{libelleIa}"></div>
+                    </div>
+                    <div class="col-12 col-md-8">
+                        <label class="form-label" for="posteIa">Poste par défaut — Lettre 3</label>
+                        <input class="form-control" id="posteIa" th:field="*{posteIa}" type="text"/>
+                        <div class="text-danger" th:errors="*{posteIa}"></div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Enregistrer le profil</button>
             </form>
         </div>
     </div>
@@ -79,27 +76,23 @@
         <div class="card-header" th:text="${modele.libelleUi}">Modèle</div>
         <div class="card-body">
             <form method="post" th:action="@{'/parametres/modeles/' + ${modele.cle}}">
-                <!-- Lecteur : champs désactivés, donc non soumissibles (même par Entrée). -->
-                <fieldset th:disabled="${#authorization.expression('hasRole(''LECTEUR'')')}">
                 <!-- Contenu HTML : éditeur Quill + champ caché rempli à la soumission -->
                 <div th:if="${modele.html}">
-                    <div class="editeur-modele" th:attr="data-cible='champ_' + ${modele.cle}, data-lecture-seule=${#authorization.expression('hasRole(''LECTEUR'')')}"
+                    <div class="editeur-modele" th:attr="data-cible='champ_' + ${modele.cle}"
                          th:utext="${modele.contenu}"></div>
                     <input type="hidden" th:id="'champ_' + ${modele.cle}" name="contenu"
                            th:value="${modele.contenu}"/>
                 </div>
                 <!-- Libellé : texte brut -->
                 <div th:unless="${modele.html}">
-                    <input type="text" class="form-control" name="contenu" th:value="${modele.contenu}"
-                           th:readonly="${#authorization.expression('hasRole(''LECTEUR'')')}"/>
+                    <input type="text" class="form-control" name="contenu" th:value="${modele.contenu}"/>
                 </div>
-                </fieldset>
                 <small class="text-muted">Variables : <span th:text="${modele.variables}"></span></small>
-                <div class="mt-2" sec:authorize="hasRole('TITULAIRE')">
+                <div class="mt-2">
                     <button type="submit" class="btn btn-primary btn-sm">Enregistrer</button>
                 </div>
             </form>
-            <form method="post" class="mt-2" sec:authorize="hasRole('TITULAIRE')"
+            <form method="post" class="mt-2"
                   th:action="@{'/parametres/modeles/' + ${modele.cle} + '/reinitialiser'}">
                 <button type="submit" class="btn btn-outline-secondary btn-sm">Réinitialiser</button>
             </form>
