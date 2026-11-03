@@ -78,6 +78,13 @@
             <form method="post" th:action="@{'/parametres/modeles/' + ${modele.cle}}">
                 <!-- Contenu HTML : éditeur Quill + champ caché rempli à la soumission -->
                 <div th:if="${modele.html}">
+                    <!-- Insèrent la variable au curseur ; chacune est exigée à l'enregistrement. -->
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                th:each="variable : ${modele.variablesObligatoires}"
+                                th:attr="data-variable=${variable}"
+                                th:text="'+ ' + ${variable}">+ variable</button>
+                    </div>
                     <div class="editeur-modele" th:attr="data-cible='champ_' + ${modele.cle}"
                          th:utext="${modele.contenu}"></div>
                     <input type="hidden" th:id="'champ_' + ${modele.cle}" name="contenu"

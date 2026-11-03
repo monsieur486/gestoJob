@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -91,7 +92,7 @@ class ModeleEmailServiceTest {
 
     @Test
     void mettreAJour_nettoieLeHtml_etMetAJourLeCacheDuTitulaireCourant() {
-        modeleEmailService.mettreAJour("CONTENU_GENERAL", "<p>{{POLITESSE}}</p><script>x</script>");
+        modeleEmailService.mettreAJour("CONTENU_GENERAL", "<p>{{POLITESSE}} {{POSTE}}</p><script>x</script>");
 
         String courant = modeleEmailService.getContenu(Titulaire.LAURENT, "CONTENU_GENERAL");
         assertThat(courant).contains("{{POLITESSE}}").doesNotContain("script");
@@ -112,6 +113,29 @@ class ModeleEmailServiceTest {
         assertThat(existant.getContenu()).isEqualTo("Réf {{REFERENCE}} - {{NOM}}");
         assertThat(modeleEmailService.getContenu(Titulaire.LAURENT, "LIBELLE_REFERENCE"))
                 .isEqualTo("Réf {{REFERENCE}} - {{NOM}}");
+    }
+
+    @Test
+    void mettreAJour_lettreSansPoste_refuseEtNEnregistreRien() {
+        assertThatThrownBy(() -> modeleEmailService.mettreAJour("CONTENU_GENERAL", "<p>{{POLITESSE}}</p>"))
+                .isInstanceOf(MetierException.class)
+                .hasMessageContaining("{{POSTE}}")
+                .hasMessageNotContaining("{{POLITESSE}}");
+        verify(modeleEmailRepository, never()).save(any(ModeleEmail.class));
+    }
+
+    @Test
+    void mettreAJour_lettreSansAucuneVariable_citeLesDeux() {
+        assertThatThrownBy(() -> modeleEmailService.mettreAJour("CONTENU_IA", "<p>Bonjour</p>"))
+                .isInstanceOf(MetierException.class)
+                .hasMessageContaining("{{POLITESSE}}")
+                .hasMessageContaining("{{POSTE}}");
+    }
+
+    @Test
+    void mettreAJour_lettreNulle_refusee() {
+        assertThatThrownBy(() -> modeleEmailService.mettreAJour("CONTENU_GENERAL", null))
+                .isInstanceOf(MetierException.class);
     }
 
     @Test
@@ -154,5 +178,7 @@ class ModeleEmailServiceTest {
         assertThat(vues).hasSize(5);
         assertThat(vues.get(0).getLibelleUi()).isEqualTo("Lg");
         assertThat(vues.get(4).getLibelleUi()).isEqualTo(CleModele.LIBELLE_SPONTANEE.getLibelleUi());
+        assertThat(vues.get(0).getVariablesObligatoires()).containsExactly("{{POLITESSE}}", "{{POSTE}}");
+        assertThat(vues.get(4).getVariablesObligatoires()).isEmpty();
     }
 }

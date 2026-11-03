@@ -63,4 +63,39 @@ class CleModeleTest {
             }
         }
     }
+
+    @Test
+    void getVariablesObligatoires_lettresExigentPolitesseEtPoste_objetsRien() {
+        assertThat(CleModele.CONTENU_GENERAL.getVariablesObligatoires())
+                .containsExactly("{{POLITESSE}}", "{{POSTE}}");
+        assertThat(CleModele.CONTENU_IA.getVariablesObligatoires())
+                .containsExactly("{{POLITESSE}}", "{{POSTE}}");
+        assertThat(CleModele.LIBELLE_SPONTANEE.getVariablesObligatoires()).isEmpty();
+    }
+
+    @Test
+    void variablesManquantes_citeSeulementLesAbsentes() {
+        assertThat(CleModele.CONTENU_GENERAL.variablesManquantes("<p>{{POLITESSE}}</p>"))
+                .containsExactly("{{POSTE}}");
+        assertThat(CleModele.CONTENU_GENERAL.variablesManquantes("{{POSTE}} {{POLITESSE}}")).isEmpty();
+        assertThat(CleModele.CONTENU_GENERAL.variablesManquantes(null))
+                .containsExactly("{{POLITESSE}}", "{{POSTE}}");
+        assertThat(CleModele.LIBELLE_REFERENCE.variablesManquantes("")).isEmpty();
+    }
+
+    @Test
+    void ressourcesParDefaut_desLettresContiennentLeursVariablesObligatoires() throws IOException {
+        // Sinon « Réinitialiser » restaurerait une lettre que l'enregistrement refuserait.
+        for (Titulaire titulaire : Titulaire.values()) {
+            for (CleModele cle : CleModele.values()) {
+                try (InputStream is = Thread.currentThread().getContextClassLoader()
+                        .getResourceAsStream(cle.getCheminRessource(titulaire))) {
+                    String texte = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                    for (String variable : cle.getVariablesObligatoires()) {
+                        assertThat(texte).as(titulaire + "/" + cle).contains(variable);
+                    }
+                }
+            }
+        }
+    }
 }

@@ -1,5 +1,7 @@
 package com.mr486.gestojob.model;
 
+import java.util.List;
+
 /**
  * Catalogue des modèles d'email éditables : associe chaque clé stable à sa
  * catégorie, son format, son libellé d'affichage, sa ressource par défaut et les
@@ -93,6 +95,35 @@ public enum CleModele {
      */
     public String getVariables() {
         return variables;
+    }
+
+    /**
+     * Retourne les variables qu'un modèle doit contenir pour être enregistré : une
+     * lettre sans formule de politesse ni intitulé de poste partirait incomplète.
+     * Les objets de mail n'en exigent aucune.
+     *
+     * <p><b>Exemple :</b> {@code CONTENU_GENERAL.getVariablesObligatoires()} retourne
+     * {@code ["{{POLITESSE}}", "{{POSTE}}"]} ; {@code LIBELLE_SPONTANEE} une liste vide.</p>
+     *
+     * @return les variables obligatoires, dans l'ordre d'affichage
+     */
+    public List<String> getVariablesObligatoires() {
+        return categorie == Categorie.CONTENU ? List.of("{{POLITESSE}}", "{{POSTE}}") : List.of();
+    }
+
+    /**
+     * Retourne les variables obligatoires absentes d'un contenu.
+     *
+     * <p><b>Exemple :</b> {@code CONTENU_GENERAL.variablesManquantes("<p>{{POLITESSE}}</p>")}
+     * retourne {@code ["{{POSTE}}"]} ; un contenu nul les retourne toutes.</p>
+     *
+     * @param contenu contenu du modèle (peut être nul)
+     * @return les variables manquantes, vide si le contenu est complet
+     */
+    public List<String> variablesManquantes(String contenu) {
+        return getVariablesObligatoires().stream()
+                .filter(variable -> contenu == null || !contenu.contains(variable))
+                .toList();
     }
 
     /**

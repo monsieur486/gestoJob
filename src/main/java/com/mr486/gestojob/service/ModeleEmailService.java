@@ -108,6 +108,7 @@ public class ModeleEmailService {
                     .html(cle.isHtml())
                     .contenu(getContenu(titulaire, cle.name()))
                     .variables(cle.getVariables())
+                    .variablesObligatoires(cle.getVariablesObligatoires())
                     .build());
         }
         return vues;
@@ -122,7 +123,7 @@ public class ModeleEmailService {
      *
      * @param cle         clé du modèle
      * @param contenuBrut contenu soumis par l'utilisateur
-     * @throws MetierException si la clé est inconnue
+     * @throws MetierException si la clé est inconnue ou si une variable obligatoire manque
      */
     @Transactional
     public void mettreAJour(String cle, String contenuBrut) {
@@ -130,6 +131,12 @@ public class ModeleEmailService {
         String contenu = cleModele.isHtml()
                 ? HtmlSanitizer.nettoie(contenuBrut)
                 : (contenuBrut == null ? "" : contenuBrut.trim());
+        List<String> manquantes = cleModele.variablesManquantes(contenu);
+        if (!manquantes.isEmpty()) {
+            log.warn("modèle {} refusé : variables manquantes {}", cle, manquantes);
+            throw new MetierException("Modèle non enregistré : variable(s) manquante(s) "
+                    + String.join(", ", manquantes) + ".");
+        }
         enregistrer(utilisateurCourant.titulaire(), cle, contenu);
         log.info("modèle {} mis à jour", cle);
     }

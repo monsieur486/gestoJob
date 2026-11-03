@@ -117,7 +117,9 @@ async function copyAnnonceTxtToClipboard(buttonEl) {
 
 // Éditeurs Quill des modèles d'email : barre limitée au gras, italique,
 // soulignement et aux listes à puce.
-// Le HTML de chaque éditeur est recopié dans le champ caché ciblé à la soumission.
+// Les boutons [data-variable] du formulaire insèrent leur variable au curseur ;
+// à la soumission, le HTML est recopié dans le champ caché ciblé, et l'envoi est
+// bloqué s'il manque une de ces variables (le serveur fait la même vérification).
 if (typeof Quill !== 'undefined') {
     document.querySelectorAll('.editeur-modele').forEach(function (zone) {
         var editeur = new Quill(zone, {
@@ -126,10 +128,37 @@ if (typeof Quill !== 'undefined') {
         });
         var champ = document.getElementById(zone.getAttribute('data-cible'));
         var form = zone.closest('form');
-        if (form && champ) {
-            form.addEventListener('submit', function () {
-                champ.value = editeur.root.innerHTML;
-            });
+        if (!form || !champ) {
+            return;
         }
+        var boutons = form.querySelectorAll('[data-variable]');
+        boutons.forEach(function (bouton) {
+            bouton.addEventListener('click', function () {
+                var variable = bouton.getAttribute('data-variable');
+                // getSelection(true) redonne le focus à l'éditeur ; une sélection est remplacée.
+                var plage = editeur.getSelection(true);
+                editeur.deleteText(plage.index, plage.length, 'user');
+                editeur.insertText(plage.index, variable, 'user');
+                editeur.setSelection(plage.index + variable.length, 0, 'user');
+            });
+        });
+        form.addEventListener('submit', function (evenement) {
+            champ.value = editeur.root.innerHTML;
+            var manquantes = Array.prototype.map.call(boutons, function (bouton) {
+                return bouton.getAttribute('data-variable');
+            }).filter(function (variable) {
+                return champ.value.indexOf(variable) === -1;
+            });
+            if (manquantes.length > 0) {
+                evenement.preventDefault();
+                var message = 'Variable(s) manquante(s) : ' + manquantes.join(', ')
+                    + '. Le modèle n\'a pas été enregistré.';
+                if (document.getElementById('appToast') && typeof bootstrap !== 'undefined') {
+                    showToast(message, 'danger');
+                } else {
+                    window.alert(message);
+                }
+            }
+        });
     });
 }
