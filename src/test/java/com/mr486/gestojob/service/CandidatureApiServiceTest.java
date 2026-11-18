@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -69,7 +70,7 @@ class CandidatureApiServiceTest {
         service = new CandidatureApiService(entrepriseService, contactService, annonceService,
                 modeleEmailService, profilService, entrepriseRepository, contactRepository,
                 utilisateurCourant, validator);
-        org.mockito.Mockito.lenient().when(utilisateurCourant.titulaire()).thenReturn(Titulaire.LAURENT);
+        lenient().when(utilisateurCourant.titulaire()).thenReturn(Titulaire.LAURENT);
     }
 
     private static Entreprise entreprise(int id, boolean active) {
@@ -209,6 +210,9 @@ class CandidatureApiServiceTest {
                 new ContactDemande(8L, null, null, null))))
                 .isInstanceOf(NoSuchElementException.class);
         verify(annonceService, never()).creerAvecLettre(any(), anyString());
+        verify(entrepriseService, never()).save(any());
+        verify(entrepriseService, never()).setActive(anyInt(), anyBoolean());
+        verify(contactService, never()).saveContact(any(), anyInt());
     }
 
     @Test
@@ -232,5 +236,70 @@ class CandidatureApiServiceTest {
         assertThat(cap.getValue().getContenuId()).isEqualTo(2);
         assertThat(cap.getValue().getEntrepriseId()).isEqualTo(12);
         assertThat(cap.getValue().getTypeAnnonce()).isEqualTo(1);
+    }
+
+    @Test
+    void creer_nouveauContactEmailInvalide_refuseSansEcriture() {
+        when(entrepriseService.getEntreprise(12)).thenReturn(entreprise(12, false));
+
+        assertThatThrownBy(() -> service.creer(demande(
+                new EntrepriseDemande(12, null, null, null, null, null),
+                new ContactDemande(null, "pas-un-email", "Durand", 2))))
+                .isInstanceOf(MetierException.class);
+        verify(entrepriseService, never()).setActive(anyInt(), anyBoolean());
+        verify(contactService, never()).saveContact(any(), anyInt());
+    }
+
+    @Test
+    void creer_plusieursViolations_jointesParPointVirgule() {
+        assertThatThrownBy(() -> service.creer(demande(
+                new EntrepriseDemande(null, " ", null, null, "75001", " "), null)))
+                .isInstanceOf(MetierException.class)
+                .hasMessageContaining("La ville est obligatoire.")
+                .hasMessageContaining("Le nom est obligatoire.")
+                .hasMessageContaining(" ; ");
+    }
+
+    @Test
+    void creer_contactInconnu_404SansEcriture() {
+        when(entrepriseService.getEntreprise(12)).thenReturn(entreprise(12, false));
+        when(contactService.getContact(8L)).thenThrow(new NoSuchElementException());
+
+        assertThatThrownBy(() -> service.creer(demande(
+                new EntrepriseDemande(12, null, null, null, null, null),
+                new ContactDemande(8L, null, null, null))))
+                .isInstanceOf(NoSuchElementException.class);
+        verify(entrepriseService, never()).setActive(anyInt(), anyBoolean());
+        verify(annonceService, never()).creerAvecLettre(any(), anyString());
+    }
+
+    @Test
+    void creer_contactExistantAvecNouvelleEntreprise_404SansEcriture() {
+        when(contactService.getContact(8L)).thenReturn(Contact.builder().id(8L).entrepriseId(12).build());
+
+        assertThatThrownBy(() -> service.creer(demande(
+                new EntrepriseDemande(null, "Nouvelle", null, null, "75001", "Paris"),
+                new ContactDemande(8L, null, null, null))))
+                .isInstanceOf(NoSuchElementException.class);
+        verify(entrepriseService, never()).save(any());
+    }
+
+    @Test
+    void creer_posteEtReferenceTransmis_politesseNulleParDefaut0() {
+        when(entrepriseService.save(any(EntrepriseForm.class))).thenReturn(31);
+        when(contactService.saveContact(any(ContactForm.class), eq(31))).thenReturn(77L);
+        when(annonceService.creerAvecLettre(any(), anyString())).thenReturn(annonce(5L, 1));
+
+        service.creer(demande(new EntrepriseDemande(null, "Nouvelle", null, null, "75001", "Paris"),
+                new ContactDemande(null, "d@n.fr", "Durand", null)));
+
+        ArgumentCaptor<AnnonceForm> cap = ArgumentCaptor.forClass(AnnonceForm.class);
+        verify(annonceService).creerAvecLettre(cap.capture(), anyString());
+        assertThat(cap.getValue().getPoste()).isEqualTo("Dev");
+        assertThat(cap.getValue().getReference()).isEqualTo("R1");
+        assertThat(cap.getValue().getContactId()).isEqualTo(77L);
+        ArgumentCaptor<ContactForm> cf = ArgumentCaptor.forClass(ContactForm.class);
+        verify(contactService).saveContact(cf.capture(), eq(31));
+        assertThat(cf.getValue().getFormuleDePolitesse()).isZero();
     }
 }

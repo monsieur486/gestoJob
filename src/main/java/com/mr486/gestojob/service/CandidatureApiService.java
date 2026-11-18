@@ -116,35 +116,45 @@ public class CandidatureApiService {
     @Transactional
     public CandidatureReponse creer(CandidatureDemande demande) {
         EntrepriseDemande ed = demande.entreprise();
+        ContactDemande cd = demande.contact();
         boolean entrepriseCreee = ed.id() == null;
+
+        // Phase 1 : toutes les vérifications en lecture seule, avant la moindre écriture.
+        Entreprise existante = entrepriseCreee ? null : entrepriseService.getEntreprise(ed.id());
+        EntrepriseForm formEntreprise = entrepriseCreee ? formEntreprise(ed) : null;
+        Contact contactExistant = null;
+        ContactForm formContact = null;
+        if (cd != null) {
+            if (cd.id() == null) {
+                formContact = formContact(cd);
+            } else {
+                contactExistant = contactService.getContact(cd.id());
+                // Un contact d'une autre entreprise (ou avec une entreprise à créer) est traité comme inconnu (404).
+                if (existante == null || !existante.getId().equals(contactExistant.getEntrepriseId())) {
+                    throw new NoSuchElementException("Contact introuvable avec id: " + cd.id());
+                }
+            }
+        }
+
+        // Phase 2 : écritures.
         boolean entrepriseReactivee = false;
         int entrepriseId;
         if (entrepriseCreee) {
-            entrepriseId = entrepriseService.save(formEntreprise(ed));
+            entrepriseId = entrepriseService.save(formEntreprise);
         } else {
-            Entreprise existante = entrepriseService.getEntreprise(ed.id());
             entrepriseId = existante.getId();
             if (!Boolean.TRUE.equals(existante.getEstActive())) {
                 entrepriseService.setActive(entrepriseId, true);
                 entrepriseReactivee = true;
             }
         }
-
         Long contactId = null;
         boolean contactCree = false;
-        ContactDemande cd = demande.contact();
-        if (cd != null) {
-            if (cd.id() == null) {
-                contactId = contactService.saveContact(formContact(cd), entrepriseId);
-                contactCree = true;
-            } else {
-                Contact contact = contactService.getContact(cd.id());
-                // Un contact d'une autre entreprise est traité comme inconnu (404).
-                if (contact.getEntrepriseId() == null || contact.getEntrepriseId() != entrepriseId) {
-                    throw new NoSuchElementException("Contact introuvable avec id: " + cd.id());
-                }
-                contactId = contact.getId();
-            }
+        if (formContact != null) {
+            contactId = contactService.saveContact(formContact, entrepriseId);
+            contactCree = true;
+        } else if (contactExistant != null) {
+            contactId = contactExistant.getId();
         }
 
         AnnonceForm form = new AnnonceForm(entrepriseId, TypeContenu.IA.getCode(), contactId,
@@ -166,7 +176,8 @@ public class CandidatureApiService {
 
     // Construit le formulaire de contact depuis la demande et le valide.
     private ContactForm formContact(ContactDemande cd) {
-        ContactForm form = new ContactForm(cd.email(), cd.formuleDePolitesse(), cd.nom());
+        ContactForm form = new ContactForm(cd.email(),
+                cd.formuleDePolitesse() == null ? 0 : cd.formuleDePolitesse(), cd.nom());
         valider(form);
         return form;
     }

@@ -2,7 +2,8 @@ package com.mr486.gestojob.dto.api;
 
 /**
  * Contact visé par une demande de candidature : soit existant (identifiant
- * renseigné), soit à créer (email, nom et formule de politesse).
+ * renseigné), soit à créer (email, nom et formule de politesse). Lorsque l'identifiant
+ * est renseigné, l'email, le nom et la formule de politesse sont ignorés.
  *
  * <p><b>Exemple :</b> {@code new ContactDemande(null, "d@acme.fr", "Durand", 2)} crée Madame Durand.</p>
  *
