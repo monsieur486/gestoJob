@@ -114,6 +114,7 @@ public class CandidatureApiService {
      * @return les identifiants et indicateurs de ce qui a été créé
      * @throws NoSuchElementException si l'entreprise ou le contact est inconnu (ou d'un autre titulaire)
      * @throws MetierException        si les données d'une entreprise ou d'un contact à créer sont invalides
+     *                                (email du contact obligatoire) ou si la lettre est refusée
      */
     @Transactional
     public CandidatureReponse creer(CandidatureDemande demande) {
@@ -122,6 +123,7 @@ public class CandidatureApiService {
         boolean entrepriseCreee = ed.id() == null;
 
         // Phase 1 : toutes les vérifications en lecture seule, avant la moindre écriture.
+        AnnonceCreationService.nettoyerLettre(demande.lettreHtml());
         Entreprise existante = entrepriseCreee ? null : entrepriseService.getEntreprise(ed.id());
         EntrepriseForm formEntreprise = entrepriseCreee ? formEntreprise(ed) : null;
         ContactForm formContact = cd != null && cd.id() == null ? formContact(cd) : null;
@@ -179,6 +181,9 @@ public class CandidatureApiService {
 
     // Construit le formulaire de contact depuis la demande et le valide.
     private ContactForm formContact(ContactDemande cd) {
+        if (cd.email() == null || cd.email().isBlank()) {
+            throw new MetierException("L'email du contact est obligatoire.");
+        }
         Integer politesse = cd.formuleDePolitesse();
         ContactForm form = new ContactForm(cd.email(), politesse == null ? Integer.valueOf(0) : politesse, cd.nom());
         valider(form);

@@ -240,6 +240,38 @@ class CandidatureApiServiceTest {
     }
 
     @Test
+    void creer_nouveauContactSansEmail_refuseSansEcriture() {
+        assertThatThrownBy(() -> service.creer(demande(
+                new EntrepriseDemande(null, "Nouvelle", null, null, "75001", "Paris"),
+                new ContactDemande(null, null, "Durand", 0))))
+                .isInstanceOf(MetierException.class)
+                .hasMessage("L'email du contact est obligatoire.");
+        assertThatThrownBy(() -> service.creer(demande(
+                new EntrepriseDemande(null, "Nouvelle", null, null, "75001", "Paris"),
+                new ContactDemande(null, "  ", "Durand", 0))))
+                .isInstanceOf(MetierException.class)
+                .hasMessage("L'email du contact est obligatoire.");
+        verify(entrepriseService, never()).save(any());
+        verify(contactService, never()).saveContact(any(), anyInt());
+        verify(annonceCreationService, never()).creerAvecLettre(any(), anyString());
+    }
+
+    @Test
+    void creer_lettreSansPolitesse_refuseSansEcriture() {
+        CandidatureDemande demande = new CandidatureDemande(
+                new EntrepriseDemande(null, "Nouvelle", null, null, "75001", "Paris"),
+                new ContactDemande(null, "d@n.fr", "Durand", 2),
+                new AnnonceDemande(1, "Dev", "R1"), "<p>Bonjour</p>");
+
+        assertThatThrownBy(() -> service.creer(demande))
+                .isInstanceOf(MetierException.class)
+                .hasMessageContaining("{{POLITESSE}}");
+        verify(entrepriseService, never()).save(any());
+        verify(contactService, never()).saveContact(any(), anyInt());
+        verify(annonceCreationService, never()).creerAvecLettre(any(), anyString());
+    }
+
+    @Test
     void creer_nouveauContactEmailInvalide_refuseSansEcriture() {
         when(entrepriseService.getEntreprise(12)).thenReturn(entreprise(12, false));
 
