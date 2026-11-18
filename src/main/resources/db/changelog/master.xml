@@ -12,4 +12,5 @@
     <include file="db/changelog/007-creation_modele_email.sql"/>
     <include file="db/changelog/008-multi-utilisateurs.sql"/>
     <include file="db/changelog/009-lettre-personnalisee.sql"/>
+    <include file="db/changelog/010-offres-consultees.sql"/>
 </databaseChangeLog>
