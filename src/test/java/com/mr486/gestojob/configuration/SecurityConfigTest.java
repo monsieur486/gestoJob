@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.mr486.gestojob.securite.JetonApiFiltre;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,9 +42,12 @@ import org.springframework.web.context.WebApplicationContext;
         "gestojob.comptes.ft01.username=ft01-test",
         "gestojob.comptes.ft01.password=mdp-ft01",
         "gestojob.comptes.ft02.username=ft02-test",
-        "gestojob.comptes.ft02.password=mdp-ft02"
+        "gestojob.comptes.ft02.password=mdp-ft02",
+        "gestojob.api.token=" + SecurityConfigTest.JETON
 })
 class SecurityConfigTest {
+
+    static final String JETON = "jeton-de-test-0123456789";
 
     @Autowired
     private WebApplicationContext context;
@@ -191,5 +195,40 @@ class SecurityConfigTest {
     void lecteur_peutSeDeconnecter() throws Exception {
         mvc.perform(post("/logout").with(user("ft01").roles("LECTEUR")).with(csrf()))
                 .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    void api_sansJeton_401() throws Exception {
+        mvc.perform(get("/api/modele-lettre"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void api_sessionFormulaireSansJeton_401() throws Exception {
+        // Une session ouverte par le formulaire ne vaut rien sur l'API : seul le jeton compte.
+        mvc.perform(get("/api/modele-lettre").with(user("laurent-test").roles("TITULAIRE")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void api_jetonValide_franchitLaSecurite() throws Exception {
+        // /api/modele-lettre n'existe pas encore (tâche 5) : 404 prouve que le jeton est accepté.
+        int statut = mvc.perform(get("/api/modele-lettre").header(JetonApiFiltre.EN_TETE, JETON))
+                .andReturn().getResponse().getStatus();
+        assertThat(statut).isNotIn(401, 403);
+    }
+
+    @Test
+    void api_postAvecJeton_sansCsrf_pasDe403() throws Exception {
+        int statut = mvc.perform(post("/api/candidatures").header(JetonApiFiltre.EN_TETE, JETON))
+                .andReturn().getResponse().getStatus();
+        assertThat(statut).isNotIn(401, 403);
+    }
+
+    @Test
+    void formulaires_postSansCsrf_toujours403() throws Exception {
+        // Non-régression : désactiver le CSRF sur l'API ne doit pas le désactiver sur les pages.
+        mvc.perform(post("/entreprises/ajout").with(user("laurent-test").roles("TITULAIRE")))
+                .andExpect(status().isForbidden());
     }
 }
