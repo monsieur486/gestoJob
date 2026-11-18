@@ -240,6 +240,18 @@ class SecurityConfigTest {
     }
 
     @Test
+    void api_entrepriseInconnue_404Json() throws Exception {
+        mvc.perform(post("/api/candidatures").header(JetonApiFiltre.EN_TETE, JETON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"entreprise\":{\"id\":999999},"
+                                + "\"annonce\":{\"typeAnnonce\":1,\"poste\":\"Dev\"},"
+                                + "\"lettreHtml\":\"<p>{{POLITESSE}}</p>\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.erreur").exists());
+    }
+
+    @Test
     void api_annonceAbsente_400Json() throws Exception {
         mvc.perform(post("/api/candidatures").header(JetonApiFiltre.EN_TETE, JETON)
                         .contentType(MediaType.APPLICATION_JSON)
