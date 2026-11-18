@@ -110,6 +110,14 @@ class SecurityConfigTest {
     }
 
     @Test
+    void lecteur_saisieOuSuppressionOffreConsulteeRefusee_403() throws Exception {
+        mvc.perform(post("/consultees").with(user("ft01").roles("LECTEUR")).with(csrf()))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/consultees/1/supprimer").with(user("ft01").roles("LECTEUR")).with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void lecteur_formulaireCreationRefuse_403() throws Exception {
         mvc.perform(get("/entreprises/ajout").with(user("ft01").roles("LECTEUR")))
                 .andExpect(status().isForbidden());
