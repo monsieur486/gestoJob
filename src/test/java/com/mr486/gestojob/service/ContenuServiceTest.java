@@ -1,9 +1,13 @@
 package com.mr486.gestojob.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.CleModele;
 import com.mr486.gestojob.model.Profil;
 import com.mr486.gestojob.model.Titulaire;
@@ -52,7 +56,7 @@ class ContenuServiceTest {
         when(modeleEmailService.getContenu(Titulaire.RENEE, "CONTENU_MICROSERVICES"))
                 .thenReturn("<p>{{POLITESSE}}</p><p>poste {{POSTE}}</p>");
 
-        String html = contenuService.getHtmlContenu(Titulaire.RENEE, "", 1, "Madame, Monsieur,");
+        String html = contenuService.getHtmlContenu(annonce(Titulaire.RENEE, "", 1, null), "Madame, Monsieur,");
 
         // htmlEscape encode « à » en entité : rendu identique dans le courriel.
         assertThat(html).contains("correspondant &agrave; mon profil");
@@ -60,63 +64,88 @@ class ContenuServiceTest {
 
     @Test
     void html_echappeLePosteSaisiParUtilisateur() {
-        String html = contenuService.getHtmlContenu(
-                Titulaire.LAURENT, "<script>alert(1)</script>", 0, "Madame, Monsieur,");
+        String html = contenuService.getHtmlContenu(annonce(Titulaire.LAURENT, "<script>alert(1)</script>", 0, null), "Madame, Monsieur,");
         assertThat(html).contains("&lt;script&gt;").doesNotContain("<script>");
     }
 
     @Test
     void html_echappeLaFormuleDePolitesse() {
-        String html = contenuService.getHtmlContenu(Titulaire.LAURENT, "Développeur", 0, "Madame <b>Durand</b>,");
+        String html = contenuService.getHtmlContenu(annonce(Titulaire.LAURENT, "Développeur", 0, null), "Madame <b>Durand</b>,");
         assertThat(html).contains("Madame &lt;b&gt;Durand&lt;/b&gt;,").doesNotContain("<b>Durand</b>");
     }
 
     @Test
     void texte_nEchappePas_carCeNestPasDuHtml() {
-        String txt = contenuService.getTextContenu(Titulaire.LAURENT, "Dév & Co", 0, "Madame, Monsieur,");
+        String txt = contenuService.getTextContenu(annonce(Titulaire.LAURENT, "Dév & Co", 0, null), "Madame, Monsieur,");
         assertThat(txt).contains("Dév & Co").doesNotContain("&amp;");
     }
 
     @Test
     void html_utiliseLePosteParDefaut_siVide() {
-        String html = contenuService.getHtmlContenu(Titulaire.LAURENT, "", 0, "Madame, Monsieur,");
+        String html = contenuService.getHtmlContenu(annonce(Titulaire.LAURENT, "", 0, null), "Madame, Monsieur,");
         // htmlEscape produit les entités nommées (é -> &eacute;)
         assertThat(html).contains("de d&eacute;veloppeur Java");
     }
 
     @Test
     void texte_utiliseLePosteParDefaut_siVide() {
-        String txt = contenuService.getTextContenu(Titulaire.LAURENT, "", 0, "Madame, Monsieur,");
+        String txt = contenuService.getTextContenu(annonce(Titulaire.LAURENT, "", 0, null), "Madame, Monsieur,");
         assertThat(txt).contains("de développeur Java");
     }
 
     @Test
     void html_templateMicroservice_siTypeContenu1() {
-        assertThat(contenuService.getHtmlContenu(Titulaire.LAURENT, "Dev", 1, "Madame, Monsieur,"))
+        assertThat(contenuService.getHtmlContenu(annonce(Titulaire.LAURENT, "Dev", 1, null), "Madame, Monsieur,"))
                 .contains("microservices");
     }
 
     @Test
     void html_templateIaAgentique_siTypeContenu2() {
-        assertThat(contenuService.getHtmlContenu(Titulaire.LAURENT, "Dev", 2, "Madame, Monsieur,"))
+        assertThat(contenuService.getHtmlContenu(annonce(Titulaire.LAURENT, "Dev", 2, null), "Madame, Monsieur,"))
                 .contains("agents IA");
     }
 
     @Test
     void texte_typeContenuNull_utiliseLeTemplateGeneral_sansNpe() {
-        assertThat(contenuService.getTextContenu(Titulaire.LAURENT, "", null, "Madame, Monsieur,"))
+        assertThat(contenuService.getTextContenu(annonce(Titulaire.LAURENT, "", null, null), "Madame, Monsieur,"))
                 .contains("de développeur Java");
     }
 
     @Test
     void texte_politesseNull_utiliseLaSalutationGenerique_sansNpe() {
-        String txt = contenuService.getTextContenu(Titulaire.LAURENT, "Dev", 0, null);
+        String txt = contenuService.getTextContenu(annonce(Titulaire.LAURENT, "Dev", 0, null), null);
         assertThat(txt).contains("Madame, Monsieur,");
     }
 
     @Test
     void texte_deriveDuHtml_substitueLaPolitesse() {
-        String txt = contenuService.getTextContenu(Titulaire.LAURENT, "Dev", 0, "Madame Durand,");
+        String txt = contenuService.getTextContenu(annonce(Titulaire.LAURENT, "Dev", 0, null), "Madame Durand,");
         assertThat(txt).contains("Madame Durand,").doesNotContain("{{POLITESSE}}");
+    }
+
+    private static Annonce annonce(Titulaire titulaire, String poste, Integer type, String lettre) {
+        return Annonce.builder().titulaire(titulaire).poste(poste).typeContenu(type)
+                .lettrePersonnalisee(lettre).build();
+    }
+
+    @Test
+    void html_utiliseLaLettrePersonnalisee_auLieuDuModele() {
+        Annonce a = annonce(Titulaire.LAURENT, "Dev Java", 2, "<p>{{POLITESSE}}</p><p>Chez Acme, {{POSTE}}</p>");
+        assertThat(contenuService.getHtmlContenu(a, "Madame Durand,"))
+                .isEqualTo("<p>Madame Durand,</p><p>Chez Acme, Dev Java</p>");
+        verify(modeleEmailService, never()).getContenu(any(), any());
+    }
+
+    @Test
+    void texte_utiliseLaLettrePersonnalisee() {
+        Annonce a = annonce(Titulaire.LAURENT, "Dev", 2, "<p>{{POLITESSE}}</p><p>Lettre Acme</p>");
+        assertThat(contenuService.getTextContenu(a, "Monsieur,")).contains("Monsieur,").contains("Lettre Acme");
+    }
+
+    @Test
+    void lettreBlanche_retombeSurLeModele() {
+        Annonce a = annonce(Titulaire.LAURENT, "Dev", 2, "   ");
+        contenuService.getHtmlContenu(a, "Madame, Monsieur,");
+        verify(modeleEmailService).getContenu(Titulaire.LAURENT, "CONTENU_IA");
     }
 }

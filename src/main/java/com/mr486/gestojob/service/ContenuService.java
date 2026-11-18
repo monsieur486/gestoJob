@@ -1,6 +1,7 @@
 package com.mr486.gestojob.service;
 
 import com.mr486.gestojob.configuration.ApplicationConfiguration;
+import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.CleModele;
 import com.mr486.gestojob.model.Titulaire;
 import lombok.RequiredArgsConstructor;
@@ -28,14 +29,12 @@ public class ContenuService {
      * <p><b>Exemple :</b> un poste contenant « &lt;script&gt; » est échappé dans le
      * HTML produit.</p>
      *
-     * @param titulaire          titulaire de l'annonce (modèle et poste par défaut de son profil)
-     * @param poste              intitulé du poste (valeur par défaut si vide)
-     * @param typeContenu        type de contenu (1 = microservices, 2 = IA, sinon général)
+     * @param annonce            annonce (titulaire, poste, type de contenu et lettre personnalisée éventuelle)
      * @param messageDePolitesse formule de politesse (salutation générique si null)
      * @return le contenu HTML
      */
-    public String getHtmlContenu(Titulaire titulaire, String poste, Integer typeContenu, String messageDePolitesse) {
-        return getContent(titulaire, poste, typeContenu, messageDePolitesse, true);
+    public String getHtmlContenu(Annonce annonce, String messageDePolitesse) {
+        return getContent(annonce, messageDePolitesse, true);
     }
 
     /**
@@ -45,22 +44,26 @@ public class ContenuService {
      * poste par défaut du profil (ex. « de développeur Java orienté microservices ») ; le poste
      * fourni n'est pas échappé.</p>
      *
-     * @param titulaire          titulaire de l'annonce (modèle et poste par défaut de son profil)
-     * @param poste              intitulé du poste (valeur par défaut si vide)
-     * @param typeContenu        type de contenu (1 = microservices, 2 = IA, sinon général)
+     * @param annonce            annonce (titulaire, poste, type de contenu et lettre personnalisée éventuelle)
      * @param messageDePolitesse formule de politesse (salutation générique si null)
      * @return le contenu texte
      */
-    public String getTextContenu(Titulaire titulaire, String poste, Integer typeContenu, String messageDePolitesse) {
-        return getContent(titulaire, poste, typeContenu, messageDePolitesse, false);
+    public String getTextContenu(Annonce annonce, String messageDePolitesse) {
+        return getContent(annonce, messageDePolitesse, false);
     }
 
-    // Lit le modèle HTML correspondant au type, puis substitue politesse et poste.
+    // Utilise la lettre personnalisée de l'annonce si elle est renseignée, sinon lit le
+    // modèle HTML correspondant au type, puis substitue politesse et poste.
     // HTML : saisies échappées (anti-injection). Texte : modèle converti en texte
     // brut (HtmlToPlainText) puis substitution non échappée.
-    private String getContent(Titulaire titulaire, String poste, Integer typeContenu, String messageDePolitesse, boolean isHtml) {
-        CleModele cle = CleModele.pourTypeContenu(typeContenu);
-        String modeleHtml = modeleEmailService.getContenu(titulaire, cle.name());
+    private String getContent(Annonce annonce, String messageDePolitesse, boolean isHtml) {
+        Titulaire titulaire = annonce.getTitulaire();
+        String poste = annonce.getPoste();
+        CleModele cle = CleModele.pourTypeContenu(annonce.getTypeContenu());
+        String lettre = annonce.getLettrePersonnalisee();
+        String modeleHtml = (lettre != null && !lettre.isBlank())
+                ? lettre
+                : modeleEmailService.getContenu(titulaire, cle.name());
         String politesse = (messageDePolitesse == null)
                 ? ApplicationConfiguration.SALUTATION_GENERIQUE
                 : messageDePolitesse;

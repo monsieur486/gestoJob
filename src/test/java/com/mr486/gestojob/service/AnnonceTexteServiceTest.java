@@ -68,7 +68,7 @@ class AnnonceTexteServiceTest {
                 .reference("R1").poste("Dev").typeContenu(0).statusAnnonce(2).build();
         when(annonceRepository.findByIdAndTitulaire(1L, Titulaire.RENEE)).thenReturn(Optional.of(a));
         when(libelleService.construitLibelle(any())).thenReturn("Objet");
-        when(contenuService.getTextContenu(any(), eq("Dev"), eq(0), any())).thenReturn("CORPS_TXT");
+        when(contenuService.getTextContenu(any(Annonce.class), any())).thenReturn("CORPS_TXT");
 
         String result = annonceTexteService.getAnnonceTxtContenuById(1L);
 

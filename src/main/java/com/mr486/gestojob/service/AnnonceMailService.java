@@ -153,11 +153,6 @@ public class AnnonceMailService {
                 ? ApplicationConfiguration.SALUTATION_GENERIQUE
                 : contact.getMessageDePolitesse();
 
-        return contenuService.getHtmlContenu(
-                annonce.getTitulaire(),
-                annonce.getPoste(),
-                annonce.getTypeContenu(),
-                messageDePolitesse
-        );
+        return contenuService.getHtmlContenu(annonce, messageDePolitesse);
     }
 }

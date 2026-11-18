@@ -49,6 +49,10 @@ public class Annonce {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
     private Titulaire titulaire;
+    // lettre HTML propre à l'annonce, prioritaire sur le modèle du titulaire (exclue du toString : texte long, hors logs)
+    @ToString.Exclude
+    @Column(columnDefinition = "TEXT")
+    private String lettrePersonnalisee;
 
     /**
      * Retourne le libellé lisible (avec icône) correspondant au statut numérique
