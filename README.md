@@ -54,6 +54,43 @@ L'application sert deux candidats, dont les données sont **totalement cloisonn�
   réglé dans `application.yml` (`gestojob.mail.<titulaire>.host|port`). Obtenir ces mots de passe :
   voir [`docs/api-mail.md`](docs/api-mail.md).
 
+## API Claude
+
+Une API REST `/api/**` permet à Claude Code (skill `gestion-annonce`) d'enregistrer une
+candidature dont la lettre de motivation a été personnalisée. Elle ne sert que le
+titulaire **Laurent**, n'envoie **jamais** de mail et ne modifie ni ne supprime aucune
+annonce : la candidature arrive dans la file d'attente (`/file`) et l'envoi reste un
+geste manuel (une candidature sans contact est enregistrée comme « site », déjà envoyée).
+
+**Authentification** — chaîne de sécurité dédiée, sans session ni CSRF, indépendante des
+formulaires. Le jeton (`GESTOJOB_API_TOKEN` dans le `.env`) est passé dans l'en-tête
+`X-GestoJob-Jeton`. Un jeton absent ou faux renvoie `401` (JSON) et écrit sur le logger
+`securite.connexion` la ligne `ECHEC_CONNEXION identifiant="api" adresse=<ip>`, prise en
+compte par fail2ban comme un échec de connexion. Un jeton configuré vide **désactive**
+l'API (toute requête reçoit `401`). Le jeton n'est jamais journalisé.
+
+| Méthode | Chemin | Rôle |
+|---|---|---|
+| `GET`  | `/api/modele-lettre` | Lettre « IA agentique » de Laurent telle qu'en base : `cle`, `html`, `posteParDefaut` |
+| `GET`  | `/api/entreprises?nom=…` | Recherche d'entreprises (insensible à la casse, sous-chaîne) avec leurs contacts, pour éviter les doublons |
+| `POST` | `/api/candidatures` | Crée entreprise, contact et annonce en une transaction ; répond `201` |
+
+`POST /api/candidatures` reçoit `entreprise` (`{ "id" }` ou les champs d'une nouvelle),
+`contact` (`{ "id" }`, une création, ou `null` pour une candidature « site »), `annonce`
+(`typeAnnonce`, `poste`, `reference`) et `lettreHtml`. La lettre est nettoyée (HTML) et doit
+contenir `{{POLITESSE}}` ; `{{POSTE}}` est facultatif. Elle est stockée avec l'annonce
+(`lettre_personnalisee`) et **remplace le modèle** à l'envoi comme pour le texte à copier.
+Une entreprise existante inactive est réactivée. Les erreurs sont en JSON
+`{ "erreur": "message" }` : `400` (validation), `404` (id inconnu ou appartenant à
+l'autre titulaire), `401` (jeton).
+
+```bash
+curl -H @fichier-entete https://<hote>/api/entreprises?nom=acme
+```
+
+où `fichier-entete` contient la ligne `X-GestoJob-Jeton: <jeton>` (ne jamais taper le
+jeton dans la commande).
+
 ## Build & tests
 
 ```bash
@@ -86,6 +123,11 @@ base est jointe en interne (`gestojob-db`). L'application est exposée sur le po
 (et éventuellement `MAIL_RENEE_*`), supprimer `GESTOJOB_ADMIN_*` et ajouter les huit variables
 `GESTOJOB_{LAURENT,RENEE,FT01,FT02}_{USERNAME,PASSWORD}` (voir `dist.env`). La migration Liquibase
 `008` rattache toutes les données existantes à Laurent.
+
+**Avant `./maj.sh`** (version avec l'API Claude), ajouter au `.env` du serveur
+`GESTOJOB_API_TOKEN` (≥ 32 octets aléatoires, par exemple `openssl rand -base64 48` ; vide =
+API désactivée), puis vérifier que le reverse proxy (Traefik) laisse passer `/api/**` et
+l'en-tête `X-GestoJob-Jeton`. La migration Liquibase `009` ajoute `lettre_personnalisee`.
 
 ## Configuration
 

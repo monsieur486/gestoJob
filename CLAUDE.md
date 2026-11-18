@@ -28,11 +28,11 @@ Stack: Spring Boot 4.0.2, Java 17, Maven, PostgreSQL, Liquibase, Thymeleaf, Lomb
 ./maj.sh                       # down + git pull + rebuild/up (deploy update)
 ```
 
-The suite has ~273 tests across `model/`, `dto/`, `service/`, `controller/`, `tools/`, and `configuration/` — mostly fast JUnit 5 + Mockito unit tests (controllers tested directly, no MockMvc; services with mocked repositories). The lone exception is `GestoJobApplicationTests#contextLoads`, which boots the full Spring context and therefore requires a reachable database and the env vars below — so `./mvnw verify` needs Postgres running (`./dev-start.sh`). A new public method must come with matching tests (the `jacoco:check` rule flags coverage under 80 % line coverage — indicative, non-blocking: `haltOnFailure=false`).
+The suite has ~327 tests across `model/`, `dto/`, `service/`, `controller/`, `tools/`, `securite/`, and `configuration/` — mostly fast JUnit 5 + Mockito unit tests (controllers tested directly, no MockMvc; services with mocked repositories). The lone exception is `GestoJobApplicationTests#contextLoads`, which boots the full Spring context and therefore requires a reachable database and the env vars below — so `./mvnw verify` needs Postgres running (`./dev-start.sh`). A new public method must come with matching tests (the `jacoco:check` rule flags coverage under 80 % line coverage — indicative, non-blocking: `haltOnFailure=false`).
 
 ## Configuration
 
-Config is **not** in `application.yml` defaults — `application.yml` imports `optional:file:.env` and reads everything from environment variables. `.env` (gitignored in practice; `dist.env` is the template) must define: `POSTGRES_DB/USER/PASSWORD`, `MAIL_LAURENT_USERNAME/PASSWORD` (`MAIL_RENEE_*` facultatives), `DOCKER_UI_PORT` (also the app's `server.port`), and `MAX_*_PAR_PAGE` pagination sizes.
+Config is **not** in `application.yml` defaults — `application.yml` imports `optional:file:.env` and reads everything from environment variables. `.env` (gitignored in practice; `dist.env` is the template) must define: `POSTGRES_DB/USER/PASSWORD`, `MAIL_LAURENT_USERNAME/PASSWORD` (`MAIL_RENEE_*` facultatives), `DOCKER_UI_PORT` (also the app's `server.port`), and `MAX_*_PAR_PAGE` pagination sizes. `GESTOJOB_API_TOKEN` (→ `gestojob.api.token`) is the Claude API token (≥ 32 random bytes); empty = API disabled.
 
 `application-docker.yml` (activated by `SPRING_PROFILES_ACTIVE=docker` in the container) is identical except the datasource host is `gestojob-db` instead of `localhost`.
 
@@ -57,6 +57,15 @@ Four fixed in-memory accounts (`SecurityConfig`, credentials from `GESTOJOB_{LAU
 - Read-only is enforced server-side in `SecurityConfig` (home `/` requires login; non-GET requests, creation forms and the whole Paramètres page require `TITULAIRE`; 403 otherwise), and the UI hides action buttons with `sec:authorize`. `TitulaireConseil` (`@ControllerAdvice`) exposes only `titulaireAffichage` (the current titulaire's display name) to views.
 - `ProfilService` / `profil` table: candidate name plus label and default job title for each of the three letter types, editable in Paramètres. Default email templates are per titulaire under `src/main/resources/modeles/defaut/{LAURENT,RENEE}/`. A letter template (`CONTENU_*`) must contain `{{POLITESSE}}` and `{{POSTE}}` (`CleModele.getVariablesObligatoires`): Paramètres offers insert buttons and blocks the save in the browser, and `ModeleEmailService.mettreAJour` refuses it server-side.
 - `MailConfiguration` builds one SMTP sender per titulaire. Host/port default to `spring.mail.*` (Gmail) and can be overridden per titulaire with `gestojob.mail.<titulaire>.host|port` (renée uses Yahoo: `smtp.mail.yahoo.com:587`). `MAIL_LAURENT_*` required, `MAIL_RENEE_*` optional (without them renée's annonces stay queued and sending reports "adresse d'envoi non configurée").
+
+### Claude API (`/api/**`)
+
+Token-authenticated REST API used by the `gestion-annonce` Claude Code skill, serving **LAURENT only**.
+
+- `configuration/ApiSecurityConfig` is a second, higher-priority `SecurityFilterChain` matching `/api/**` only: stateless, CSRF off for this chain only, no form login. `SecurityConfig`'s form chain is untouched. `securite/JetonApiFiltre` reads header `X-GestoJob-Jeton`, compares in constant time to `gestojob.api.token` and authenticates as `ROLE_TITULAIRE` + `DONNEES_LAURENT`, so `UtilisateurCourant` and every service work unchanged. Missing/wrong token (or empty configured token) → JSON 401 plus exactly one `ECHEC_CONNEXION identifiant="api" adresse=<ip>` line on logger `securite.connexion` (picked up by fail2ban). Never log the token or header.
+- `controller/api/CandidatureApiController` (`@RestController`): `GET /api/modele-lettre`, `GET /api/entreprises?nom=`, `POST /api/candidatures` (201). Logic lives in `service/CandidatureApiService` (reuses `EntrepriseService`, `ContactService`, `AnnonceService.creerAvecLettre`); DTOs in `dto/api/`. `controller/api/ApiErreurConseil` returns JSON `{ "erreur": ... }` (400 business/validation, 404 `NoSuchElementException`) so the HTML `ErreurConseil` does not apply.
+- The API never sends mail and never updates or deletes an annonce. Created annonces use `typeContenu = TypeContenu.IA.getCode()`; with a contact they are queued (status 1), without one they are "site" (status 2).
+- `Annonce.lettrePersonnalisee` (column `lettre_personnalisee`, migration `009`): when non-empty, `ContenuService` uses it **instead of the template** (HTML and plain text, hence email and `/contenu/{id}`). It is sanitised with `HtmlSanitizer.nettoie` and must contain `{{POLITESSE}}`; `{{POSTE}}` is optional.
 
 ### Database / migrations
 
