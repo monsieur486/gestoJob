@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 class ApiErreurConseilTest {
@@ -59,6 +61,32 @@ class ApiErreurConseilTest {
 
         assertThat(reponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(reponse.getBody()).isEqualTo(new ErreurApi("Ressource introuvable."));
+    }
+
+    @Test
+    void methodeNonAutorisee_405MessageFixe() {
+        ResponseEntity<ErreurApi> reponse = conseil.methodeNonAutorisee(
+                new HttpRequestMethodNotSupportedException("DELETE"));
+
+        assertThat(reponse.getStatusCode()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
+        assertThat(reponse.getBody()).isEqualTo(new ErreurApi("Méthode non autorisée."));
+    }
+
+    @Test
+    void typeNonSupporte_415MessageFixe() {
+        ResponseEntity<ErreurApi> reponse = conseil.typeNonSupporte(
+                new HttpMediaTypeNotSupportedException("text/plain"));
+
+        assertThat(reponse.getStatusCode()).isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+        assertThat(reponse.getBody()).isEqualTo(new ErreurApi("Type de contenu non pris en charge."));
+    }
+
+    @Test
+    void erreurInattendue_500MessageFixeSansDetail() {
+        ResponseEntity<ErreurApi> reponse = conseil.erreurInterne(new IllegalStateException("secret interne"));
+
+        assertThat(reponse.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(reponse.getBody()).isEqualTo(new ErreurApi("Erreur interne."));
     }
 
     // Sert uniquement à fournir un MethodParameter à l'exception de validation.
