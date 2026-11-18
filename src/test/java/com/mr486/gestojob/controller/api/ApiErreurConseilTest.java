@@ -15,7 +15,6 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 class ApiErreurConseilTest {
@@ -61,15 +60,6 @@ class ApiErreurConseilTest {
 
         assertThat(reponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(reponse.getBody()).isEqualTo(new ErreurApi("Ressource introuvable."));
-    }
-
-    @Test
-    void methodeNonAutorisee_405MessageFixe() {
-        ResponseEntity<ErreurApi> reponse = conseil.methodeNonAutorisee(
-                new HttpRequestMethodNotSupportedException("DELETE"));
-
-        assertThat(reponse.getStatusCode()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
-        assertThat(reponse.getBody()).isEqualTo(new ErreurApi("Méthode non autorisée."));
     }
 
     @Test

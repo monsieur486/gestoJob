@@ -251,6 +251,24 @@ class SecurityConfigTest {
                 .andExpect(jsonPath("$.erreur").exists());
     }
 
+    // La méthode non prévue est refusée avant que Spring ne connaisse le contrôleur : seul un
+    // conseil global (filtré sur /api/) peut la rendre en JSON. Ce test le prouve de bout en bout.
+    @Test
+    void api_methodeNonPrevue_405Json() throws Exception {
+        mvc.perform(delete("/api/candidatures").header(JetonApiFiltre.EN_TETE, JETON))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.erreur").value("Méthode non autorisée."));
+    }
+
+    // Hors API, une méthode non prévue garde le traitement standard de Spring (pas de JSON).
+    @Test
+    void pages_methodeNonPrevue_405SansJson() throws Exception {
+        mvc.perform(delete("/entreprises/ajout").with(user("laurent-test").roles("TITULAIRE")).with(csrf()))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(content().string(""));
+    }
+
     @Test
     void api_annonceAbsente_400Json() throws Exception {
         mvc.perform(post("/api/candidatures").header(JetonApiFiltre.EN_TETE, JETON)

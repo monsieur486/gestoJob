@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -22,7 +21,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  *
  * <p>Limité au paquet du {@link CandidatureApiController} et prioritaire, il passe avant le
  * conseil global des pages ({@code ErreurConseil}), qui rendrait une page HTML. Les messages ne
- * reprennent jamais le contenu de la requête (lettre, poste).</p>
+ * reprennent jamais le contenu de la requête (lettre, poste). La méthode HTTP non prévue (405),
+ * refusée avant le choix du contrôleur, est traitée à part par {@link ApiMethodeConseil}.</p>
  *
  * <p><b>Exemple :</b> une règle métier violée répond {@code 400}
  * {@code {"erreur":"La ville est obligatoire."}}.</p>
@@ -85,19 +85,6 @@ public class ApiErreurConseil {
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<ErreurApi> introuvable(NoSuchElementException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErreurApi("Ressource introuvable."));
-    }
-
-    /**
-     * Rend une méthode HTTP non prévue sur un point d'entrée en 405, sans détail.
-     *
-     * <p><b>Exemple :</b> un {@code DELETE /api/candidatures} donne 405 {@code "Méthode non autorisée."}.</p>
-     *
-     * @param exception la méthode refusée (son message n'est pas exposé)
-     * @return 405 et un message fixe
-     */
-    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ErreurApi> methodeNonAutorisee(HttpRequestMethodNotSupportedException exception) {
-        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(new ErreurApi("Méthode non autorisée."));
     }
 
     /**
