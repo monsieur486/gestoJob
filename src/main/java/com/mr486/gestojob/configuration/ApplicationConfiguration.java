@@ -21,4 +21,7 @@ public class ApplicationConfiguration {
 
     /** Civilité « Monsieur » (préfixe d'une formule de politesse personnalisée). */
     public static final String CIVILITE_MONSIEUR = "Monsieur";
+
+    /** Nombre maximal d'entreprises renvoyées par la recherche de l'API. */
+    public static final int MAX_RESULTATS_RECHERCHE_API = 20;
 }

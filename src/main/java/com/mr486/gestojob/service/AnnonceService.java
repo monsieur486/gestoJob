@@ -1,17 +1,13 @@
 package com.mr486.gestojob.service;
 
-import com.mr486.gestojob.dto.AnnonceForm;
 import com.mr486.gestojob.dto.AnnonceListe;
 import com.mr486.gestojob.dto.RechercheAnnonceForm;
-import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.StatutAnnonce;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import com.mr486.gestojob.securite.UtilisateurCourant;
-import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,10 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service métier de gestion des annonces (candidatures).
- * Gère la création, la consultation, la suppression et la recherche paginée des
- * annonces. Les transitions de statut sont assurées par {@link AnnonceStatutService},
- * le contenu texte par {@link AnnonceTexteService} et l'envoi des emails par
- * {@link AnnonceMailService}.
+ * Gère la consultation, la suppression et la recherche paginée des annonces.
+ * La création est assurée par {@link AnnonceCreationService}, les transitions de
+ * statut par {@link AnnonceStatutService}, le contenu texte par
+ * {@link AnnonceTexteService} et l'envoi des emails par {@link AnnonceMailService}.
  */
 @Service
 @RequiredArgsConstructor
@@ -35,8 +31,6 @@ public class AnnonceService {
     private final AnnonceRepository annonceRepository;
     private final AnnonceListeMapper annonceListeMapper;
     private final UtilisateurCourant utilisateurCourant;
-    private final EntrepriseService entrepriseService;
-    private final ContactService contactService;
     @Value("${gestojob.max-annonces-par-page:7}")
     private int maxAnnoncesParPage;
 
@@ -81,11 +75,6 @@ public class AnnonceService {
         return annonceListeMapper.toAnnonceListe(annoncesEntreprise);
     }
 
-    // Persiste une annonce en base.
-    private void save(Annonce a) {
-        annonceRepository.save(a);
-    }
-
     /**
      * Supprime définitivement une annonce.
      *
@@ -98,50 +87,6 @@ public class AnnonceService {
         annonceRepository.findByIdAndTitulaire(annonceId, utilisateurCourant.titulaire())
                 .ifPresent(annonceRepository::delete);
         log.info("annonce supprimée : {}", annonceId);
-    }
-
-    /**
-     * Crée et enregistre une annonce à partir du formulaire de saisie.
-     * Une candidature sans contact (réponse via le site) est marquée comme déjà
-     * envoyée (statut 2) avec la date du jour ; sinon elle est mise en attente (statut 1).
-     *
-     * <p><b>Exemple :</b> un formulaire avec contactId=null est enregistré au statut 2 (envoyé) avec la date du jour ; avec un contactId=3, l'annonce est créée au statut 1 (en attente) et sans date d'envoi.</p>
-     *
-     * @param form formulaire de l'annonce
-     * @throws IllegalArgumentException si aucune entreprise n'est renseignée
-     * @throws java.util.NoSuchElementException si l'entreprise ou le contact n'appartient pas au titulaire courant
-     */
-    @Transactional
-    public void saveForm(AnnonceForm form) {
-        if (form.getEntrepriseId() == null) {
-            throw new MetierException("Entreprise obligatoire pour créer une annonce.");
-        }
-
-        Long contactId = form.getContactId();
-        boolean site = (contactId == null || contactId == 0L);
-
-        // Cloisonnement : l'entreprise et le contact doivent appartenir au titulaire
-        // courant, sinon on réagit comme pour un id inconnu.
-        if (!Boolean.TRUE.equals(entrepriseService.existe(form.getEntrepriseId()))) {
-            throw new NoSuchElementException("Entreprise introuvable : " + form.getEntrepriseId());
-        }
-        if (!site) {
-            contactService.getContact(contactId);
-        }
-
-        Annonce a = Annonce.builder()
-                .titulaire(utilisateurCourant.titulaire())
-                .entrepriseId(form.getEntrepriseId())
-                .contactId(site ? null : contactId)
-                .typeAnnonce(form.getTypeAnnonce())
-                .typeContenu(form.getContenuId())
-                .poste(form.getPoste())
-                .reference(form.getReference())
-                .statusAnnonce(site ? StatutAnnonce.EN_COURS.getCode() : StatutAnnonce.BOITE_ENVOI.getCode())
-                .dateEnvoi(site ? OffsetDateTime.now() : null)
-                .build();
-
-        save(a);
     }
 
     /**

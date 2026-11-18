@@ -116,11 +116,23 @@ class ContactServiceTest {
     @Test
     void saveContact_enregistre_siFormuleNulleEtSansEmail() {
         when(entrepriseService.existe(7)).thenReturn(true);
+        when(contactRepository.save(any(Contact.class))).thenReturn(contactAvecId());
         ContactForm form = ContactForm.builder().email(null).formuleDePolitesse(null).nom("Durand").build();
 
         contactService.saveContact(form, 7);
 
         verify(contactRepository).save(any(Contact.class));
+    }
+
+    @Test
+    void saveContact_renvoieLIdDuContactEnregistre() {
+        when(entrepriseService.existe(7)).thenReturn(true);
+        Contact enregistre = new Contact();
+        enregistre.setId(42L);
+        when(contactRepository.save(any(Contact.class))).thenReturn(enregistre);
+        ContactForm form = ContactForm.builder().email(null).formuleDePolitesse(null).nom("Durand").build();
+
+        assertThat(contactService.saveContact(form, 7)).isEqualTo(42L);
     }
 
     @Test
@@ -140,6 +152,7 @@ class ContactServiceTest {
     @Test
     void saveContact_enregistre_siValide() {
         when(entrepriseService.existe(7)).thenReturn(true);
+        when(contactRepository.save(any(Contact.class))).thenReturn(contactAvecId());
         ContactForm form = ContactForm.builder()
                 .email("contact@acme.fr").formuleDePolitesse(0).nom("Durand").build();
 
@@ -193,6 +206,7 @@ class ContactServiceTest {
     @Test
     void saveContact_poseLeTitulaireCourant() {
         when(entrepriseService.existe(7)).thenReturn(true);
+        when(contactRepository.save(any(Contact.class))).thenReturn(contactAvecId());
         ContactForm form = ContactForm.builder().email("c@acme.fr").formuleDePolitesse(0).build();
 
         contactService.saveContact(form, 7);
@@ -216,5 +230,12 @@ class ContactServiceTest {
         when(contactRepository.findByIdAndTitulaire(3L, Titulaire.RENEE)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> contactService.getContact(3L)).isInstanceOf(NoSuchElementException.class);
+    }
+
+    // Contact tel que renvoyé par save() : l'identifiant est attribué par la base.
+    private static Contact contactAvecId() {
+        Contact contact = new Contact();
+        contact.setId(42L);
+        return contact;
     }
 }

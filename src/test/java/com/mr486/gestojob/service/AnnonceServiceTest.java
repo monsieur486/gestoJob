@@ -17,6 +17,7 @@ import com.mr486.gestojob.model.CleModele;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.model.Profil;
+import com.mr486.gestojob.model.StatutAnnonce;
 import com.mr486.gestojob.model.Titulaire;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import com.mr486.gestojob.securite.UtilisateurCourant;
@@ -70,7 +71,7 @@ class AnnonceServiceTest {
         AnnonceListeMapper annonceListeMapper =
                 new AnnonceListeMapper(entrepriseService, contactService, libelleService, profilService);
         annonceService = new AnnonceService(annonceRepository, annonceListeMapper,
-                utilisateurCourant, entrepriseService, contactService);
+                utilisateurCourant);
         ReflectionTestUtils.setField(annonceService, "maxAnnoncesParPage", 10);
         ReflectionTestUtils.setField(annonceService, "maxPositifsParPage", 10);
         when(utilisateurCourant.titulaire()).thenReturn(Titulaire.RENEE);
@@ -141,83 +142,6 @@ class AnnonceServiceTest {
         when(annonceRepository.countByTitulaire(Titulaire.RENEE)).thenReturn(12L);
 
         assertThat(annonceService.countAnnonces()).isEqualTo(12L);
-    }
-
-    @Test
-    void saveForm_poseLeTitulaireCourant() {
-        AnnonceForm form = AnnonceForm.builder().entrepriseId(10).contactId(null).typeAnnonce(1)
-                .contenuId(2).poste("Dev").reference("R1").build();
-
-        annonceService.saveForm(form);
-
-        ArgumentCaptor<Annonce> captor = ArgumentCaptor.forClass(Annonce.class);
-        verify(annonceRepository).save(captor.capture());
-        assertThat(captor.getValue().getTitulaire()).isEqualTo(Titulaire.RENEE);
-    }
-
-    @Test
-    void saveForm_contactAutreTitulaire_refuse() {
-        when(contactService.getContact(3L)).thenThrow(new NoSuchElementException());
-        AnnonceForm form = AnnonceForm.builder().entrepriseId(10).contactId(3L).typeAnnonce(1)
-                .contenuId(2).poste("Dev").reference("R1").build();
-
-        assertThatThrownBy(() -> annonceService.saveForm(form)).isInstanceOf(NoSuchElementException.class);
-
-        verify(annonceRepository, never()).save(any());
-    }
-
-    @Test
-    void saveForm_entrepriseAutreTitulaire_refuse() {
-        when(entrepriseService.existe(99)).thenReturn(false);
-        AnnonceForm form = AnnonceForm.builder().entrepriseId(99).contactId(null).typeAnnonce(1)
-                .contenuId(2).poste("Dev").reference("R1").build();
-
-        assertThatThrownBy(() -> annonceService.saveForm(form)).isInstanceOf(NoSuchElementException.class);
-
-        verify(annonceRepository, never()).save(any());
-    }
-
-    @Test
-    void saveForm_sansContact_creeAnnonceEnvoyeeAvecDate() {
-        AnnonceForm form = AnnonceForm.builder()
-                .entrepriseId(10).contactId(null).typeAnnonce(1).contenuId(2)
-                .poste("Dev").reference("R1").build();
-
-        annonceService.saveForm(form);
-
-        ArgumentCaptor<Annonce> captor = ArgumentCaptor.forClass(Annonce.class);
-        verify(annonceRepository).save(captor.capture());
-        Annonce saved = captor.getValue();
-        assertThat(saved.getStatusAnnonce()).isEqualTo(2);
-        assertThat(saved.getContactId()).isNull();
-        assertThat(saved.getDateEnvoi()).isNotNull();
-    }
-
-    @Test
-    void saveForm_avecContact_creeAnnonceEnAttenteSansDate() {
-        AnnonceForm form = AnnonceForm.builder()
-                .entrepriseId(10).contactId(3L).typeAnnonce(1).contenuId(2)
-                .poste("Dev").reference("R1").build();
-
-        annonceService.saveForm(form);
-
-        ArgumentCaptor<Annonce> captor = ArgumentCaptor.forClass(Annonce.class);
-        verify(annonceRepository).save(captor.capture());
-        Annonce saved = captor.getValue();
-        assertThat(saved.getStatusAnnonce()).isEqualTo(1);
-        assertThat(saved.getContactId()).isEqualTo(3L);
-        assertThat(saved.getDateEnvoi()).isNull();
-    }
-
-    @Test
-    void saveForm_sansEntreprise_leveMetierException() {
-        AnnonceForm form = AnnonceForm.builder().entrepriseId(null).build();
-
-        assertThatThrownBy(() -> annonceService.saveForm(form))
-                .isInstanceOf(MetierException.class)
-                .hasMessageContaining("Entreprise obligatoire");
-
-        verify(annonceRepository, never()).save(any());
     }
 
     @Test

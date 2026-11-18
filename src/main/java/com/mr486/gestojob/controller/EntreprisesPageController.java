@@ -4,6 +4,7 @@ import com.mr486.gestojob.dto.AnnonceForm;
 import com.mr486.gestojob.dto.ContactForm;
 import com.mr486.gestojob.dto.EntrepriseForm;
 import com.mr486.gestojob.exception.MetierException;
+import com.mr486.gestojob.service.AnnonceCreationService;
 import com.mr486.gestojob.service.AnnonceService;
 import com.mr486.gestojob.service.ContactService;
 import com.mr486.gestojob.service.EntrepriseRechercheService;
@@ -35,6 +36,7 @@ public class EntreprisesPageController {
     private final EntrepriseRechercheService entrepriseRechercheService;
     private final ContactService contactService;
     private final AnnonceService annonceService;
+    private final AnnonceCreationService annonceCreationService;
     private final ProfilService profilService;
 
     /**
@@ -233,7 +235,7 @@ public class EntreprisesPageController {
         }
 
         try {
-            annonceService.saveForm(form);
+            annonceCreationService.saveForm(form);
             return "redirect:/entreprises/" + id;
         } catch (MetierException ex) {
             model.addAttribute("errorMessage", ex.getMessage());

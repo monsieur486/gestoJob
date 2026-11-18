@@ -84,6 +84,11 @@ gestojob:
     ft02:
       username: ${GESTOJOB_FT02_USERNAME}
       password: ${GESTOJOB_FT02_PASSWORD}
+  # Jeton de l'API Claude (/api/**, en-tête X-GestoJob-Jeton), qui agit comme
+  # titulaire LAURENT. Vide par défaut : l'API est alors désactivée et tout appel
+  # reçoit 401 (chaque refus est journalisé pour fail2ban).
+  api:
+    token: ${GESTOJOB_API_TOKEN:}
 
 # --- Journal central ---------------------------------------------------------
 #

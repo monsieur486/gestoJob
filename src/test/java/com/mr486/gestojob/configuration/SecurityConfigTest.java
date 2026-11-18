@@ -12,9 +12,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.mr486.gestojob.securite.JetonApiFiltre;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +27,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -33,6 +37,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest
+@SuppressWarnings("PMD.TooManyMethods")
 @TestPropertySource(properties = {
         "gestojob.comptes.laurent.username=laurent-test",
         "gestojob.comptes.laurent.password=mdp-laurent",
@@ -41,9 +46,12 @@ import org.springframework.web.context.WebApplicationContext;
         "gestojob.comptes.ft01.username=ft01-test",
         "gestojob.comptes.ft01.password=mdp-ft01",
         "gestojob.comptes.ft02.username=ft02-test",
-        "gestojob.comptes.ft02.password=mdp-ft02"
+        "gestojob.comptes.ft02.password=mdp-ft02",
+        "gestojob.api.token=" + SecurityConfigTest.JETON
 })
 class SecurityConfigTest {
+
+    static final String JETON = "jeton-de-test-0123456789";
 
     @Autowired
     private WebApplicationContext context;
@@ -191,5 +199,90 @@ class SecurityConfigTest {
     void lecteur_peutSeDeconnecter() throws Exception {
         mvc.perform(post("/logout").with(user("ft01").roles("LECTEUR")).with(csrf()))
                 .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    void api_sansJeton_401() throws Exception {
+        mvc.perform(get("/api/modele-lettre"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void api_sessionFormulaireSansJeton_401() throws Exception {
+        // Une session ouverte par le formulaire ne vaut rien sur l'API : seul le jeton compte.
+        mvc.perform(get("/api/modele-lettre").with(user("laurent-test").roles("TITULAIRE")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void api_modeleLettre_avecJeton_200() throws Exception {
+        // Le modèle CONTENU_IA de LAURENT est créé au démarrage par ModeleEmailInitializer.
+        mvc.perform(get("/api/modele-lettre").header(JetonApiFiltre.EN_TETE, JETON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void api_postAvecJeton_sansCsrf_corpsVide_400Json() throws Exception {
+        // Le jeton et l'absence de CSRF passent la sécurité : c'est la validation qui répond.
+        mvc.perform(post("/api/candidatures").header(JetonApiFiltre.EN_TETE, JETON)
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erreur").exists());
+    }
+
+    @Test
+    void api_jsonIllisible_400Json() throws Exception {
+        mvc.perform(post("/api/candidatures").header(JetonApiFiltre.EN_TETE, JETON)
+                        .contentType(MediaType.APPLICATION_JSON).content("{pas du json"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.erreur").exists());
+    }
+
+    @Test
+    void api_entrepriseInconnue_404Json() throws Exception {
+        mvc.perform(post("/api/candidatures").header(JetonApiFiltre.EN_TETE, JETON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"entreprise\":{\"id\":999999},"
+                                + "\"annonce\":{\"typeAnnonce\":1,\"poste\":\"Dev\"},"
+                                + "\"lettreHtml\":\"<p>{{POLITESSE}}</p>\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.erreur").exists());
+    }
+
+    // La méthode non prévue est refusée avant que Spring ne connaisse le contrôleur : seul un
+    // conseil global (filtré sur /api/) peut la rendre en JSON. Ce test le prouve de bout en bout.
+    @Test
+    void api_methodeNonPrevue_405Json() throws Exception {
+        mvc.perform(delete("/api/candidatures").header(JetonApiFiltre.EN_TETE, JETON))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.erreur").value("Méthode non autorisée."));
+    }
+
+    // Hors API, une méthode non prévue garde le traitement standard de Spring (pas de JSON).
+    @Test
+    void pages_methodeNonPrevue_405SansJson() throws Exception {
+        mvc.perform(delete("/entreprises/ajout").with(user("laurent-test").roles("TITULAIRE")).with(csrf()))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(content().string(""));
+    }
+
+    @Test
+    void api_annonceAbsente_400Json() throws Exception {
+        mvc.perform(post("/api/candidatures").header(JetonApiFiltre.EN_TETE, JETON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"entreprise\":{\"id\":1},\"lettreHtml\":\"<p>{{POLITESSE}}</p>\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.erreur").exists());
+    }
+
+    @Test
+    void formulaires_postSansCsrf_toujours403() throws Exception {
+        // Non-régression : désactiver le CSRF sur l'API ne doit pas le désactiver sur les pages.
+        mvc.perform(post("/entreprises/ajout").with(user("laurent-test").roles("TITULAIRE")))
+                .andExpect(status().isForbidden());
     }
 }

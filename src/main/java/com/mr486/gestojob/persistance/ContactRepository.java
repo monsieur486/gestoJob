@@ -62,4 +62,15 @@ public interface ContactRepository extends JpaRepository<Contact, Long> {
      * @return la liste des contacts trouvés
      */
     List<Contact> findAllByIdInAndTitulaire(Collection<Long> ids, Titulaire titulaire);
+
+    /**
+     * Charge les contacts du titulaire rattachés à l'une des entreprises données.
+     *
+     * <p><b>Exemple :</b> findAllByEntrepriseIdInAndTitulaire([3, 7], RENEE) renvoie les contacts de Renée des entreprises 3 et 7.</p>
+     *
+     * @param entrepriseIds les identifiants d'entreprises recherchés
+     * @param titulaire     le titulaire propriétaire
+     * @return la liste des contacts trouvés
+     */
+    List<Contact> findAllByEntrepriseIdInAndTitulaire(Collection<Integer> entrepriseIds, Titulaire titulaire);
 }

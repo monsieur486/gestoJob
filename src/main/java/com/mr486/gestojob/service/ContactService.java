@@ -57,12 +57,13 @@ public class ContactService {
      *
      * @param contactForm  formulaire du contact
      * @param entrepriseId identifiant de l'entreprise rattachée
+     * @return l'identifiant du contact créé
      * @throws MetierException si l'entreprise est introuvable, si une formule de
      *                         politesse est choisie sans email renseigné, ou si un
      *                         contact avec le même email existe déjà pour l'entreprise
      */
     @Transactional
-    public void saveContact(ContactForm contactForm, int entrepriseId) {
+    public Long saveContact(ContactForm contactForm, int entrepriseId) {
         validerEntrepriseExistante(entrepriseId);
         validerEmailRequisSiPolitesse(contactForm, entrepriseId);
         validerUniciteEmail(contactForm, entrepriseId);
@@ -73,8 +74,9 @@ public class ContactService {
         contact.setFormuleDePolitesse(contactForm.getFormuleDePolitesse());
         contact.setEmail(contactForm.getEmail());
         contact.setNom(contactForm.getNom());
-        contactRepository.save(contact);
+        Long id = contactRepository.save(contact).getId();
         log.info("contact créé pour l'entreprise {}", entrepriseId);
+        return id;
     }
 
     // Refuse la création si l'entreprise de rattachement n'existe pas.
