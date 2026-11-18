@@ -74,10 +74,9 @@ public class ContactService {
         contact.setFormuleDePolitesse(contactForm.getFormuleDePolitesse());
         contact.setEmail(contactForm.getEmail());
         contact.setNom(contactForm.getNom());
-        Contact enregistre = contactRepository.save(contact);
+        Long id = contactRepository.save(contact).getId();
         log.info("contact créé pour l'entreprise {}", entrepriseId);
-        // save() renvoie l'entité gérée ; on se prémunit d'un retour absent.
-        return enregistre == null ? null : enregistre.getId();
+        return id;
     }
 
     // Refuse la création si l'entreprise de rattachement n'existe pas.

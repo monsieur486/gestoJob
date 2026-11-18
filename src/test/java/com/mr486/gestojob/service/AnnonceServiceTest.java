@@ -246,6 +246,18 @@ class AnnonceServiceTest {
     }
 
     @Test
+    void creerAvecLettre_politesseSupprimeeParLeNettoyage_refuse() {
+        AnnonceForm form = AnnonceForm.builder().entrepriseId(3).contactId(8L).typeAnnonce(1)
+                .contenuId(2).poste("Dev").reference("R1").build();
+
+        assertThatThrownBy(() -> annonceService.creerAvecLettre(form,
+                "<script>{{POLITESSE}}</script><p>x</p>"))
+                .isInstanceOf(MetierException.class).hasMessageContaining("{{POLITESSE}}");
+
+        verify(annonceRepository, never()).save(any());
+    }
+
+    @Test
     void creerAvecLettre_sansContact_estUneCandidatureSiteDejaEnvoyee() {
         when(annonceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         AnnonceForm form = AnnonceForm.builder().entrepriseId(3).contactId(null).typeAnnonce(1)
