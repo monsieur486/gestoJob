@@ -109,7 +109,10 @@ une nouvelle API.
   (`EcouteurEchecConnexion`) : `ECHEC_CONNEXION identifiant="api" adresse=<ip>`,
   l'adresse étant l'adresse cliente réelle (`request.getRemoteAddr()`, déjà corrigée
   par `forward-headers-strategy: native`). Le filtre fail2ban existant la prend
-  donc en compte sans modification. Moyen au choix du builder (écriture directe
+  donc en compte sans modification. Précision : `native` est la valeur de
+  `application.yml` ; le profil `docker` (`application-docker.yml`) la remplace par
+  `framework`, qui traite le schéma et l'hôte mais ne remplace pas forcément
+  l'adresse distante : à vérifier en production si l'adresse journalisée est celle du proxy. Moyen au choix du builder (écriture directe
   dans le filtre, ou passage par un `AuthenticationManager` qui publie l'événement
   d'échec), mais **une seule ligne par refus**, et le format ne doit pas diverger.
   Risque accepté : des refus répétés depuis le poste de Laurent bannissent son
@@ -153,7 +156,7 @@ Règles :
   porte `entrepriseReactivee: true`. Le skill le signale à Laurent à l'étape 5,
   avant le feu vert.
 - Annonce : `typeContenu = 2` (IA agentique), statut et date selon la règle existante
-  (`AnnonceService.saveForm`) : avec contact → `BOITE_ENVOI` (1) ; sans contact →
+  (`AnnonceCreationService.saveForm`, extrait d'`AnnonceService`) : avec contact → `BOITE_ENVOI` (1) ; sans contact →
   « site », `EN_COURS` (2), `dateEnvoi = now`.
 - `lettreHtml` : passée par `HtmlSanitizer.nettoie`, **doit contenir `{{POLITESSE}}`**
   (la salutation reste tranchée à l'envoi d'après le contact) ; `{{POSTE}}`
@@ -165,7 +168,7 @@ Règles :
   `NoSuchElementException` → 404), pour que `ErreurConseil` (page HTML 404) ne
   s'applique pas à l'API.
 - Logique de création dans un **service dédié** (ex. `CandidatureApiService`), qui
-  réutilise `EntrepriseService`, `ContactService`, `AnnonceService` ; le contrôleur
+  réutilise `EntrepriseService`, `ContactService`, `AnnonceCreationService` ; le contrôleur
   reste mince et ne manipule que des DTO (`record`s ou classes Lombok dans `dto/`).
 
 ### 3. Lettre personnalisée par annonce

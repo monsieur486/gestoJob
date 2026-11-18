@@ -12,6 +12,7 @@ import com.mr486.gestojob.dto.EntrepriseForm;
 import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.model.Profil;
+import com.mr486.gestojob.service.AnnonceCreationService;
 import com.mr486.gestojob.service.AnnonceService;
 import com.mr486.gestojob.service.ContactService;
 import com.mr486.gestojob.service.EntrepriseRechercheService;
@@ -46,6 +47,8 @@ class EntreprisesPageControllerTest {
     private ContactService contactService;
     @Mock
     private AnnonceService annonceService;
+    @Mock
+    private AnnonceCreationService annonceCreationService;
     @Mock
     private ProfilService profilService;
     @Mock
@@ -162,7 +165,7 @@ class EntreprisesPageControllerTest {
 
         assertThat(view).isEqualTo("redirect:/entreprises/8");
         assertThat(form.getEntrepriseId()).isEqualTo(8);
-        verify(annonceService).saveForm(form);
+        verify(annonceCreationService).saveForm(form);
     }
 
     @Test
@@ -175,7 +178,7 @@ class EntreprisesPageControllerTest {
         String view = controller.ajoutAnnonceSubmit(8, new AnnonceForm(), bindingResult, new ExtendedModelMap());
 
         assertThat(view).isEqualTo("entreprise_detail");
-        verify(annonceService, never()).saveForm(any(AnnonceForm.class));
+        verify(annonceCreationService, never()).saveForm(any(AnnonceForm.class));
     }
 
     @Test

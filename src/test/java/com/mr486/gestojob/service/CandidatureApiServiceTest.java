@@ -56,7 +56,7 @@ class CandidatureApiServiceTest {
 
     @Mock private EntrepriseService entrepriseService;
     @Mock private ContactService contactService;
-    @Mock private AnnonceService annonceService;
+    @Mock private AnnonceCreationService annonceCreationService;
     @Mock private ModeleEmailService modeleEmailService;
     @Mock private ProfilService profilService;
     @Mock private EntrepriseRepository entrepriseRepository;
@@ -68,7 +68,7 @@ class CandidatureApiServiceTest {
 
     @BeforeEach
     void init() {
-        service = new CandidatureApiService(entrepriseService, contactService, annonceService,
+        service = new CandidatureApiService(entrepriseService, contactService, annonceCreationService,
                 modeleEmailService, profilService, entrepriseRepository, contactRepository,
                 utilisateurCourant, validator);
         lenient().when(utilisateurCourant.titulaire()).thenReturn(Titulaire.LAURENT);
@@ -141,7 +141,7 @@ class CandidatureApiServiceTest {
     void creer_entrepriseExistanteActive_contactExistant() {
         when(entrepriseService.getEntreprise(12)).thenReturn(entreprise(12, true));
         when(contactService.getContact(8L)).thenReturn(Contact.builder().id(8L).entrepriseId(12).build());
-        when(annonceService.creerAvecLettre(any(), anyString())).thenReturn(annonce(5L, 1));
+        when(annonceCreationService.creerAvecLettre(any(), anyString())).thenReturn(annonce(5L, 1));
 
         CandidatureReponse r = service.creer(demande(
                 new EntrepriseDemande(12, null, null, null, null, null),
@@ -159,7 +159,7 @@ class CandidatureApiServiceTest {
     @Test
     void creer_entrepriseInactive_estReactivee() {
         when(entrepriseService.getEntreprise(12)).thenReturn(entreprise(12, false));
-        when(annonceService.creerAvecLettre(any(), anyString())).thenReturn(annonce(5L, 2));
+        when(annonceCreationService.creerAvecLettre(any(), anyString())).thenReturn(annonce(5L, 2));
 
         CandidatureReponse r = service.creer(demande(
                 new EntrepriseDemande(12, null, null, null, null, null), null));
@@ -173,7 +173,7 @@ class CandidatureApiServiceTest {
     void creer_nouvelleEntreprise_etNouveauContact() {
         when(entrepriseService.save(any(EntrepriseForm.class))).thenReturn(31);
         when(contactService.saveContact(any(ContactForm.class), eq(31))).thenReturn(77L);
-        when(annonceService.creerAvecLettre(any(), anyString())).thenReturn(annonce(5L, 1));
+        when(annonceCreationService.creerAvecLettre(any(), anyString())).thenReturn(annonce(5L, 1));
 
         CandidatureReponse r = service.creer(demande(
                 new EntrepriseDemande(null, "Nouvelle", null, null, "75001", "Paris"),
@@ -189,13 +189,13 @@ class CandidatureApiServiceTest {
     @Test
     void creer_sansContact_annonceSite() {
         when(entrepriseService.getEntreprise(12)).thenReturn(entreprise(12, true));
-        when(annonceService.creerAvecLettre(any(), anyString())).thenReturn(annonce(5L, 2));
+        when(annonceCreationService.creerAvecLettre(any(), anyString())).thenReturn(annonce(5L, 2));
 
         CandidatureReponse r = service.creer(demande(
                 new EntrepriseDemande(12, null, null, null, null, null), null));
 
         ArgumentCaptor<AnnonceForm> cap = ArgumentCaptor.forClass(AnnonceForm.class);
-        verify(annonceService).creerAvecLettre(cap.capture(), eq("<p>{{POLITESSE}}</p>"));
+        verify(annonceCreationService).creerAvecLettre(cap.capture(), eq("<p>{{POLITESSE}}</p>"));
         assertThat(cap.getValue().getContactId()).isNull();
         assertThat(r.contactId()).isNull();
         assertThat(r.statut()).isEqualTo(2);
@@ -210,7 +210,7 @@ class CandidatureApiServiceTest {
                 new EntrepriseDemande(12, null, null, null, null, null),
                 new ContactDemande(8L, null, null, null))))
                 .isInstanceOf(NoSuchElementException.class);
-        verify(annonceService, never()).creerAvecLettre(any(), anyString());
+        verify(annonceCreationService, never()).creerAvecLettre(any(), anyString());
         verify(entrepriseService, never()).save(any());
         verify(entrepriseService, never()).setActive(anyInt(), anyBoolean());
         verify(contactService, never()).saveContact(any(), anyInt());
@@ -228,12 +228,12 @@ class CandidatureApiServiceTest {
     @Test
     void creer_typeContenuToujoursIa() {
         when(entrepriseService.getEntreprise(12)).thenReturn(entreprise(12, true));
-        when(annonceService.creerAvecLettre(any(), anyString())).thenReturn(annonce(5L, 2));
+        when(annonceCreationService.creerAvecLettre(any(), anyString())).thenReturn(annonce(5L, 2));
 
         service.creer(demande(new EntrepriseDemande(12, null, null, null, null, null), null));
 
         ArgumentCaptor<AnnonceForm> cap = ArgumentCaptor.forClass(AnnonceForm.class);
-        verify(annonceService).creerAvecLettre(cap.capture(), anyString());
+        verify(annonceCreationService).creerAvecLettre(cap.capture(), anyString());
         assertThat(cap.getValue().getContenuId()).isEqualTo(2);
         assertThat(cap.getValue().getEntrepriseId()).isEqualTo(12);
         assertThat(cap.getValue().getTypeAnnonce()).isEqualTo(1);
@@ -271,7 +271,7 @@ class CandidatureApiServiceTest {
                 new ContactDemande(8L, null, null, null))))
                 .isInstanceOf(NoSuchElementException.class);
         verify(entrepriseService, never()).setActive(anyInt(), anyBoolean());
-        verify(annonceService, never()).creerAvecLettre(any(), anyString());
+        verify(annonceCreationService, never()).creerAvecLettre(any(), anyString());
     }
 
     @Test
@@ -289,13 +289,13 @@ class CandidatureApiServiceTest {
     void creer_posteEtReferenceTransmis_politesseNulleParDefaut0() {
         when(entrepriseService.save(any(EntrepriseForm.class))).thenReturn(31);
         when(contactService.saveContact(any(ContactForm.class), eq(31))).thenReturn(77L);
-        when(annonceService.creerAvecLettre(any(), anyString())).thenReturn(annonce(5L, 1));
+        when(annonceCreationService.creerAvecLettre(any(), anyString())).thenReturn(annonce(5L, 1));
 
         service.creer(demande(new EntrepriseDemande(null, "Nouvelle", null, null, "75001", "Paris"),
                 new ContactDemande(null, "d@n.fr", "Durand", null)));
 
         ArgumentCaptor<AnnonceForm> cap = ArgumentCaptor.forClass(AnnonceForm.class);
-        verify(annonceService).creerAvecLettre(cap.capture(), anyString());
+        verify(annonceCreationService).creerAvecLettre(cap.capture(), anyString());
         assertThat(cap.getValue().getPoste()).isEqualTo("Dev");
         assertThat(cap.getValue().getReference()).isEqualTo("R1");
         assertThat(cap.getValue().getContactId()).isEqualTo(77L);

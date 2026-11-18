@@ -145,7 +145,8 @@ domaine :
 
 **Annonces**
 
-- `AnnonceService` — création, consultation, suppression et recherche paginée des annonces.
+- `AnnonceService` — consultation, suppression et recherche paginée des annonces.
+- `AnnonceCreationService` — création des annonces, avec ou sans lettre personnalisée (cloisonnement par titulaire, règle de statut).
 - `AnnonceStatutService` — transitions de statut du cycle de vie (dépassée, refusée, acceptée).
 - `AnnonceTexteService` — formule de politesse et contenu **texte** de l'annonce (copier-coller).
 - `AnnonceMailService` — envoi des courriels (contenu **HTML**), individuel ou depuis la file d'attente ; l'expédition est déléguée à l'abstraction **`Mailer`** (implémentation `MailTools`, SMTP), ce qui découple le service du transport et facilite les tests.

@@ -48,7 +48,7 @@ public class CandidatureApiService {
 
     private final EntrepriseService entrepriseService;
     private final ContactService contactService;
-    private final AnnonceService annonceService;
+    private final AnnonceCreationService annonceCreationService;
     private final ModeleEmailService modeleEmailService;
     private final ProfilService profilService;
     private final EntrepriseRepository entrepriseRepository;
@@ -135,7 +135,7 @@ public class CandidatureApiService {
 
         AnnonceForm form = new AnnonceForm(entrepriseId, TypeContenu.IA.getCode(), contactId,
                 demande.annonce().typeAnnonce(), demande.annonce().poste(), demande.annonce().reference(), null);
-        Annonce annonce = annonceService.creerAvecLettre(form, demande.lettreHtml());
+        Annonce annonce = annonceCreationService.creerAvecLettre(form, demande.lettreHtml());
         log.info("candidature API créée : annonce {} (entreprise {}, créée={}, réactivée={})",
                 annonce.getId(), entrepriseId, entrepriseCreee, entrepriseReactivee);
         return new CandidatureReponse(annonce.getId(), entrepriseId, contactId, annonce.getStatusAnnonce(),
