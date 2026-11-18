@@ -1,10 +1,15 @@
 package com.mr486.gestojob.service;
 
 import com.mr486.gestojob.dto.OffreConsulteeForm;
+import com.mr486.gestojob.dto.api.OffreConsulteeDemande;
+import com.mr486.gestojob.dto.api.OffreConsulteeReponse;
+import com.mr486.gestojob.exception.MetierException;
+import com.mr486.gestojob.model.MotifEcart;
 import com.mr486.gestojob.model.OffreConsultee;
 import com.mr486.gestojob.model.Titulaire;
 import com.mr486.gestojob.persistance.OffreConsulteeRepository;
 import com.mr486.gestojob.securite.UtilisateurCourant;
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,6 +72,32 @@ public class OffreConsulteeService {
         OffreConsultee enregistree = offreConsulteeRepository.save(entree);
         log.info("Offre consultée enregistrée : id={} titulaire={}", enregistree.getId(), titulaire);
         return enregistree;
+    }
+
+    /**
+     * Enregistre une offre consultée reçue par l'API Claude : le motif est donné
+     * par son nom (casse indifférente) et la date, si absente, vaut aujourd'hui.
+     *
+     * <p><b>Exemple :</b> motif {@code "distance"} sans date → entrée au motif 3
+     * datée du jour ; motif {@code "AUTRE"} → {@link MetierException} (400 JSON).</p>
+     *
+     * @param demande la demande validée
+     * @return l'identifiant, la date et le nom du motif retenus
+     * @throws MetierException si le motif est inconnu
+     */
+    @Transactional
+    public OffreConsulteeReponse ajouterDepuisApi(OffreConsulteeDemande demande) {
+        MotifEcart motif = MotifEcart.depuisNom(demande.motif())
+                .orElseThrow(() -> new MetierException("Motif inconnu : attendu PROFIL, POSTE ou DISTANCE."));
+        OffreConsulteeForm form = new OffreConsulteeForm();
+        form.setDateConsultation(demande.dateConsultation() != null ? demande.dateConsultation() : LocalDate.now());
+        form.setIntitule(demande.intitule());
+        form.setEntreprise(demande.entreprise());
+        form.setLien(demande.lien());
+        form.setMotifEcart(motif.getCode());
+        form.setCommentaire(demande.commentaire());
+        OffreConsultee enregistree = ajouter(form);
+        return new OffreConsulteeReponse(enregistree.getId(), enregistree.getDateConsultation(), motif.name());
     }
 
     /**

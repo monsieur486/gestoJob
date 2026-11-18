@@ -8,6 +8,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.mr486.gestojob.dto.OffreConsulteeForm;
+import com.mr486.gestojob.dto.api.OffreConsulteeDemande;
+import com.mr486.gestojob.dto.api.OffreConsulteeReponse;
+import com.mr486.gestojob.exception.MetierException;
 import com.mr486.gestojob.model.OffreConsultee;
 import com.mr486.gestojob.model.Titulaire;
 import com.mr486.gestojob.persistance.OffreConsulteeRepository;
@@ -119,5 +122,42 @@ class OffreConsulteeServiceTest {
 
         assertThatThrownBy(() -> service.supprimer(6L)).isInstanceOf(NoSuchElementException.class);
         verify(repository, never()).delete(any());
+    }
+
+    @Test
+    void ajouterDepuisApi_motifEnMinuscules_etSansDate() {
+        when(repository.save(any(OffreConsultee.class))).thenAnswer(i -> {
+            OffreConsultee o = i.getArgument(0);
+            o.setId(12L);
+            return o;
+        });
+
+        OffreConsulteeReponse reponse = service.ajouterDepuisApi(
+                new OffreConsulteeDemande("Tech lead", "Foo SA", null, "distance", "Lyon", null));
+
+        ArgumentCaptor<OffreConsultee> captor = ArgumentCaptor.forClass(OffreConsultee.class);
+        verify(repository).save(captor.capture());
+        assertThat(captor.getValue().getMotifEcart()).isEqualTo(3);
+        assertThat(captor.getValue().getDateConsultation()).isEqualTo(LocalDate.now());
+        assertThat(reponse).isEqualTo(new OffreConsulteeReponse(12L, LocalDate.now(), "DISTANCE"));
+    }
+
+    @Test
+    void ajouterDepuisApi_dateFournie_estConservee() {
+        OffreConsulteeReponse reponse = service.ajouterDepuisApi(
+                new OffreConsulteeDemande("Tech lead", "Foo SA", null, "PROFIL", null, LocalDate.of(2026, 11, 2)));
+
+        assertThat(reponse.dateConsultation()).isEqualTo(LocalDate.of(2026, 11, 2));
+        assertThat(reponse.motif()).isEqualTo("PROFIL");
+    }
+
+    @Test
+    void ajouterDepuisApi_motifInconnu_leveMetierException() {
+        OffreConsulteeDemande demande = new OffreConsulteeDemande("Tech lead", "Foo SA", null, "AUTRE", null, null);
+
+        assertThatThrownBy(() -> service.ajouterDepuisApi(demande))
+                .isInstanceOf(MetierException.class)
+                .hasMessage("Motif inconnu : attendu PROFIL, POSTE ou DISTANCE.");
+        verify(repository, never()).save(any());
     }
 }
