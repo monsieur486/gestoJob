@@ -29,9 +29,6 @@ import org.springframework.security.web.authentication.AnonymousAuthenticationFi
 @Configuration
 public class ApiSecurityConfig {
 
-    /** Corps du refus faute d'authentification. */
-    private static final String CORPS_401 = "{\"erreur\":\"Authentification requise.\"}";
-
     /** Corps du refus faute de droits. */
     private static final String CORPS_403 = "{\"erreur\":\"Accès refusé.\"}";
 
@@ -64,7 +61,7 @@ public class ApiSecurityConfig {
                 .addFilterBefore(new JetonApiFiltre(jeton), AnonymousAuthenticationFilter.class)
                 .exceptionHandling(erreurs -> erreurs
                         .authenticationEntryPoint((requete, reponse, exception) ->
-                                repondre(reponse, HttpServletResponse.SC_UNAUTHORIZED, CORPS_401))
+                                repondre(reponse, HttpServletResponse.SC_UNAUTHORIZED, JetonApiFiltre.CORPS_401))
                         .accessDeniedHandler((requete, reponse, exception) ->
                                 repondre(reponse, HttpServletResponse.SC_FORBIDDEN, CORPS_403)));
         return http.build();

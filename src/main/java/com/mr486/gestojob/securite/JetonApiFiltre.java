@@ -38,7 +38,7 @@ public class JetonApiFiltre extends OncePerRequestFilter {
     public static final String EN_TETE = "X-GestoJob-Jeton";
 
     /** Corps de la réponse de refus, fixe : il ne dit rien de la cause du refus. */
-    private static final String CORPS_401 = "{\"erreur\":\"Authentification requise.\"}";
+    public static final String CORPS_401 = "{\"erreur\":\"Authentification requise.\"}";
 
     /** Identifiant porté par la ligne fail2ban et par l'authentification accordée. */
     private static final String IDENTIFIANT = "api";

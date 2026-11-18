@@ -12,6 +12,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -25,6 +27,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -211,18 +214,38 @@ class SecurityConfigTest {
     }
 
     @Test
-    void api_jetonValide_franchitLaSecurite() throws Exception {
-        // /api/modele-lettre n'existe pas encore (tâche 5) : 404 prouve que le jeton est accepté.
-        int statut = mvc.perform(get("/api/modele-lettre").header(JetonApiFiltre.EN_TETE, JETON))
-                .andReturn().getResponse().getStatus();
-        assertThat(statut).isNotIn(401, 403);
+    void api_modeleLettre_avecJeton_200() throws Exception {
+        // Le modèle CONTENU_IA de LAURENT est créé au démarrage par ModeleEmailInitializer.
+        mvc.perform(get("/api/modele-lettre").header(JetonApiFiltre.EN_TETE, JETON))
+                .andExpect(status().isOk());
     }
 
     @Test
-    void api_postAvecJeton_sansCsrf_pasDe403() throws Exception {
-        int statut = mvc.perform(post("/api/candidatures").header(JetonApiFiltre.EN_TETE, JETON))
-                .andReturn().getResponse().getStatus();
-        assertThat(statut).isNotIn(401, 403);
+    void api_postAvecJeton_sansCsrf_corpsVide_400Json() throws Exception {
+        // Le jeton et l'absence de CSRF passent la sécurité : c'est la validation qui répond.
+        mvc.perform(post("/api/candidatures").header(JetonApiFiltre.EN_TETE, JETON)
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erreur").exists());
+    }
+
+    @Test
+    void api_jsonIllisible_400Json() throws Exception {
+        mvc.perform(post("/api/candidatures").header(JetonApiFiltre.EN_TETE, JETON)
+                        .contentType(MediaType.APPLICATION_JSON).content("{pas du json"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.erreur").exists());
+    }
+
+    @Test
+    void api_annonceAbsente_400Json() throws Exception {
+        mvc.perform(post("/api/candidatures").header(JetonApiFiltre.EN_TETE, JETON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"entreprise\":{\"id\":1},\"lettreHtml\":\"<p>{{POLITESSE}}</p>\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.erreur").exists());
     }
 
     @Test
