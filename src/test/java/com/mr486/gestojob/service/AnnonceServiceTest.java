@@ -17,6 +17,7 @@ import com.mr486.gestojob.model.CleModele;
 import com.mr486.gestojob.model.Contact;
 import com.mr486.gestojob.model.Entreprise;
 import com.mr486.gestojob.model.Profil;
+import com.mr486.gestojob.model.StatutAnnonce;
 import com.mr486.gestojob.model.Titulaire;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import com.mr486.gestojob.securite.UtilisateurCourant;
@@ -207,6 +208,53 @@ class AnnonceServiceTest {
         assertThat(saved.getStatusAnnonce()).isEqualTo(1);
         assertThat(saved.getContactId()).isEqualTo(3L);
         assertThat(saved.getDateEnvoi()).isNull();
+    }
+
+    @Test
+    void creerAvecLettre_nettoieEtEnregistreLaLettre() {
+        when(annonceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        AnnonceForm form = AnnonceForm.builder().entrepriseId(3).contactId(8L).typeAnnonce(1)
+                .contenuId(2).poste("Dev").reference("R1").build();
+
+        Annonce a = annonceService.creerAvecLettre(form,
+                "<p>{{POLITESSE}}</p><script>alert(1)</script><p>Acme</p>");
+
+        assertThat(a.getLettrePersonnalisee()).contains("{{POLITESSE}}").contains("Acme").doesNotContain("script");
+        assertThat(a.getStatusAnnonce()).isEqualTo(StatutAnnonce.BOITE_ENVOI.getCode());
+        assertThat(a.getTitulaire()).isEqualTo(Titulaire.RENEE);
+    }
+
+    @Test
+    void creerAvecLettre_sansPolitesse_refuse() {
+        AnnonceForm form = AnnonceForm.builder().entrepriseId(3).contactId(8L).typeAnnonce(1)
+                .contenuId(2).poste("Dev").reference("R1").build();
+
+        assertThatThrownBy(() -> annonceService.creerAvecLettre(form, "<p>Bonjour</p>"))
+                .isInstanceOf(MetierException.class).hasMessageContaining("{{POLITESSE}}");
+
+        verify(annonceRepository, never()).save(any());
+    }
+
+    @Test
+    void creerAvecLettre_lettreNulle_refuse() {
+        AnnonceForm form = AnnonceForm.builder().entrepriseId(3).build();
+
+        assertThatThrownBy(() -> annonceService.creerAvecLettre(form, null))
+                .isInstanceOf(MetierException.class).hasMessageContaining("{{POLITESSE}}");
+
+        verify(annonceRepository, never()).save(any());
+    }
+
+    @Test
+    void creerAvecLettre_sansContact_estUneCandidatureSiteDejaEnvoyee() {
+        when(annonceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        AnnonceForm form = AnnonceForm.builder().entrepriseId(3).contactId(null).typeAnnonce(1)
+                .contenuId(2).poste("Dev").reference("R1").build();
+
+        Annonce a = annonceService.creerAvecLettre(form, "<p>{{POLITESSE}}</p>");
+
+        assertThat(a.getStatusAnnonce()).isEqualTo(StatutAnnonce.EN_COURS.getCode());
+        assertThat(a.getDateEnvoi()).isNotNull();
     }
 
     @Test

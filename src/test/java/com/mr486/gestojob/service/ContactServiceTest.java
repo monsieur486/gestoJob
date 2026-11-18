@@ -124,6 +124,17 @@ class ContactServiceTest {
     }
 
     @Test
+    void saveContact_renvoieLIdDuContactEnregistre() {
+        when(entrepriseService.existe(7)).thenReturn(true);
+        Contact enregistre = new Contact();
+        enregistre.setId(42L);
+        when(contactRepository.save(any(Contact.class))).thenReturn(enregistre);
+        ContactForm form = ContactForm.builder().email(null).formuleDePolitesse(null).nom("Durand").build();
+
+        assertThat(contactService.saveContact(form, 7)).isEqualTo(42L);
+    }
+
+    @Test
     void saveContact_leveUneException_siEmailDejaUtilisePourLEntreprise() {
         when(entrepriseService.existe(7)).thenReturn(true);
         when(contactRepository.existsByTitulaireAndEntrepriseIdAndEmailIgnoreCase(

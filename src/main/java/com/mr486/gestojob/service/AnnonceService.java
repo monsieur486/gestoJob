@@ -8,6 +8,7 @@ import com.mr486.gestojob.model.Annonce;
 import com.mr486.gestojob.model.StatutAnnonce;
 import com.mr486.gestojob.persistance.AnnonceRepository;
 import com.mr486.gestojob.securite.UtilisateurCourant;
+import com.mr486.gestojob.tools.HtmlSanitizer;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -82,8 +83,8 @@ public class AnnonceService {
     }
 
     // Persiste une annonce en base.
-    private void save(Annonce a) {
-        annonceRepository.save(a);
+    private Annonce save(Annonce a) {
+        return annonceRepository.save(a);
     }
 
     /**
@@ -113,6 +114,35 @@ public class AnnonceService {
      */
     @Transactional
     public void saveForm(AnnonceForm form) {
+        creer(form, null);
+    }
+
+    /**
+     * Crée et enregistre une annonce portant sa propre lettre de motivation personnalisée.
+     * Mêmes validations et même règle de statut que {@link #saveForm(AnnonceForm)} ;
+     * la lettre est nettoyée par {@link HtmlSanitizer#nettoie(String)} puis doit contenir
+     * la variable {@code {{POLITESSE}}}.
+     *
+     * <p><b>Exemple :</b> creerAvecLettre(form, "&lt;p&gt;{{POLITESSE}}&lt;/p&gt;&lt;script&gt;x&lt;/script&gt;") enregistre l'annonce avec la lettre « &lt;p&gt;{{POLITESSE}}&lt;/p&gt; » ; une lettre sans {{POLITESSE}} lève MetierException.</p>
+     *
+     * @param form        formulaire de l'annonce
+     * @param lettreHtml  lettre de motivation en HTML, avant nettoyage
+     * @return l'annonce enregistrée
+     * @throws MetierException si l'entreprise est absente ou si la lettre ne contient pas {{POLITESSE}}
+     * @throws java.util.NoSuchElementException si l'entreprise ou le contact n'appartient pas au titulaire courant
+     */
+    @Transactional
+    public Annonce creerAvecLettre(AnnonceForm form, String lettreHtml) {
+        String lettre = HtmlSanitizer.nettoie(lettreHtml);
+        if (lettre == null || !lettre.contains("{{POLITESSE}}")) {
+            log.warn("création d'annonce refusée : lettre sans la variable {{POLITESSE}}");
+            throw new MetierException("Lettre refusée : la variable {{POLITESSE}} est obligatoire.");
+        }
+        return creer(form, lettre);
+    }
+
+    // Valide le formulaire puis enregistre l'annonce (lettre nulle = modèle par défaut).
+    private Annonce creer(AnnonceForm form, String lettrePersonnalisee) {
         if (form.getEntrepriseId() == null) {
             throw new MetierException("Entreprise obligatoire pour créer une annonce.");
         }
@@ -137,11 +167,12 @@ public class AnnonceService {
                 .typeContenu(form.getContenuId())
                 .poste(form.getPoste())
                 .reference(form.getReference())
+                .lettrePersonnalisee(lettrePersonnalisee)
                 .statusAnnonce(site ? StatutAnnonce.EN_COURS.getCode() : StatutAnnonce.BOITE_ENVOI.getCode())
                 .dateEnvoi(site ? OffsetDateTime.now() : null)
                 .build();
 
-        save(a);
+        return save(a);
     }
 
     /**
