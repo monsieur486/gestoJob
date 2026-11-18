@@ -21,8 +21,12 @@ import org.springframework.format.annotation.DateTimeFormat;
 @NoArgsConstructor
 public class OffreConsulteeForm {
 
-    /** Expression des liens acceptés : vide, ou http(s) sans espace (refuse {@code javascript:}). */
-    public static final String REGEX_LIEN = "^$|^https?://\\S+$";
+    /**
+     * Expression des liens acceptés : vide, ou http(s) sans espace interne, casse
+     * indifférente, espaces de bord tolérés (retirés par le service avant
+     * l'enregistrement). Refuse {@code javascript:} et tout autre schéma.
+     */
+    public static final String REGEX_LIEN = "(?i)^\\s*$|^\\s*https?://\\S+\\s*$";
 
     /** Message d'erreur commun pour un lien refusé. */
     public static final String MESSAGE_LIEN = "Le lien doit commencer par http:// ou https://.";

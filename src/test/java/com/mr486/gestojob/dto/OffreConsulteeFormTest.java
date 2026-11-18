@@ -115,4 +115,22 @@ class OffreConsulteeFormTest {
         form.setCommentaire("x".repeat(1001));
         assertThat(valider(form)).extracting(v -> v.getPropertyPath().toString()).containsExactly("commentaire");
     }
+
+    @Test
+    void lienEnMajusculesOuAvecEspacesDeBord_estValide() {
+        OffreConsulteeForm form = formValide();
+        form.setLien("HTTPS://exemple.fr/o/1");
+        assertThat(valider(form)).isEmpty();
+        form.setLien(" https://exemple.fr/o/1\n");
+        assertThat(valider(form)).isEmpty();
+        form.setLien("  ");
+        assertThat(valider(form)).isEmpty();
+    }
+
+    @Test
+    void lienJavascriptPrecedeDEspaces_resteInvalide() {
+        OffreConsulteeForm form = formValide();
+        form.setLien("  javascript:alert(1)");
+        assertThat(valider(form)).extracting(v -> v.getPropertyPath().toString()).containsExactly("lien");
+    }
 }
