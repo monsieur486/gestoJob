@@ -26,8 +26,12 @@ public class ContenuService {
     /**
      * Génère la version HTML du contenu de la candidature.
      *
+     * <p>La lettre personnalisée de l'annonce, lorsqu'elle est présente, est prioritaire
+     * sur le modèle.</p>
+     *
      * <p><b>Exemple :</b> un poste contenant « &lt;script&gt; » est échappé dans le
-     * HTML produit.</p>
+     * HTML produit ; une annonce portant une lettre personnalisée est rendue avec cette
+     * lettre et non avec le modèle.</p>
      *
      * @param annonce            annonce (titulaire, poste, type de contenu et lettre personnalisée éventuelle)
      * @param messageDePolitesse formule de politesse (salutation générique si null)
@@ -40,9 +44,12 @@ public class ContenuService {
     /**
      * Génère la version texte du contenu de la candidature (dérivée du HTML).
      *
+     * <p>La lettre personnalisée de l'annonce, lorsqu'elle est présente, est prioritaire
+     * sur le modèle.</p>
+     *
      * <p><b>Exemple :</b> avec typeContenu=1 et un poste vide, le texte utilise le
      * poste par défaut du profil (ex. « de développeur Java orienté microservices ») ; le poste
-     * fourni n'est pas échappé.</p>
+     * fourni n'est pas échappé ; une lettre personnalisée remplace le modèle.</p>
      *
      * @param annonce            annonce (titulaire, poste, type de contenu et lettre personnalisée éventuelle)
      * @param messageDePolitesse formule de politesse (salutation générique si null)

@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
  * le contenu texte par {@link AnnonceTexteService} et l'envoi des emails par
  * {@link AnnonceMailService}.
  */
+@SuppressWarnings("PMD.TooManyMethods")
 @Service
 @RequiredArgsConstructor
 @Slf4j

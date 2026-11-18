@@ -16,4 +16,22 @@ import java.util.List;
  */
 public record EntrepriseApi(Integer id, String nom, String ville, String codePostal,
                             Boolean estActive, List<ContactApi> contacts) {
+
+    /**
+     * Constructeur canonique : copie défensive de la liste des contacts.
+     */
+    @SuppressWarnings("PMD.UnusedAssignment")
+    public EntrepriseApi {
+        contacts = contacts == null ? List.of() : List.copyOf(contacts);
+    }
+
+    /**
+     * Accesseur : renvoie une copie de la liste des contacts.
+     *
+     * @return les contacts (copie non modifiable)
+     */
+    @Override
+    public List<ContactApi> contacts() {
+        return List.copyOf(contacts);
+    }
 }

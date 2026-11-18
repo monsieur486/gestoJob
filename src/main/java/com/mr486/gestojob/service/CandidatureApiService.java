@@ -39,6 +39,8 @@ import org.springframework.transaction.annotation.Transactional;
  * complète (entreprise, contact, annonce avec lettre personnalisée). Toutes les
  * lectures et écritures sont limitées au titulaire courant.
  */
+// Orchestrateur de la création d'une candidature : le couplage élevé est inhérent à son rôle.
+@SuppressWarnings({"PMD.ExcessiveImports", "PMD.CouplingBetweenObjects"})
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -122,40 +124,14 @@ public class CandidatureApiService {
         // Phase 1 : toutes les vérifications en lecture seule, avant la moindre écriture.
         Entreprise existante = entrepriseCreee ? null : entrepriseService.getEntreprise(ed.id());
         EntrepriseForm formEntreprise = entrepriseCreee ? formEntreprise(ed) : null;
-        Contact contactExistant = null;
-        ContactForm formContact = null;
-        if (cd != null) {
-            if (cd.id() == null) {
-                formContact = formContact(cd);
-            } else {
-                contactExistant = contactService.getContact(cd.id());
-                // Un contact d'une autre entreprise (ou avec une entreprise à créer) est traité comme inconnu (404).
-                if (existante == null || !existante.getId().equals(contactExistant.getEntrepriseId())) {
-                    throw new NoSuchElementException("Contact introuvable avec id: " + cd.id());
-                }
-            }
-        }
+        ContactForm formContact = cd != null && cd.id() == null ? formContact(cd) : null;
+        Contact contactExistant = cd != null && cd.id() != null ? contactRattache(cd.id(), existante) : null;
 
         // Phase 2 : écritures.
-        boolean entrepriseReactivee = false;
-        int entrepriseId;
-        if (entrepriseCreee) {
-            entrepriseId = entrepriseService.save(formEntreprise);
-        } else {
-            entrepriseId = existante.getId();
-            if (!Boolean.TRUE.equals(existante.getEstActive())) {
-                entrepriseService.setActive(entrepriseId, true);
-                entrepriseReactivee = true;
-            }
-        }
-        Long contactId = null;
-        boolean contactCree = false;
-        if (formContact != null) {
-            contactId = contactService.saveContact(formContact, entrepriseId);
-            contactCree = true;
-        } else if (contactExistant != null) {
-            contactId = contactExistant.getId();
-        }
+        int entrepriseId = entrepriseCreee ? entrepriseService.save(formEntreprise) : existante.getId();
+        boolean entrepriseReactivee = !entrepriseCreee && reactiver(existante);
+        Long contactId = enregistrerContact(formContact, contactExistant, entrepriseId);
+        boolean contactCree = formContact != null;
 
         AnnonceForm form = new AnnonceForm(entrepriseId, TypeContenu.IA.getCode(), contactId,
                 demande.annonce().typeAnnonce(), demande.annonce().poste(), demande.annonce().reference(), null);
@@ -164,6 +140,33 @@ public class CandidatureApiService {
                 annonce.getId(), entrepriseId, entrepriseCreee, entrepriseReactivee);
         return new CandidatureReponse(annonce.getId(), entrepriseId, contactId, annonce.getStatusAnnonce(),
                 entrepriseCreee, entrepriseReactivee, contactCree);
+    }
+
+    // Renvoie le contact du titulaire, qui doit être rattaché à l'entreprise existante donnée (sinon 404).
+    private Contact contactRattache(Long contactId, Entreprise existante) {
+        Contact contact = contactService.getContact(contactId);
+        // Un contact d'une autre entreprise (ou avec une entreprise à créer) est traité comme inconnu (404).
+        if (existante == null || !existante.getId().equals(contact.getEntrepriseId())) {
+            throw new NoSuchElementException("Contact introuvable avec id: " + contactId);
+        }
+        return contact;
+    }
+
+    // Crée le contact si un formulaire est fourni, sinon reprend l'existant ; null s'il n'y a pas de contact.
+    private Long enregistrerContact(ContactForm formContact, Contact contactExistant, int entrepriseId) {
+        if (formContact != null) {
+            return contactService.saveContact(formContact, entrepriseId);
+        }
+        return contactExistant == null ? null : contactExistant.getId();
+    }
+
+    // Réactive l'entreprise si elle est inactive ; indique si une réactivation a eu lieu.
+    private boolean reactiver(Entreprise existante) {
+        if (Boolean.TRUE.equals(existante.getEstActive())) {
+            return false;
+        }
+        entrepriseService.setActive(existante.getId(), true);
+        return true;
     }
 
     // Construit explicitement le formulaire (sans les valeurs par défaut de ville et code postal) et le valide.
@@ -176,8 +179,8 @@ public class CandidatureApiService {
 
     // Construit le formulaire de contact depuis la demande et le valide.
     private ContactForm formContact(ContactDemande cd) {
-        ContactForm form = new ContactForm(cd.email(),
-                cd.formuleDePolitesse() == null ? 0 : cd.formuleDePolitesse(), cd.nom());
+        Integer politesse = cd.formuleDePolitesse();
+        ContactForm form = new ContactForm(cd.email(), politesse == null ? Integer.valueOf(0) : politesse, cd.nom());
         valider(form);
         return form;
     }

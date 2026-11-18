@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("PMD.TooManyMethods")
 class ContenuServiceTest {
 
     @Mock
@@ -64,19 +65,22 @@ class ContenuServiceTest {
 
     @Test
     void html_echappeLePosteSaisiParUtilisateur() {
-        String html = contenuService.getHtmlContenu(annonce(Titulaire.LAURENT, "<script>alert(1)</script>", 0, null), "Madame, Monsieur,");
+        Annonce annonce = annonce(Titulaire.LAURENT, "<script>alert(1)</script>", 0, null);
+        String html = contenuService.getHtmlContenu(annonce, "Madame, Monsieur,");
         assertThat(html).contains("&lt;script&gt;").doesNotContain("<script>");
     }
 
     @Test
     void html_echappeLaFormuleDePolitesse() {
-        String html = contenuService.getHtmlContenu(annonce(Titulaire.LAURENT, "Développeur", 0, null), "Madame <b>Durand</b>,");
+        Annonce annonce = annonce(Titulaire.LAURENT, "Développeur", 0, null);
+        String html = contenuService.getHtmlContenu(annonce, "Madame <b>Durand</b>,");
         assertThat(html).contains("Madame &lt;b&gt;Durand&lt;/b&gt;,").doesNotContain("<b>Durand</b>");
     }
 
     @Test
     void texte_nEchappePas_carCeNestPasDuHtml() {
-        String txt = contenuService.getTextContenu(annonce(Titulaire.LAURENT, "Dév & Co", 0, null), "Madame, Monsieur,");
+        Annonce annonce = annonce(Titulaire.LAURENT, "Dév & Co", 0, null);
+        String txt = contenuService.getTextContenu(annonce, "Madame, Monsieur,");
         assertThat(txt).contains("Dév & Co").doesNotContain("&amp;");
     }
 
@@ -123,11 +127,6 @@ class ContenuServiceTest {
         assertThat(txt).contains("Madame Durand,").doesNotContain("{{POLITESSE}}");
     }
 
-    private static Annonce annonce(Titulaire titulaire, String poste, Integer type, String lettre) {
-        return Annonce.builder().titulaire(titulaire).poste(poste).typeContenu(type)
-                .lettrePersonnalisee(lettre).build();
-    }
-
     @Test
     void html_utiliseLaLettrePersonnalisee_auLieuDuModele() {
         Annonce a = annonce(Titulaire.LAURENT, "Dev Java", 2, "<p>{{POLITESSE}}</p><p>Chez Acme, {{POSTE}}</p>");
@@ -147,5 +146,11 @@ class ContenuServiceTest {
         Annonce a = annonce(Titulaire.LAURENT, "Dev", 2, "   ");
         contenuService.getHtmlContenu(a, "Madame, Monsieur,");
         verify(modeleEmailService).getContenu(Titulaire.LAURENT, "CONTENU_IA");
+    }
+
+    // Construit une annonce de test (titulaire, poste, type de contenu, lettre personnalisée éventuelle).
+    private static Annonce annonce(Titulaire titulaire, String poste, Integer type, String lettre) {
+        return Annonce.builder().titulaire(titulaire).poste(poste).typeContenu(type)
+                .lettrePersonnalisee(lettre).build();
     }
 }

@@ -37,6 +37,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest
+@SuppressWarnings("PMD.TooManyMethods")
 @TestPropertySource(properties = {
         "gestojob.comptes.laurent.username=laurent-test",
         "gestojob.comptes.laurent.password=mdp-laurent",

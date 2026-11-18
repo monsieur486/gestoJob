@@ -51,6 +51,7 @@ import org.springframework.data.domain.Pageable;
  * Tests unitaires de {@link CandidatureApiService} (dépendances mockées, validateur réel).
  */
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.CouplingBetweenObjects"})
 class CandidatureApiServiceTest {
 
     @Mock private EntrepriseService entrepriseService;
