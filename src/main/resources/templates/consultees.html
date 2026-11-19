@@ -34,13 +34,13 @@
         </div>
         <div class="col-12 col-md-4">
             <label class="form-label" for="intitule">Intitulé</label>
-            <input class="form-control" id="intitule" maxlength="255" th:field="*{intitule}" type="text"
+            <input class="form-control" id="intitule" th:field="*{intitule}" type="text"
                    th:classappend="${#fields.hasErrors('intitule')} ? ' is-invalid'" required>
             <div class="invalid-feedback" th:errors="*{intitule}">Erreur</div>
         </div>
         <div class="col-12 col-md-3">
             <label class="form-label" for="entreprise">Entreprise</label>
-            <input class="form-control" id="entreprise" maxlength="255" th:field="*{entreprise}" type="text"
+            <input class="form-control" id="entreprise" th:field="*{entreprise}" type="text"
                    th:classappend="${#fields.hasErrors('entreprise')} ? ' is-invalid'" required>
             <div class="invalid-feedback" th:errors="*{entreprise}">Erreur</div>
         </div>
@@ -55,13 +55,13 @@
         </div>
         <div class="col-12 col-md-4">
             <label class="form-label" for="lien">Lien (facultatif)</label>
-            <input class="form-control" id="lien" maxlength="1000" placeholder="https://..." th:field="*{lien}"
+            <input class="form-control" id="lien" placeholder="https://..." th:field="*{lien}"
                    type="url" th:classappend="${#fields.hasErrors('lien')} ? ' is-invalid'">
             <div class="invalid-feedback" th:errors="*{lien}">Erreur</div>
         </div>
         <div class="col-12 col-md-6">
             <label class="form-label" for="commentaire">Commentaire (facultatif)</label>
-            <input class="form-control" id="commentaire" maxlength="1000" th:field="*{commentaire}" type="text"
+            <input class="form-control" id="commentaire" th:field="*{commentaire}" type="text"
                    th:classappend="${#fields.hasErrors('commentaire')} ? ' is-invalid'">
             <div class="invalid-feedback" th:errors="*{commentaire}">Erreur</div>
         </div>
