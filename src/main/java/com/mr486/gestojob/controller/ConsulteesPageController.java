@@ -35,7 +35,8 @@ public class ConsulteesPageController {
     /**
      * Affiche une page du journal et le formulaire de saisie (date du jour pré-remplie).
      *
-     * <p><b>Exemple :</b> {@code GET /consultees?page=2} affiche la deuxième page.</p>
+     * <p><b>Exemple :</b> {@code GET /consultees?page=2} affiche la deuxième page ;
+     * {@code ?page=0} affiche la première, {@code ?page=99} la dernière existante.</p>
      *
      * @param model le modèle de la vue
      * @param page  le numéro de page (base 1)
@@ -44,10 +45,16 @@ public class ConsulteesPageController {
     @GetMapping("/consultees")
     public String liste(Model model, @RequestParam(name = "page", defaultValue = "1") int page) {
         model.addAttribute("page_active", VUE);
-        Page<OffreConsultee> resultat = offreConsulteeService.lister(page - 1);
+        // Numéro hors bornes : ramené à la première (≤ 0) ou à la dernière page existante.
+        int pageIndex = Math.max(0, page - 1);
+        Page<OffreConsultee> resultat = offreConsulteeService.lister(pageIndex);
+        if (resultat.getTotalPages() > 0 && pageIndex >= resultat.getTotalPages()) {
+            pageIndex = resultat.getTotalPages() - 1;
+            resultat = offreConsulteeService.lister(pageIndex);
+        }
         model.addAttribute("consulteesPage", resultat);
         model.addAttribute("consultees", resultat.getContent());
-        model.addAttribute("currentPage", page);
+        model.addAttribute("currentPage", pageIndex + 1);
         model.addAttribute("totalPages", resultat.getTotalPages());
         model.addAttribute("motifs", MotifEcart.values());
         if (!model.containsAttribute(ATTRIBUT_FORM)) {

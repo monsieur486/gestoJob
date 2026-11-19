@@ -12,7 +12,9 @@ import static org.mockito.Mockito.when;
 import com.mr486.gestojob.dto.OffreConsulteeForm;
 import com.mr486.gestojob.model.MotifEcart;
 import com.mr486.gestojob.service.OffreConsulteeService;
+import com.mr486.gestojob.model.OffreConsultee;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.NoSuchElementException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +22,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -53,6 +57,33 @@ class ConsulteesPageControllerTest {
         assertThat(((OffreConsulteeForm) model.getAttribute("form")).getDateConsultation())
                 .isEqualTo(LocalDate.now());
         verify(offreConsulteeService).lister(0);
+    }
+
+    @Test
+    void liste_pageNulleOuNegative_afficheLaPremiere() {
+        when(offreConsulteeService.lister(0)).thenReturn(Page.empty());
+
+        Model model = new ExtendedModelMap();
+        controller.liste(model, -3);
+
+        assertThat(model.getAttribute("currentPage")).isEqualTo(1);
+        verify(offreConsulteeService).lister(0);
+    }
+
+    @Test
+    void liste_pageAuDelaDeLaDerniere_afficheLaDerniere() {
+        // 2 pages de 7 : la page 99 est vide, on retombe sur la page 2 (index 1).
+        OffreConsultee entree = new OffreConsultee();
+        when(offreConsulteeService.lister(98))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(98, 7), 8));
+        when(offreConsulteeService.lister(1))
+                .thenReturn(new PageImpl<>(List.of(entree), PageRequest.of(1, 7), 8));
+
+        Model model = new ExtendedModelMap();
+        controller.liste(model, 99);
+
+        assertThat(model.getAttribute("currentPage")).isEqualTo(2);
+        assertThat(model.getAttribute("consultees")).isEqualTo(List.of(entree));
     }
 
     @Test
