@@ -2,7 +2,9 @@
 
 Suivi personnel de candidatures : application web rendue côté serveur permettant de
 gérer des **entreprises**, leurs **contacts** et les **annonces** (candidatures), puis
-d'envoyer les courriels de lettre de motivation depuis une file d'attente.
+d'envoyer les courriels de lettre de motivation depuis une file d'attente. Un journal des
+**offres consultées** garde la trace des offres lues puis écartées (motif profil, poste ou
+distance), pour montrer la démarche de recherche.
 
 Stack : **Java 17**, **Spring Boot 4**, **Maven**, **PostgreSQL** (schéma géré par
 **Liquibase**), **Thymeleaf**, **Lombok**, **Jakarta Mail** (SMTP Gmail).
@@ -74,6 +76,7 @@ l'API (toute requête reçoit `401`). Le jeton n'est jamais journalisé.
 | `GET`  | `/api/modele-lettre` | Lettre « IA agentique » de Laurent telle qu'en base : `cle`, `html`, `posteParDefaut` |
 | `GET`  | `/api/entreprises?nom=…` | Recherche d'entreprises (insensible à la casse, sous-chaîne) avec leurs contacts, pour éviter les doublons |
 | `POST` | `/api/candidatures` | Crée entreprise, contact et annonce en une transaction ; répond `201` |
+| `POST` | `/api/offres-consultees` | Enregistre une offre lue puis écartée ; répond `201` |
 
 `POST /api/candidatures` reçoit `entreprise` (`{ "id" }` ou les champs d'une nouvelle),
 `contact` (`{ "id" }`, une création, ou `null` pour une candidature « site »), `annonce`
@@ -83,6 +86,11 @@ contenir `{{POLITESSE}}` ; `{{POSTE}}` est facultatif. Elle est stockée avec l'
 Une entreprise existante inactive est réactivée. Les erreurs sont en JSON
 `{ "erreur": "message" }` : `400` (validation), `404` (id inconnu ou appartenant à
 l'autre titulaire), `401` (jeton).
+
+`POST /api/offres-consultees` reçoit `intitule`, `entreprise`, `motif` (`PROFIL`, `POSTE` ou
+`DISTANCE`, casse indifférente) et, facultatifs, `lien` (`http(s)://` seulement),
+`commentaire` et `dateConsultation` (`yyyy-MM-dd`, aujourd'hui par défaut). Il répond
+`{ "id", "dateConsultation", "motif" }` ; un motif inconnu donne `400`.
 
 ```bash
 curl -H @fichier-entete https://<hote>/api/entreprises?nom=acme
@@ -157,6 +165,10 @@ domaine :
 - `EntrepriseService` — gestion des entreprises (création, mise à jour, activation/désactivation).
 - `EntrepriseRechercheService` — listes et recherches paginées d'entreprises.
 - `ContactService` — gestion des contacts rattachés aux entreprises.
+
+**Offres consultées**
+
+- `OffreConsulteeService` — journal des offres lues puis écartées (liste paginée, ajout, suppression, ajout par l'API), motif `MotifEcart`.
 
 **Contenu & courriels**
 
