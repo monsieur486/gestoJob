@@ -38,19 +38,23 @@ offres **lues puis écartées**, avec le motif de l'écart.
 - **Couches** : entité `OffreConsultee`, `OffreConsulteeRepository` (requêtes toutes
   filtrées par titulaire, jamais `findById/findAll/deleteById` hérités),
   `OffreConsulteeService` (lister paginé, ajouter, supprimer), `OffreConsulteeForm`
-  (validation), `OffreConsulteeController`.
+  (validation), `ConsulteesPageController`.
 - **Page** `/consultees` (menu « 👀 Offres consultées », visible à tout compte connecté) :
   formulaire de saisie en haut (masqué aux lecteurs via `sec:authorize`), date pré-remplie
   à aujourd'hui et modifiable ; liste paginée triée par date décroissante (date, intitulé,
   entreprise, lien cliquable, motif, commentaire, bouton supprimer pour le titulaire).
-  PRG : `POST /consultees` et `POST /consultees/{id}/suppression` puis `redirect:`.
+  PRG : `POST /consultees` et `POST /consultees/{id}/supprimer` puis `redirect:`.
+  Un `?page` hors bornes est ramené à la première ou à la dernière page existante ;
+  les longueurs maximales sont contrôlées côté serveur (`@Size`, message explicite)
+  plutôt que par un `maxlength` qui tronquerait sans prévenir ; une valeur non
+  convertible affiche un message français (`messages.properties`).
 - **Sécurité** : aucune règle nouvelle ; les GET sont ouverts aux comptes connectés et
   les POST réservés à `TITULAIRE` par la règle existante `anyRequest()`. Un id de l'autre
   titulaire se comporte comme un id inconnu (404).
-- **API Claude** : `POST /api/offres-consultees` (201) dans `CandidatureApiController`
-  (ou un contrôleur voisin sous `controller/api/`), DTO dans `dto/api/` (intitulé,
-  entreprise, lien, motif par code ou nom `PROFIL|POSTE|DISTANCE`, commentaire, date
-  facultative = aujourd'hui), titulaire LAURENT comme le reste de l'API. Mêmes erreurs
+- **API Claude** : `POST /api/offres-consultees` (201) dans `OffreConsulteeApiController`
+  (sous `controller/api/`), DTO `OffreConsulteeDemande` dans `dto/api/` (intitulé,
+  entreprise, lien, motif **par nom seul** `PROFIL|POSTE|DISTANCE`, casse indifférente,
+  inconnu → 400, commentaire, date facultative = aujourd'hui), titulaire LAURENT comme le reste de l'API. Mêmes erreurs
   JSON (`ApiErreurConseil`). Ni lecture ni suppression par l'API.
 - **Skill `gestion-annonce`** (dépôt `claude-skills`, chantier séparé, après la mise en
   prod de l'endpoint) : quand l'analyse conclut que l'offre ne correspond pas, le skill
