@@ -34,12 +34,12 @@ class OffreConsulteeFormConversionTest {
         DataBinder binder = new DataBinder(new OffreConsulteeForm(), "form");
         binder.setConversionService(new DefaultFormattingConversionService());
         binder.bind(new MutablePropertyValues().add(champ, valeur));
-        BindingResult resultat = binder.getBindingResult();
 
         ResourceBundleMessageSource messages = new ResourceBundleMessageSource();
         messages.setBasename("messages");
         messages.setDefaultEncoding(StandardCharsets.UTF_8.name());
         messages.setUseCodeAsDefaultMessage(false);
+        BindingResult resultat = binder.getBindingResult();
         return messages.getMessage(resultat.getFieldError(champ), Locale.FRANCE);
     }
 }

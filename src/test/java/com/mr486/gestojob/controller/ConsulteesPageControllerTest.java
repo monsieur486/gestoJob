@@ -11,8 +11,8 @@ import static org.mockito.Mockito.when;
 
 import com.mr486.gestojob.dto.OffreConsulteeForm;
 import com.mr486.gestojob.model.MotifEcart;
-import com.mr486.gestojob.service.OffreConsulteeService;
 import com.mr486.gestojob.model.OffreConsultee;
+import com.mr486.gestojob.service.OffreConsulteeService;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
